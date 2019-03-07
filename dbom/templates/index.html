@@ -56,7 +56,7 @@
                             </div>
                             <div class="details">
                                 <div class="number">
-                                    <span data-counter="counterup" data-value="0">正常</span>
+                                    <span {% if service_status == "中断" %}style="color: red"{% endif %} data-counter="counterup" data-value="0">{{ service_status }}</span>
                                 </div>
                                 <div class="desc"> 服务状态</div>
                             </div>
@@ -69,7 +69,7 @@
                             </div>
                             <div class="details">
                                 <div class="number">
-                                    <span style="color: red" data-counter="counterup" data-value="0">中断</span></div>
+                                    <span {% if net_status == "中断" %}style="color: red"{% endif %} data-counter="counterup" data-value="0">{{ net_status }}</span></div>
                                 <div class="desc"> 网络状态</div>
                             </div>
                         </div>
@@ -81,7 +81,7 @@
                             </div>
                             <div class="details">
                                 <div class="number">
-                                    <span style="color: red" data-counter="counterup" data-value="0">1</span>
+                                    <span {% if warning_client_num != 0 %}style="color: red"{% endif %} data-counter="counterup" data-value="0">{{ warning_client_num }}</span>
                                 </div>
                                 <div class="desc"> 报警客户端</div>
                             </div>
@@ -94,7 +94,7 @@
                             </div>
                             <div class="details">
                                 <div class="number">
-                                    <span data-counter="counterup" data-value="0">20</span>
+                                    <span data-counter="counterup" data-value="0">{{ client_sum }}</span>
                                 </div>
                                 <div class="desc"> 总客户端</div>
                             </div>
@@ -126,52 +126,22 @@
                                         </tr>
                                     </thead>
                                     <tbody>
+
+
+                                    {% for agent in agent_info_list %}
                                         <tr>
-                                            <td> 1 </td>
-                                            <td> DBServer1 </td>
-                                            <td> ORACLE </td>
-                                            <td> 2019-02-23 08:00:00 </td>
+                                            <td> {{ forloop.counter }} </td>
+                                            <td> {{ agent.client_name }} </td>
+                                            <td> {{ agent.agent_type_name }} </td>
+                                            <td> {{ agent.job_start_time }} </td>
                                             <td>
-                                                <span class="label label-sm label-success"> 正常 </span>
+                                                <span class="label label-sm label-success"> {{ agent.job_backup_status }} </span>
                                             </td>
                                             <td>
                                                 <span class="label label-sm label-success"> 正常 </span>
                                             </td>
                                         </tr>
-                                        <tr>
-                                            <td rowspan="2" style="vertical-align:middle"> 2 </td>
-                                            <td rowspan="2" style="vertical-align:middle"> DBServer2 </td>
-                                            <td> ORACLE </td>
-                                            <td> 2019-02-23 08:00:00 </td>
-                                            <td>
-                                                <span class="label label-sm label-success"> 正常 </span>
-                                            </td>
-                                            <td>
-                                                <span class="label label-sm label-success"> 正常 </span>
-                                            </td>
-                                        </tr>
-                                        <tr >
-                                            <td> SQLServer </td>
-                                            <td> 2019-02-23 08:00:00 </td>
-                                            <td>
-                                                <span class="label label-sm label-success"> 正常 </span>
-                                            </td>
-                                            <td>
-                                                <span class="label label-sm label-success"> 正常 </span>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td> 4 </td>
-                                            <td> appserver1 </td>
-                                            <td> 文件系统 </td>
-                                            <td> 2019-02-23 08:00:00 </td>
-                                            <td>
-                                                <span class="label label-sm label-danger"> 异常 </span>
-                                            </td>
-                                            <td>
-                                                <span class="label label-sm label-danger"> 异常 </span>
-                                            </td>
-                                        </tr>
+                                    {% endfor %}
                                     </tbody>
                                 </table>
                             </div>

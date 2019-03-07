@@ -41,11 +41,12 @@ from dbom.models import *
 from .remote import ServerByPara
 from TSDBOM import settings
 from .funcs import *
+from .CVApi_bak import CVRestApiToken, CVApiOperate
 
 funlist = []
 
-info = {"webaddr": "cv-server", "port": "81", "username": "admin", "passwd": "Admin@2017", "token": "",
-        "lastlogin": 0}
+info = {"web_addr": "cv-server", "port": "81", "username": "admin", "pass_wd": "Admin@2017", "token": "",
+        "last_login": 0}
 
 
 def getfun(myfunlist, fun):
@@ -396,6 +397,7 @@ def get_server_time_very_second(request):
 
 def index(request, funid):
     if request.user.is_authenticated():
+        # 左侧菜单栏
         global funlist
         funlist = []
         if request.user.is_superuser == 1:
@@ -423,12 +425,71 @@ def index(request, funid):
                 value.sort = 0
         funlist = sorted(funlist, key=lambda fun: fun.sort)
 
+        # 备份状态监控
+        cv_token = CVRestApiToken()
+        cv_token.login(info)
+        cv_api = CVApiOperate(cv_token)
 
+        # 服务状态/网络状态
+        if cv_api.msg.startswith("连接失败") or cv_api.msg.startswith("登录失败"):
+            service_status = "中断"
+            net_status = "中断"
+        else:
+            service_status = "正常"
+            net_status = "正常"
+
+        agent_info_list = []
+        # 客户端列表
+        client_list = cv_api.get_client_list()
+
+        # 报警客户端
+        warning_client_num = 0
+
+        # agents
+        for client in client_list:
+            client_id = str(client["clientId"])
+            client_name = client["clientName"]
+            client_agent_list = cv_api.get_client_agent_list(client_id)
+
+            first_agent_tag = 0
+
+            for agent in client_agent_list:
+                agent_dict = dict()
+                agent_type_name = agent["agentType"]
+                agent_id = agent["appId"]
+                job_list = cv_api.get_job_list(client_id, app_type_name=agent_type_name, time_sorted=True)
+                if job_list:
+                    current_job = job_list[-1]
+
+                    if "失败" in current_job["status"] and first_agent_tag == 0:
+                        first_agent_tag += 1
+                        warning_client_num += 1
+
+                    job_start_time = current_job["StartTime"]
+                    job_backup_status = current_job["status"]
+
+                    agent_dict["client_id"] = client_id
+                    agent_dict["client_name"] = client_name
+                    agent_dict["agent_type_name"] = agent_type_name
+                    agent_dict["agent_id"] = agent_id
+                    agent_dict["job_start_time"] = time.strftime("%Y-%m-%d %H:%M:%S",
+                                                                 time.localtime(int(job_start_time)))
+                    agent_dict["job_backup_status"] = job_backup_status
+                    agent_info_list.append(agent_dict)
+                else:
+                    pass
+            #   time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(sp)
         # 右上角消息任务
-        return render(request, "index.html",
-                      {'username': request.user.userinfo.fullname,  "homepage": True,
-                       "pagefuns": getpagefuns(funid, request),
-                       })
+        return render(request, "index.html", {
+            'username': request.user.userinfo.fullname,
+            "homepage": True,
+            "pagefuns": getpagefuns(funid, request),
+            "agent_info_list": agent_info_list,
+            "service_status": service_status,
+            "net_status": net_status,
+            "warning_client_num": warning_client_num,
+            "client_sum": len(client_list)
+        })
     else:
         return HttpResponseRedirect("/login")
 
