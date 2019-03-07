@@ -16,7 +16,9 @@ import re
 import pdfkit
 import sys
 import requests
+import threading
 from operator import itemgetter
+import operator
 
 from django.utils.timezone import utc
 from django.utils.timezone import localtime
@@ -395,9 +397,54 @@ def get_server_time_very_second(request):
         return JsonResponse({"current_time": current_time.strftime('%Y-%m-%d %H:%M:%S')})
 
 
+def custom_agent_dict(cv_api, agent, client_id, client_name, temp_lock):
+    """
+    多线程处理构造所有agent下备份任务
+    :param cv_api:
+    :param agent:
+    :param client_id:
+    :param first_agent_tag:
+    :param warning_client_num:
+    :param client_name:
+    :return:
+    """
+    global agent_info_list, first_agent_tag, warning_client_num
+    with temp_lock:
+        agent_dict = dict()
+        agent_type_name = agent["agentType"]
+        agent_id = agent["appId"]
+        job_list = cv_api.get_job_list(client_id, app_type_name=agent_type_name, time_sorted=True)
+        if job_list:
+            current_job = job_list[-1]
+
+            if "失败" in current_job["status"] and first_agent_tag == 0:
+                first_agent_tag += 1
+                warning_client_num += 1
+
+            job_start_time = current_job["StartTime"]
+            job_backup_status = current_job["status"]
+
+            agent_dict["client_id"] = client_id
+            agent_dict["client_name"] = client_name
+            agent_dict["agent_type_name"] = agent_type_name
+            agent_dict["agent_id"] = agent_id
+            agent_dict["job_start_time"] = time.strftime("%Y-%m-%d %H:%M:%S",
+                                                         time.localtime(int(job_start_time)))
+            agent_dict["job_backup_status"] = job_backup_status
+            agent_info_list.append(agent_dict)
+        else:
+            pass
+
+
+# agent_info_list = []
+# first_agent_tag = 0
+# warning_client_num = 0
+
+
 def index(request, funid):
     if request.user.is_authenticated():
         # 左侧菜单栏
+        # global funlist, agent_info_list, first_agent_tag, warning_client_num
         global funlist
         funlist = []
         if request.user.is_superuser == 1:
@@ -438,13 +485,16 @@ def index(request, funid):
             service_status = "正常"
             net_status = "正常"
 
-        agent_info_list = []
         # 客户端列表
         client_list = cv_api.get_client_list()
 
         # 报警客户端
         warning_client_num = 0
 
+        sorted_num = 0
+
+        whole_list = []
+        client_order = 0
         # agents
         for client in client_list:
             client_id = str(client["clientId"])
@@ -452,13 +502,23 @@ def index(request, funid):
             client_agent_list = cv_api.get_client_agent_list(client_id)
 
             first_agent_tag = 0
+            current_agent_thread_list = []
+            num = 0
+            agent_info_list = []
 
             for agent in client_agent_list:
-                agent_dict = dict()
+                #     temp_lock = threading.Lock()
+                #     current_agent_thread = threading.Thread(target=custom_agent_dict,
+                #                                             args=(cv_api, agent, client_id, client_name, temp_lock))
+                #     current_agent_thread_list.append(current_agent_thread)
+                #     current_agent_thread.start()
+                # for i in current_agent_thread_list:
+                #     i.join()
                 agent_type_name = agent["agentType"]
                 agent_id = agent["appId"]
                 job_list = cv_api.get_job_list(client_id, app_type_name=agent_type_name, time_sorted=True)
                 if job_list:
+                    num += 1
                     current_job = job_list[-1]
 
                     if "失败" in current_job["status"] and first_agent_tag == 0:
@@ -467,24 +527,37 @@ def index(request, funid):
 
                     job_start_time = current_job["StartTime"]
                     job_backup_status = current_job["status"]
+                    sorted_num += 1
 
-                    agent_dict["client_id"] = client_id
-                    agent_dict["client_name"] = client_name
-                    agent_dict["agent_type_name"] = agent_type_name
-                    agent_dict["agent_id"] = agent_id
-                    agent_dict["job_start_time"] = time.strftime("%Y-%m-%d %H:%M:%S",
-                                                                 time.localtime(int(job_start_time)))
-                    agent_dict["job_backup_status"] = job_backup_status
-                    agent_info_list.append(agent_dict)
-                else:
-                    pass
-            #   time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(sp)
+                    agent_info_list.append({
+                        "sorted_num": sorted_num,
+                        "client_id": client_id,
+                        "client_name": client_name,
+                        "agent_type_name": agent_type_name,
+                        "agent_id": agent_id,
+                        "job_start_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(job_start_time))),
+                        "job_backup_status": job_backup_status,
+                        "client_agent_list_length": len(client_agent_list),
+                    })
+            if agent_info_list:
+                client_order += 1
+            whole_list.append({
+                "client_id": client_id,
+                "client_name": client_name,
+                "client_order": client_order,
+                "agent_info_list": sorted(agent_info_list, key=operator.itemgetter("sorted_num")),
+                "agent_length": len(agent_info_list)
+            })
+
+        #
+        # with open("agent_list.json", "w") as f:
+        #     f.write(json.dumps(whole_list))
         # 右上角消息任务
         return render(request, "index.html", {
             'username': request.user.userinfo.fullname,
             "homepage": True,
             "pagefuns": getpagefuns(funid, request),
-            "agent_info_list": agent_info_list,
+            "whole_list": whole_list,
             "service_status": service_status,
             "net_status": net_status,
             "warning_client_num": warning_client_num,

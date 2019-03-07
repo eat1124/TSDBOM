@@ -56,7 +56,8 @@
                             </div>
                             <div class="details">
                                 <div class="number">
-                                    <span {% if service_status == "中断" %}style="color: red"{% endif %} data-counter="counterup" data-value="0">{{ service_status }}</span>
+                                    <span {% if service_status == "中断" %}style="color: red"{% endif %}
+                                          data-counter="counterup" data-value="0">{{ service_status }}</span>
                                 </div>
                                 <div class="desc"> 服务状态</div>
                             </div>
@@ -69,7 +70,8 @@
                             </div>
                             <div class="details">
                                 <div class="number">
-                                    <span {% if net_status == "中断" %}style="color: red"{% endif %} data-counter="counterup" data-value="0">{{ net_status }}</span></div>
+                                    <span {% if net_status == "中断" %}style="color: red"{% endif %}
+                                          data-counter="counterup" data-value="0">{{ net_status }}</span></div>
                                 <div class="desc"> 网络状态</div>
                             </div>
                         </div>
@@ -81,7 +83,8 @@
                             </div>
                             <div class="details">
                                 <div class="number">
-                                    <span {% if warning_client_num != 0 %}style="color: red"{% endif %} data-counter="counterup" data-value="0">{{ warning_client_num }}</span>
+                                    <span {% if warning_client_num != 0 %}style="color: red"{% endif %}
+                                          data-counter="counterup" data-value="0">{{ warning_client_num }}</span>
                                 </div>
                                 <div class="desc"> 报警客户端</div>
                             </div>
@@ -116,31 +119,34 @@
                             <div class="table-scrollable">
                                 <table class="table table-hover">
                                     <thead>
-                                        <tr>
-                                            <th>   </th>
-                                            <th> 客户端 </th>
-                                            <th> 类型 </th>
-                                            <th> 最近备份时间 </th>
-                                            <th> 备份状态 </th>
-                                            <th> 辅助拷贝状态 </th>
-                                        </tr>
+                                    <tr>
+                                        <th></th>
+                                        <th> 客户端</th>
+                                        <th> 类型</th>
+                                        <th> 最近备份时间</th>
+                                        <th> 备份状态</th>
+                                        <th> 辅助拷贝状态</th>
+                                    </tr>
                                     </thead>
                                     <tbody>
 
-
-                                    {% for agent in agent_info_list %}
-                                        <tr>
-                                            <td> {{ forloop.counter }} </td>
-                                            <td> {{ agent.client_name }} </td>
-                                            <td> {{ agent.agent_type_name }} </td>
-                                            <td> {{ agent.job_start_time }} </td>
-                                            <td>
-                                                <span class="label label-sm label-success"> {{ agent.job_backup_status }} </span>
-                                            </td>
-                                            <td>
-                                                <span class="label label-sm label-success"> 正常 </span>
-                                            </td>
-                                        </tr>
+                                    {% for client in whole_list %}
+                                        {% for agent in client.agent_info_list %}
+                                            <tr>
+                                                {% if forloop.counter == 1 %}
+                                                <td rowspan="{{ client.agent_length }}" style="vertical-align:middle"> {{ client.client_order }}</td>
+                                                <td rowspan="{{ client.agent_length }}" style="vertical-align:middle"> {{ client.client_name }}</td>
+                                                {% endif %}
+                                                <td> {{ agent.agent_type_name }}</td>
+                                                <td> {{ agent.job_start_time }}</td>
+                                                <td>
+                                                    <span class="label label-sm label-success"> {{ agent.job_backup_status }} </span>
+                                                </td>
+                                                <td>
+                                                    <span class="label label-sm label-success"> 正常 </span>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
                                     {% endfor %}
                                     </tbody>
                                 </table>
@@ -735,7 +741,7 @@
     <script src="/static/assets/global/plugins/fullcalendar/fullcalendar.min.js" type="text/javascript"></script>
     <link href="/static/assets/global/plugins/fullcalendar/fullcalendar.min.css" rel="stylesheet" type="text/css"/>
 
-        <script src="/static/assets/pages/scripts/charts-highcharts.min.js" type="text/javascript"></script>
+    <script src="/static/assets/pages/scripts/charts-highcharts.min.js" type="text/javascript"></script>
 
 
 

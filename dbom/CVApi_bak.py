@@ -180,7 +180,6 @@ class CVRestApiCmd(object):
         """
         GET请求
         """
-        print(command)
         ret = self._rest_cmd("GET", command, update_cmd)
 
         if write_down:
@@ -817,7 +816,6 @@ class CVApiOperate(CVRestApiCmd):
         for agent in c_agent_list:
             agent_info = {}
             agent_type = agent["agentType"]
-            print(agent_type)
             backup_set_list = []
             instance_list = []
             # 文件系统备份集
@@ -881,7 +879,6 @@ class CVApiOperate(CVRestApiCmd):
                                 self._sub_client_list.clear()
                         instance_info["backup_set_list"] = virtual_backup_set_list
                         instance_list.append(instance_info)
-                        print("instance_list", instance_list)
             # 数据库实例
             else:
                 for instance in c_instance_list:
@@ -1019,8 +1016,7 @@ if __name__ == "__main__":
     # sp = cv_api.get_library_list()
     # sp = cv_api.get_library_info("auxdisk")
     # sp = cv_api.get_job_info("4439132")
-    sp = cv_api.get_job_list("24", job_type="13", app_type_name="Oracle", backup_set_name=None,
-                             sub_client_name=None, time_sorted=True)
+    sp = cv_api.get_job_list("2")
     print(sp)
     # import json
     #
