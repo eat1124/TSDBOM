@@ -397,20 +397,20 @@ def get_server_time_very_second(request):
         return JsonResponse({"current_time": current_time.strftime('%Y-%m-%d %H:%M:%S')})
 
 
-def custom_agent_dict(cv_api, agent, client_id, client_name, temp_lock):
+def custom_agent_dict(cv_api, agent, client_id, client_name, temp_lock, client_agent_list):
     """
-    多线程处理构造所有agent下备份任务
+    并发请求所有agent下的job
     :param cv_api:
     :param agent:
     :param client_id:
-    :param first_agent_tag:
-    :param warning_client_num:
     :param client_name:
+    :param temp_lock:
+    :param client_agent_list:
     :return:
     """
-    global agent_info_list, first_agent_tag, warning_client_num
+    global agent_info_list, first_agent_tag, warning_client_num, sorted_num
     with temp_lock:
-        agent_dict = dict()
+        print("发送请求。。。")
         agent_type_name = agent["agentType"]
         agent_id = agent["appId"]
         job_list = cv_api.get_job_list(client_id, app_type_name=agent_type_name, time_sorted=True)
@@ -423,29 +423,31 @@ def custom_agent_dict(cv_api, agent, client_id, client_name, temp_lock):
 
             job_start_time = current_job["StartTime"]
             job_backup_status = current_job["status"]
+            sorted_num += 1
 
-            agent_dict["client_id"] = client_id
-            agent_dict["client_name"] = client_name
-            agent_dict["agent_type_name"] = agent_type_name
-            agent_dict["agent_id"] = agent_id
-            agent_dict["job_start_time"] = time.strftime("%Y-%m-%d %H:%M:%S",
-                                                         time.localtime(int(job_start_time)))
-            agent_dict["job_backup_status"] = job_backup_status
-            agent_info_list.append(agent_dict)
-        else:
-            pass
+            agent_info_list.append({
+                "sorted_num": sorted_num,
+                "client_id": client_id,
+                "client_name": client_name,
+                "agent_type_name": agent_type_name,
+                "agent_id": agent_id,
+                "job_start_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(job_start_time))),
+                "job_backup_status": job_backup_status,
+                "client_agent_list_length": len(client_agent_list),
+            })
 
-
+#
 # agent_info_list = []
 # first_agent_tag = 0
 # warning_client_num = 0
+# sorted_num = 0
 
 
 def index(request, funid):
     if request.user.is_authenticated():
         # 左侧菜单栏
         # global funlist, agent_info_list, first_agent_tag, warning_client_num
-        global funlist
+        global funlist, agent_info_list, first_agent_tag, warning_client_num, sorted_num
         funlist = []
         if request.user.is_superuser == 1:
             allfunlist = Fun.objects.all()
@@ -475,6 +477,7 @@ def index(request, funid):
         # 备份状态监控
         cv_token = CVRestApiToken()
         cv_token.login(info)
+        print("登录成功。。。")
         cv_api = CVApiOperate(cv_token)
 
         # 服务状态/网络状态
@@ -502,14 +505,15 @@ def index(request, funid):
             client_agent_list = cv_api.get_client_agent_list(client_id)
 
             first_agent_tag = 0
-            current_agent_thread_list = []
-            num = 0
+            # current_agent_thread_list = []
             agent_info_list = []
 
             for agent in client_agent_list:
+                print("-----------------")
                 #     temp_lock = threading.Lock()
                 #     current_agent_thread = threading.Thread(target=custom_agent_dict,
-                #                                             args=(cv_api, agent, client_id, client_name, temp_lock))
+                #                                             args=(cv_api, agent, client_id, client_name, temp_lock,
+                #                                                   client_agent_list))
                 #     current_agent_thread_list.append(current_agent_thread)
                 #     current_agent_thread.start()
                 # for i in current_agent_thread_list:
@@ -518,7 +522,6 @@ def index(request, funid):
                 agent_id = agent["appId"]
                 job_list = cv_api.get_job_list(client_id, app_type_name=agent_type_name, time_sorted=True)
                 if job_list:
-                    num += 1
                     current_job = job_list[-1]
 
                     if "失败" in current_job["status"] and first_agent_tag == 0:
