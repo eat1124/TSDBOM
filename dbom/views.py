@@ -19,6 +19,7 @@ import requests
 import threading
 from operator import itemgetter
 import operator
+from concurrent.futures import ThreadPoolExecutor
 
 from django.utils.timezone import utc
 from django.utils.timezone import localtime
@@ -397,7 +398,7 @@ def get_server_time_very_second(request):
         return JsonResponse({"current_time": current_time.strftime('%Y-%m-%d %H:%M:%S')})
 
 
-def custom_agent_dict(cv_api, agent, client_id, client_name, temp_lock, client_agent_list):
+def custom_agent_dict(cv_api, agent, client_id, client_name):
     """
     并发请求所有agent下的job
     :param cv_api:
@@ -408,46 +409,43 @@ def custom_agent_dict(cv_api, agent, client_id, client_name, temp_lock, client_a
     :param client_agent_list:
     :return:
     """
-    global agent_info_list, first_agent_tag, warning_client_num, sorted_num
-    with temp_lock:
-        print("发送请求。。。")
-        agent_type_name = agent["agentType"]
-        agent_id = agent["appId"]
-        job_list = cv_api.get_job_list(client_id, app_type_name=agent_type_name, time_sorted=True)
-        if job_list:
-            current_job = job_list[-1]
+    print("发送请求。。。")
+    agent_type_name = agent["agentType"]
+    agent_id = agent["appId"]
+    job_list = cv_api.get_job_list(client_id, app_type_name=agent_type_name, time_sorted=True)
+    if job_list:
+        current_job = job_list[-1]
 
-            if "失败" in current_job["status"] and first_agent_tag == 0:
-                first_agent_tag += 1
-                warning_client_num += 1
+        job_start_time = current_job["StartTime"]
+        job_backup_status = current_job["status"]
 
-            job_start_time = current_job["StartTime"]
-            job_backup_status = current_job["status"]
-            sorted_num += 1
+        return {
+            "client_id": client_id,
+            "client_name": client_name,
+            "agent_type_name": agent_type_name,
+            "agent_id": agent_id,
+            "job_start_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(job_start_time))),
+            "job_backup_status": job_backup_status,
+        }
+    else:
+        return None
 
-            agent_info_list.append({
-                "sorted_num": sorted_num,
-                "client_id": client_id,
-                "client_name": client_name,
-                "agent_type_name": agent_type_name,
-                "agent_id": agent_id,
-                "job_start_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(job_start_time))),
-                "job_backup_status": job_backup_status,
-                "client_agent_list_length": len(client_agent_list),
-            })
 
-#
-# agent_info_list = []
-# first_agent_tag = 0
-# warning_client_num = 0
-# sorted_num = 0
+def callback(future):
+    """
+    线程池回调函数
+    :param future:
+    :return:
+    """
+    if future.result():
+        agent_info_list.append(future.result())
+        # print(future.result())
 
 
 def index(request, funid):
     if request.user.is_authenticated():
         # 左侧菜单栏
-        # global funlist, agent_info_list, first_agent_tag, warning_client_num
-        global funlist, agent_info_list, first_agent_tag, warning_client_num, sorted_num
+        global funlist, agent_info_list
         funlist = []
         if request.user.is_superuser == 1:
             allfunlist = Fun.objects.all()
@@ -494,68 +492,43 @@ def index(request, funid):
         # 报警客户端
         warning_client_num = 0
 
-        sorted_num = 0
-
         whole_list = []
         client_order = 0
+
         # agents
         for client in client_list:
+            pool = ThreadPoolExecutor(max_workers=10)
+            # 线程池
             client_id = str(client["clientId"])
             client_name = client["clientName"]
             client_agent_list = cv_api.get_client_agent_list(client_id)
 
-            first_agent_tag = 0
-            # current_agent_thread_list = []
             agent_info_list = []
 
             for agent in client_agent_list:
-                print("-----------------")
-                #     temp_lock = threading.Lock()
-                #     current_agent_thread = threading.Thread(target=custom_agent_dict,
-                #                                             args=(cv_api, agent, client_id, client_name, temp_lock,
-                #                                                   client_agent_list))
-                #     current_agent_thread_list.append(current_agent_thread)
-                #     current_agent_thread.start()
-                # for i in current_agent_thread_list:
-                #     i.join()
-                agent_type_name = agent["agentType"]
-                agent_id = agent["appId"]
-                job_list = cv_api.get_job_list(client_id, app_type_name=agent_type_name, time_sorted=True)
-                if job_list:
-                    current_job = job_list[-1]
+                # 放入任务
+                t = pool.submit(custom_agent_dict, cv_api, agent, client_id, client_name)
+                t.add_done_callback(callback)
+            # 等待终止线程池
+            while True:
+                if t.done():
+                    break
+            pool.shutdown(wait=True)
 
-                    if "失败" in current_job["status"] and first_agent_tag == 0:
-                        first_agent_tag += 1
-                        warning_client_num += 1
-
-                    job_start_time = current_job["StartTime"]
-                    job_backup_status = current_job["status"]
-                    sorted_num += 1
-
-                    agent_info_list.append({
-                        "sorted_num": sorted_num,
-                        "client_id": client_id,
-                        "client_name": client_name,
-                        "agent_type_name": agent_type_name,
-                        "agent_id": agent_id,
-                        "job_start_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(job_start_time))),
-                        "job_backup_status": job_backup_status,
-                        "client_agent_list_length": len(client_agent_list),
-                    })
             if agent_info_list:
                 client_order += 1
-            whole_list.append({
-                "client_id": client_id,
-                "client_name": client_name,
-                "client_order": client_order,
-                "agent_info_list": sorted(agent_info_list, key=operator.itemgetter("sorted_num")),
-                "agent_length": len(agent_info_list)
-            })
+                whole_list.append({
+                    "client_id": client_id,
+                    "client_name": client_name,
+                    "client_order": client_order,
+                    "agent_info_list": agent_info_list,
+                    "agent_length": len(agent_info_list)
+                })
+                for i in agent_info_list:
+                    if "失败" in i["job_backup_status"]:
+                        warning_client_num += 1
+                        break
 
-        #
-        # with open("agent_list.json", "w") as f:
-        #     f.write(json.dumps(whole_list))
-        # 右上角消息任务
         return render(request, "index.html", {
             'username': request.user.userinfo.fullname,
             "homepage": True,

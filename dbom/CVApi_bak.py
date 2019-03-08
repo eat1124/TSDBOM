@@ -352,7 +352,7 @@ class CVApiOperate(CVRestApiCmd):
         获取客户端列表
         :return:
         """
-        self.client_list.clear()
+        client_list = []
         client_rec = {"clientName": None, "clientId": -1}
         client = self.get_cmd('/Client')
         if client is None:
@@ -365,8 +365,8 @@ class CVApiOperate(CVRestApiCmd):
                 rec["clientId"] = int(node.attrib["clientId"])
             except Exception as e:
                 print("get_client_list", e)
-            self.client_list.append(rec)
-        return self.client_list
+            client_list.append(rec)
+        return client_list
 
     def get_job_list(self, client_id, job_type="backup", app_type_name=None, backup_set_name=None,
                      sub_client_name=None, time_sorted=False):
@@ -379,6 +379,7 @@ class CVApiOperate(CVRestApiCmd):
         :param sub_client_name:
         :return:
         """
+        job_list = []
         status_list = {"Running": "运行", "Waiting": "等待", "Pending": "阻塞", "Suspend": "终止", "Completed": "完成",
                        "Failed": "失败", "Failed to Start": "启动失败", "Killed": "杀掉", "Queued": "队列中"}
         '''
@@ -397,7 +398,7 @@ class CVApiOperate(CVRestApiCmd):
         Failed to Start
         Killed
         '''
-        self.job_list.clear()
+        # self.job_list.clear()
 
         command = "/Job?clientId=<<clientId>>"
         param = ""
@@ -428,7 +429,7 @@ class CVApiOperate(CVRestApiCmd):
             except KeyError as e:
                 print("get_job_list", e)
                 node.attrib["status"] = status
-            self.job_list.append({
+            job_list.append({
                 "jobId": node.attrib["jobId"],
                 "client": node.attrib["destClientName"],
                 "status": node.attrib["status"],
@@ -442,8 +443,8 @@ class CVApiOperate(CVRestApiCmd):
                 "LastTime": node.attrib["lastUpdateTime"],
             })
         if time_sorted:
-            self.job_list = sorted(self.job_list, key=operator.itemgetter("StartTime"))
-        return self.job_list
+            job_list = sorted(job_list, key=operator.itemgetter("StartTime"))
+        return job_list
 
     def get_job_info(self, job_id):
         if job_id is None:
