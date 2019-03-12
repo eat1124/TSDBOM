@@ -140,7 +140,7 @@
                                                 <td> {{ agent.agent_type_name }}</td>
                                                 <td> {{ agent.job_start_time }}</td>
                                                 <td>
-                                                    <span class="label label-sm label-success"> {{ agent.job_backup_status }} </span>
+                                                    <span class="label label-sm {{ agent.status_label }}"> {{ agent.job_backup_status }} </span>
                                                 </td>
                                                 <td>
                                                     <span class="label label-sm label-success"> 正常 </span>

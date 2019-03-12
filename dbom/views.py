@@ -50,6 +50,8 @@ funlist = []
 
 info = {"web_addr": "192.168.100.149", "port": "81", "username": "admin", "pass_wd": "Admin@2017", "token": "",
         "last_login": 0}
+
+
 # info = {"web_addr": "192.168.1.121", "port": "81", "username": "admin", "pass_wd": "admin", "token": "",
 #         "last_login": 0}
 
@@ -408,6 +410,7 @@ def custom_concrete_job_list(cv_api, client_id, client_name):
     :param client_name:
     :return:
     """
+    # print(client_id)
     job_list = cv_api.get_job_list(client_id, time_sorted=True)
 
     agent_job_list = []
@@ -419,6 +422,13 @@ def custom_concrete_job_list(cv_api, client_id, client_name):
             if job["agentType"] in job_pre_agent_list:
                 continue
             else:
+                if job["status"] in ["运行", "正常", "等待", "QueuedCompleted", "Queued"]:
+                    status_label = "label-success"
+                elif job["status"] in ["阻塞", "Completed w/ one or more errors", "Completed w/ one or more warnings"]:
+                    status_label = "label-warning"
+                else:
+                    status_label = "label-danger"
+
                 job_pre_agent_list.append(job["agentType"])
                 agent_job_list.append({
                     "client_id": client_id,
@@ -426,6 +436,7 @@ def custom_concrete_job_list(cv_api, client_id, client_name):
                     "agent_type_name": job["agentType"],
                     "job_start_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(job["StartTime"]))),
                     "job_backup_status": job["status"],
+                    "status_label": status_label,
                 })
     # print(agent_job_list)
     return agent_job_list
@@ -501,26 +512,27 @@ def index(request, funid):
         # 客户端列表
         client_list = cv_api.get_client_list()
 
-        # 报警客户端  ???
+        # 报警客户端
         warning_client_num = 0
 
         whole_list = []
 
-        pool = ThreadPoolExecutor(max_workers=10)
+        if not whole_list:
+            pool = ThreadPoolExecutor(max_workers=10)
 
-        # agents
-        for client in client_list:
-            # 线程池
-            client_id = str(client["clientId"])
-            client_name = client["clientName"]
+            # agents
+            for client in client_list:
+                # 线程池
+                client_id = str(client["clientId"])
+                client_name = client["clientName"]
 
-            t = pool.submit(custom_concrete_job_list, cv_api, client_id, client_name)
-            t.add_done_callback(callback)
+                t = pool.submit(custom_concrete_job_list, cv_api, client_id, client_name)
+                t.add_done_callback(callback)
 
-        while True:
-            if t.done():
-                break
-        pool.shutdown(wait=True)
+            while True:
+                if t.done():
+                    break
+            pool.shutdown(wait=True)
 
         # with open("agent_list.json", "w") as f:
         #     f.write(json.dumps(whole_list))

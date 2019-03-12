@@ -384,8 +384,8 @@ class CVApiOperate(CVRestApiCmd):
         :return:
         """
         job_list = []
-        status_list = {"Running": "运行", "Waiting": "等待", "Pending": "阻塞", "Suspend": "终止", "Completed": "完成",
-                       "Failed": "失败", "Failed to Start": "启动失败", "Killed": "杀掉", "Queued": "队列中"}
+        status_list = {"Running": "运行", "Waiting": "等待", "Pending": "阻塞", "Suspend": "终止", "Completed": "正常",
+                       "Failed": "失败", "Failed to Start": "启动失败", "Killed": "杀掉"}
         '''
         Running
         Waiting
