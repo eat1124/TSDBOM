@@ -5,6 +5,7 @@ from lxml import etree
 import copy
 import threading
 import operator
+from concurrent.futures import ThreadPoolExecutor
 
 
 class CVRestApiToken(object):
@@ -313,6 +314,9 @@ class CVApiOperate(CVRestApiCmd):
         self.lock = threading.Lock()
         self.library_list = []
 
+        # 线程池
+        self.pool = ThreadPoolExecutor(max_workers=10)
+
     def get_sp_list(self):
         """
         获取所有存储策略
@@ -605,8 +609,18 @@ class CVApiOperate(CVRestApiCmd):
         except Exception as e:
             self.msg = "error get agent type"
             print(self.msg, e)
-        self.agent_list = agent_list
+        # self.agent_list = agent_list
         return agent_list
+
+    def async_get_several_agent_list(self, client_list):
+        """
+        获取多个客户端的模块列表
+        :param client_list:
+        :return:
+        """
+        for client in client_list:
+            c = self.pool.submit('')
+
 
     def get_client_info(self, client):
         """
@@ -1001,14 +1015,14 @@ if __name__ == "__main__":
     a = time.time()
     # credit_info = {"web_addr": "192.168.1.121", "port": "81", "username": "admin", "pass_wd": "admin", "token": "",
     #                "last_login": 0}
-    credit_info = {"web_addr": "cv-server", "port": "81", "username": "admin", "pass_wd": "Admin@2017", "token": "",
+    credit_info = {"web_addr": "192.168.100.149", "port": "81", "username": "admin", "pass_wd": "Admin@2017", "token": "",
                    "last_login": 0}
     cv_token = CVRestApiToken()
     cv_token.login(credit_info)
     print("-----成功登陆")
     c = time.time()
     cv_api = CVApiOperate(cv_token)
-    # sp = cv_api.get_client_list()  # 2357 11 12 13 14 22 24
+    sp = cv_api.get_client_list()  # 2357 11 12 13 14 22 24
     # sp = cv_api.custom_backup_tree_by_client(3)
     # sp = cv_api.get_sub_client_info(33)
     # sp = cv_api.get_backup_set_list(3)
@@ -1017,7 +1031,7 @@ if __name__ == "__main__":
     # sp = cv_api.get_library_list()
     # sp = cv_api.get_library_info("auxdisk")
     # sp = cv_api.get_job_info("4439132")
-    sp = cv_api.get_job_list("2")
+    # sp = cv_api.get_job_list("2")
     print(sp)
     # import json
     #

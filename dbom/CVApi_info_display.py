@@ -981,18 +981,18 @@ class CV_API(object):
 
 if __name__ == "__main__":
     # commvault-10
-    info = {"webaddr": "192.168.1.121", "port": "81", "username": "admin", "passwd": "admin", "token": "",
-            "lastlogin": 0}
-    # info = {"webaddr": "cv-server", "port": "81", "username": "admin", "passwd": "Admin@2017", "token": "",
+    # info = {"webaddr": "192.168.1.121", "port": "81", "username": "admin", "passwd": "admin", "token": "",
     #         "lastlogin": 0}
+    info = {"webaddr": "cv-server", "port": "81", "username": "admin", "passwd": "Admin@2017", "token": "",
+            "lastlogin": 0}
     # info = {"webaddr": "cv-server", "port": "81", "username": "cvadmin", "passwd": "1qaz@WSX", "token": "",
     #         "lastlogin": 0}
     cvToken = CV_RestApi_Token()
 
     cvToken.login(info)
     cvAPI = CV_API(cvToken)
-    # ret = cvAPI.getJobList(3)  # backup status
-    ret = cvAPI.get_backup_info_by_client("2")  # 备份策略统计
+    ret = cvAPI.getJobList(3)  # backup status
+    # ret = cvAPI.get_backup_info_by_client("2")  # 备份策略统计
     # ret = cvAPI.getClientList()
     # ret = cvAPI.getSubclientInfo("34")
     print("***********************", "\n", ret)

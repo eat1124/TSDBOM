@@ -48,8 +48,10 @@ from .CVApi_bak import CVRestApiToken, CVApiOperate
 
 funlist = []
 
-info = {"web_addr": "cv-server", "port": "81", "username": "admin", "pass_wd": "Admin@2017", "token": "",
+info = {"web_addr": "192.168.100.149", "port": "81", "username": "admin", "pass_wd": "Admin@2017", "token": "",
         "last_login": 0}
+# info = {"web_addr": "192.168.1.121", "port": "81", "username": "admin", "pass_wd": "admin", "token": "",
+#         "last_login": 0}
 
 
 def getfun(myfunlist, fun):
@@ -398,37 +400,35 @@ def get_server_time_very_second(request):
         return JsonResponse({"current_time": current_time.strftime('%Y-%m-%d %H:%M:%S')})
 
 
-def custom_agent_dict(cv_api, agent, client_id, client_name):
+def custom_concrete_job_list(cv_api, client_id, client_name):
     """
     并发请求所有agent下的job
     :param cv_api:
-    :param agent:
     :param client_id:
     :param client_name:
-    :param temp_lock:
-    :param client_agent_list:
     :return:
     """
-    print("发送请求。。。")
-    agent_type_name = agent["agentType"]
-    agent_id = agent["appId"]
-    job_list = cv_api.get_job_list(client_id, app_type_name=agent_type_name, time_sorted=True)
+    job_list = cv_api.get_job_list(client_id, time_sorted=True)
+
+    agent_job_list = []
+
+    job_pre_agent_list = []
+
     if job_list:
-        current_job = job_list[-1]
-
-        job_start_time = current_job["StartTime"]
-        job_backup_status = current_job["status"]
-
-        return {
-            "client_id": client_id,
-            "client_name": client_name,
-            "agent_type_name": agent_type_name,
-            "agent_id": agent_id,
-            "job_start_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(job_start_time))),
-            "job_backup_status": job_backup_status,
-        }
-    else:
-        return None
+        for job in job_list:
+            if job["agentType"] in job_pre_agent_list:
+                continue
+            else:
+                job_pre_agent_list.append(job["agentType"])
+                agent_job_list.append({
+                    "client_id": client_id,
+                    "client_name": client_name,
+                    "agent_type_name": job["agentType"],
+                    "job_start_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(job["StartTime"]))),
+                    "job_backup_status": job["status"],
+                })
+    # print(agent_job_list)
+    return agent_job_list
 
 
 def callback(future):
@@ -437,15 +437,27 @@ def callback(future):
     :param future:
     :return:
     """
+    global warning_client_num, whole_list
     if future.result():
-        agent_info_list.append(future.result())
+        whole_list.append({
+            "agent_job_list": future.result(),
+            "agent_length": len(future.result())
+        })
+        for job in future.result():
+            if "失败" in job["job_backup_status"]:
+                warning_client_num += 1
+                break
         # print(future.result())
+
+
+warning_client_num = 0
+whole_list = []
 
 
 def index(request, funid):
     if request.user.is_authenticated():
         # 左侧菜单栏
-        global funlist, agent_info_list
+        global funlist, whole_list, warning_client_num
         funlist = []
         if request.user.is_superuser == 1:
             allfunlist = Fun.objects.all()
@@ -489,46 +501,29 @@ def index(request, funid):
         # 客户端列表
         client_list = cv_api.get_client_list()
 
-        # 报警客户端
+        # 报警客户端  ???
         warning_client_num = 0
 
         whole_list = []
-        client_order = 0
+
+        pool = ThreadPoolExecutor(max_workers=10)
 
         # agents
         for client in client_list:
-            pool = ThreadPoolExecutor(max_workers=10)
             # 线程池
             client_id = str(client["clientId"])
             client_name = client["clientName"]
-            client_agent_list = cv_api.get_client_agent_list(client_id)
 
-            agent_info_list = []
+            t = pool.submit(custom_concrete_job_list, cv_api, client_id, client_name)
+            t.add_done_callback(callback)
 
-            for agent in client_agent_list:
-                # 放入任务
-                t = pool.submit(custom_agent_dict, cv_api, agent, client_id, client_name)
-                t.add_done_callback(callback)
-            # 等待终止线程池
-            while True:
-                if t.done():
-                    break
-            pool.shutdown(wait=True)
+        while True:
+            if t.done():
+                break
+        pool.shutdown(wait=True)
 
-            if agent_info_list:
-                client_order += 1
-                whole_list.append({
-                    "client_id": client_id,
-                    "client_name": client_name,
-                    "client_order": client_order,
-                    "agent_info_list": agent_info_list,
-                    "agent_length": len(agent_info_list)
-                })
-                for i in agent_info_list:
-                    if "失败" in i["job_backup_status"]:
-                        warning_client_num += 1
-                        break
-
+        # with open("agent_list.json", "w") as f:
+        #     f.write(json.dumps(whole_list))
         return render(request, "index.html", {
             'username': request.user.userinfo.fullname,
             "homepage": True,
