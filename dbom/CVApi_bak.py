@@ -413,6 +413,7 @@ class CVApiOperate(CVRestApiCmd):
                 "completedJobLookupTime": 604800,
                 "job_type": job_type,
             })
+        print(cmd)
         resp = self.get_cmd(cmd)
 
         if resp is None:
@@ -1040,6 +1041,7 @@ if __name__ == "__main__":
     # sp = cv_api.get_library_list()
     # sp = cv_api.get_library_info("auxdisk")
     # sp = cv_api.get_job_info("4440337")
+
     sp = cv_api.get_job_list("3", job_type="13", time_sorted=True)
     # sp = cv_api.get_job_list("1")
     print(len(sp), sp)
