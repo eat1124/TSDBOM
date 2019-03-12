@@ -124,7 +124,9 @@ class CVRestApiCmd(object):
             update = update_cmd.encode(encoding="utf-8")
         except:
             update = update_cmd
-        headers = {'Cookie2': token}
+        headers = {
+            'Cookie2': token,
+        }
 
         if rest_cmd == "GET":
             try:
@@ -182,11 +184,11 @@ class CVRestApiCmd(object):
         GET请求
         """
         ret = self._rest_cmd("GET", command, update_cmd)
-
+        print(ret)
         if write_down:
             import json
 
-            with open("test.xml", "w") as f:
+            with open("test01.xml", "w") as f:
                 f.write(ret.decode("utf-8"))
         try:
             return etree.XML(ret)
@@ -372,7 +374,7 @@ class CVApiOperate(CVRestApiCmd):
             client_list.append(rec)
         return client_list
 
-    def get_job_list(self, client_id, job_type="backup", app_type_name=None, backup_set_name=None,
+    def get_job_list(self, client_id, job_type="", app_type_name=None, backup_set_name=None,
                      sub_client_name=None, time_sorted=False):
         """
         获取作业信息
@@ -402,16 +404,15 @@ class CVApiOperate(CVRestApiCmd):
         Failed to Start
         Killed
         '''
-        # self.job_list.clear()
-
-        command = "/Job?clientId=<<clientId>>"
-        param = ""
-        if job_type is not None:
-            param = "&jobFilter=<<type>>"
-        cmd = command + param
-        cmd = cmd.replace("<<clientId>>", client_id)
-        cmd = cmd.replace("<<type>>", job_type)
-        resp = self.get_cmd(cmd, write_down=True)
+        cmd = """/Job?clientId={client_id}&limit={limit}&offset={offset}&completedJobLookupTime={completedJobLookupTime}&jobFilter={job_type}""".format(
+            **{
+                "client_id": client_id,
+                "limit": 100,
+                "offset": 0,
+                "completedJobLookupTime": 604800,
+                "job_type": job_type,
+            })
+        resp = self.get_cmd(cmd)
 
         if resp is None:
             return None
@@ -453,8 +454,15 @@ class CVApiOperate(CVRestApiCmd):
     def get_job_info(self, job_id):
         if job_id is None:
             return None
-        command = "/Job/{0}/AdvancedDetails?infoType={1}".format(job_id, 4)
-        resp = self.get_cmd(command, write_down=True)
+        job_info_list = []
+        command = "/Job/{0}".format(job_id)
+        resp = self.get_cmd(command)
+        if resp is None:
+            return None
+        active_physical_node = resp.findall(".//jobs/jobSummary")
+        for node in active_physical_node:
+            job_info_list.append(node.attrib)
+        return job_info_list
 
     def get_client(self, client):
         """
@@ -620,7 +628,6 @@ class CVApiOperate(CVRestApiCmd):
         """
         for client in client_list:
             c = self.pool.submit('')
-
 
     def get_client_info(self, client):
         """
@@ -1015,14 +1022,15 @@ if __name__ == "__main__":
     a = time.time()
     # credit_info = {"web_addr": "192.168.1.121", "port": "81", "username": "admin", "pass_wd": "admin", "token": "",
     #                "last_login": 0}
-    credit_info = {"web_addr": "192.168.100.149", "port": "81", "username": "admin", "pass_wd": "Admin@2017", "token": "",
+    credit_info = {"web_addr": "192.168.100.149", "port": "81", "username": "admin", "pass_wd": "Admin@2017",
+                   "token": "",
                    "last_login": 0}
     cv_token = CVRestApiToken()
     cv_token.login(credit_info)
     print("-----成功登陆")
     c = time.time()
     cv_api = CVApiOperate(cv_token)
-    sp = cv_api.get_client_list()  # 2357 11 12 13 14 22 24
+    # sp = cv_api.get_client_list()  # 2357 11 12 13 14 22 24
     # sp = cv_api.custom_backup_tree_by_client(3)
     # sp = cv_api.get_sub_client_info(33)
     # sp = cv_api.get_backup_set_list(3)
@@ -1030,9 +1038,10 @@ if __name__ == "__main__":
     # sp = cv_api.get_client_list()
     # sp = cv_api.get_library_list()
     # sp = cv_api.get_library_info("auxdisk")
-    # sp = cv_api.get_job_info("4439132")
-    # sp = cv_api.get_job_list("2")
-    print(sp)
+    # sp = cv_api.get_job_info("4440337")
+    sp = cv_api.get_job_list("3", job_type="13", time_sorted=True)
+    # sp = cv_api.get_job_list("1")
+    print(len(sp), sp)
     # import json
     #
     # with open("test1.json", "w") as f:
