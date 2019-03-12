@@ -383,6 +383,7 @@ class CVApiOperate(CVRestApiCmd):
         :param app_type_name:
         :param backup_set_name:
         :param sub_client_name:
+        :param time_sorted:
         :return:
         """
         job_list = []
