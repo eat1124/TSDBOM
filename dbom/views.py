@@ -19,7 +19,7 @@ import requests
 import threading
 from operator import itemgetter
 import operator
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from django.utils.timezone import utc
 from django.utils.timezone import localtime
@@ -402,7 +402,7 @@ def get_server_time_very_second(request):
         return JsonResponse({"current_time": current_time.strftime('%Y-%m-%d %H:%M:%S')})
 
 
-def custom_concrete_job_list(cv_api, client_id, client_name, whole_list):
+def custom_concrete_job_list(cv_api, client_id, client_name):
     """
     并发请求所有agent下的job
     :param cv_api:
@@ -436,10 +436,7 @@ def custom_concrete_job_list(cv_api, client_id, client_name, whole_list):
                     "job_backup_status": job["status"],
                     "status_label": status_label,
                 })
-        whole_list.append({
-            "agent_job_list": agent_job_list,
-            "agent_length": len(agent_job_list)
-        })
+        return agent_job_list
 
 
 def index(request, funid):
@@ -496,20 +493,16 @@ def index(request, funid):
 
         pool = ThreadPoolExecutor(max_workers=5)
 
-        # agents
-        for client in client_list:
-            # 线程池
-            client_id = str(client["clientId"])
-            client_name = client["clientName"]
-            t = pool.submit(custom_concrete_job_list, cv_api, client_id, client_name, whole_list)
+        # 并发
+        all_tasks = [pool.submit(custom_concrete_job_list, cv_api, client["clientId"], client["clientName"]) for client in client_list]
 
-        while True:
-            if t.done():
-                break
-        pool.shutdown(wait=True)
+        for future in as_completed(all_tasks):
+            if future.result():
+                whole_list.append({
+                    "agent_job_list": future.result(),
+                    "agent_length": len(future.result())
+                })
 
-        # with open("agent_list.json", "w") as f:
-        #     f.write(json.dumps(whole_list))
         return render(request, "index.html", {
             'username': request.user.userinfo.fullname,
             "homepage": True,
