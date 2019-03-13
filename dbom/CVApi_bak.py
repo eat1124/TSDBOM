@@ -119,7 +119,7 @@ class CVRestApiCmd(object):
             return None
 
         client_props_req = self.service + command
-
+        print("请求链接：", client_props_req)
         try:
             update = update_cmd.encode(encoding="utf-8")
         except:
@@ -184,12 +184,9 @@ class CVRestApiCmd(object):
         GET请求
         """
         ret = self._rest_cmd("GET", command, update_cmd)
-        print(ret)
-        if write_down:
-            import json
-
-            with open("test01.xml", "w") as f:
-                f.write(ret.decode("utf-8"))
+        if write_down and ret:
+            with open(r"C:\Users\Administrator\Desktop\lookup.xml", "w") as f:
+                f.write(ret.decode("utf-8") if ret else "")
         try:
             return etree.XML(ret)
         except Exception as e:
@@ -324,7 +321,7 @@ class CVApiOperate(CVRestApiCmd):
         获取所有存储策略
         :return:
         """
-        self.sp_list.clear()
+        sp_list = []
         storage_policy = self.get_cmd("StoragePolicy")
         if storage_policy is None:
             return None
@@ -334,8 +331,27 @@ class CVApiOperate(CVRestApiCmd):
                 continue
             if "System Create" in node.attrib["storagePolicyName"]:
                 continue
-            self.sp_list.append(node.attrib)
-        return self.sp_list
+            sp_list.append(node.attrib)
+        return sp_list
+
+    def get_sp_info(self, sp_id):
+        if sp_id is None:
+            return None
+        sp_info_list = []
+        command = "StoragePolicy/{0}?propertyLevel=10".format(sp_id)
+        resp = self.get_cmd(command, write_down=True)
+        if resp is None:
+            return None
+        active_physical_node = resp.findall(".//StoragePolicyCopy")
+        for node in active_physical_node:
+            sp_info_list.append(node.attrib)
+        return sp_info_list
+
+    def get_copy_from_sp(self, sp_id, copy_id):
+        command = "StoragePolicy/{0}/Copy/{1}".format(sp_id, copy_id)
+        resp = self.get_cmd(command)
+        # if resp is None:
+        #     return None
 
     def get_schedule_list(self):
         """
@@ -360,7 +376,7 @@ class CVApiOperate(CVRestApiCmd):
         """
         client_list = []
         client_rec = {"clientName": None, "clientId": -1}
-        client = self.get_cmd('/Client')
+        client = self.get_cmd('Client')
         if client is None:
             return None
         active_physical_node = client.findall(".//clientEntity")
@@ -375,7 +391,7 @@ class CVApiOperate(CVRestApiCmd):
         return client_list
 
     def get_job_list(self, client_id, job_type="", app_type_name=None, backup_set_name=None,
-                     sub_client_name=None, time_sorted=False):
+                     sub_client_name=None, time_sorted=False, period=604800):
         """
         获取作业信息
         :param client_id:
@@ -384,11 +400,14 @@ class CVApiOperate(CVRestApiCmd):
         :param backup_set_name:
         :param sub_client_name:
         :param time_sorted:
+        :param period: 默认一周内作业
         :return:
         """
         job_list = []
         status_list = {"Running": "运行", "Waiting": "等待", "Pending": "阻塞", "Suspend": "终止", "Completed": "正常",
-                       "Failed": "失败", "Failed to Start": "启动失败", "Killed": "杀掉"}
+                       "Failed": "失败", "Failed to Start": "启动失败", "Killed": "杀掉",
+                       "Completed w/ one or more errors": "已完成，但有一个或多个错误",
+                       "Completed w/ one or more warnings": "已完成，但有一个或多个警告"}
         '''
         Running
         Waiting
@@ -405,28 +424,28 @@ class CVApiOperate(CVRestApiCmd):
         Failed to Start
         Killed
         '''
-        cmd = """/Job?clientId={client_id}&limit={limit}&offset={offset}&completedJobLookupTime={completedJobLookupTime}&jobFilter={job_type}""".format(
+        cmd = """Job?clientId={client_id}&limit={limit}&offset={offset}&completedJobLookupTime={completedJobLookupTime}&jobFilter={job_type}""".format(
             **{
                 "client_id": client_id,
                 "limit": 100,
                 "offset": 0,
-                "completedJobLookupTime": 604800,
+                "completedJobLookupTime": period,  # 最近1周作业(s)
                 "job_type": job_type,
             })
-        print(cmd)
+        # cmd = "/Job?clientId=3&completedJobLookupTime=604800&jobFilter="
         resp = self.get_cmd(cmd)
 
         if resp is None:
             return None
         active_physical_node = resp.findall(".//jobs/jobSummary")
         for node in active_physical_node:
-            if app_type_name is not None:
+            if app_type_name:
                 if app_type_name not in node.attrib["appTypeName"]:
                     continue
-            if backup_set_name is not None:
+            if backup_set_name:
                 if backup_set_name not in node.attrib["backupSetName"]:
                     continue
-            if sub_client_name is not None:
+            if sub_client_name:
                 if sub_client_name not in node.attrib["subclientName"]:
                     continue
 
@@ -458,7 +477,7 @@ class CVApiOperate(CVRestApiCmd):
             return None
         job_info_list = []
         command = "/Job/{0}".format(job_id)
-        resp = self.get_cmd(command)
+        resp = self.get_cmd(command, write_down=True)
         if resp is None:
             return None
         active_physical_node = resp.findall(".//jobs/jobSummary")
@@ -621,15 +640,6 @@ class CVApiOperate(CVRestApiCmd):
             print(self.msg, e)
         # self.agent_list = agent_list
         return agent_list
-
-    def async_get_several_agent_list(self, client_list):
-        """
-        获取多个客户端的模块列表
-        :param client_list:
-        :return:
-        """
-        for client in client_list:
-            c = self.pool.submit('')
 
     def get_client_info(self, client):
         """
@@ -1040,15 +1050,19 @@ if __name__ == "__main__":
     # sp = cv_api.get_client_list()
     # sp = cv_api.get_library_list()
     # sp = cv_api.get_library_info("auxdisk")
-    # sp = cv_api.get_job_info("4440337")
-
-    sp = cv_api.get_job_list("3", job_type="13", time_sorted=True)
+    # sp = cv_api.get_job_info("4440441")
+    # sp = cv_api.get_job_list("2",app_type_name="File System")
     # sp = cv_api.get_job_list("1")
-    print(len(sp), sp)
-    # import json
-    #
-    # with open("test1.json", "w") as f:
-    #     f.write(json.dumps(sp))
+    # sp = cv_api.get_sp_list()
+    # sp = cv_api.get_sp_info("26")
+    sp = cv_api.get_copy_from_sp("26", "30")
+    # sp = cv_api.get_client_agent_list("3")
+    if sp:
+        print(len(sp), sp)
+    else:
+        print("没有数据")
+    # with open(r"C:\Users\Administrator\Desktop\lookup.json", "w") as f:
+    #     f.write(str(sp))
 
     b = time.time()
     print("登陆时间:", round(c - a, 3), "查询时间:", round(b - c, 3))

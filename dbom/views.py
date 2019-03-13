@@ -410,11 +410,9 @@ def custom_concrete_job_list(cv_api, client_id, client_name):
     :param client_name:
     :return:
     """
-    # print(client_id)
     job_list = cv_api.get_job_list(client_id, time_sorted=True)
 
     agent_job_list = []
-
     job_pre_agent_list = []
 
     if job_list:
@@ -438,7 +436,6 @@ def custom_concrete_job_list(cv_api, client_id, client_name):
                     "job_backup_status": job["status"],
                     "status_label": status_label,
                 })
-    # print(agent_job_list)
     return agent_job_list
 
 
@@ -449,7 +446,8 @@ def callback(future):
     :return:
     """
     global warning_client_num, whole_list
-    if future.result():
+    if future.result() and future.result() not in [i["agent_job_list"] for i in whole_list]:
+        print(future.result())
         whole_list.append({
             "agent_job_list": future.result(),
             "agent_length": len(future.result())
@@ -459,10 +457,6 @@ def callback(future):
                 warning_client_num += 1
                 break
         # print(future.result())
-
-
-warning_client_num = 0
-whole_list = []
 
 
 def index(request, funid):
@@ -517,22 +511,21 @@ def index(request, funid):
 
         whole_list = []
 
-        if not whole_list:
-            pool = ThreadPoolExecutor(max_workers=10)
+        pool = ThreadPoolExecutor(max_workers=5)
 
-            # agents
-            for client in client_list:
-                # 线程池
-                client_id = str(client["clientId"])
-                client_name = client["clientName"]
+        # agents
+        for client in client_list:
+            # 线程池
+            client_id = str(client["clientId"])
+            client_name = client["clientName"]
+            temp_lock = threading.Lock()
+            t = pool.submit(custom_concrete_job_list, cv_api, client_id, client_name)
+            t.add_done_callback(callback)
 
-                t = pool.submit(custom_concrete_job_list, cv_api, client_id, client_name)
-                t.add_done_callback(callback)
-
-            while True:
-                if t.done():
-                    break
-            pool.shutdown(wait=True)
+        while True:
+            if t.done():
+                break
+        pool.shutdown(wait=True)
 
         # with open("agent_list.json", "w") as f:
         #     f.write(json.dumps(whole_list))
