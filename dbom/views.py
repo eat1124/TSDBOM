@@ -402,7 +402,7 @@ def get_server_time_very_second(request):
         return JsonResponse({"current_time": current_time.strftime('%Y-%m-%d %H:%M:%S')})
 
 
-def custom_concrete_job_list(cv_api, client_id, client_name):
+def custom_concrete_job_list(cv_api, client_id, client_name, whole_list):
     """
     并发请求所有agent下的job
     :param cv_api:
@@ -436,27 +436,10 @@ def custom_concrete_job_list(cv_api, client_id, client_name):
                     "job_backup_status": job["status"],
                     "status_label": status_label,
                 })
-    return agent_job_list
-
-
-def callback(future):
-    """
-    线程池回调函数
-    :param future:
-    :return:
-    """
-    global warning_client_num, whole_list
-    if future.result() and future.result() not in [i["agent_job_list"] for i in whole_list]:
-        print(future.result())
         whole_list.append({
-            "agent_job_list": future.result(),
-            "agent_length": len(future.result())
+            "agent_job_list": agent_job_list,
+            "agent_length": len(agent_job_list)
         })
-        for job in future.result():
-            if "失败" in job["job_backup_status"]:
-                warning_client_num += 1
-                break
-        # print(future.result())
 
 
 def index(request, funid):
@@ -519,8 +502,8 @@ def index(request, funid):
             client_id = str(client["clientId"])
             client_name = client["clientName"]
             temp_lock = threading.Lock()
-            t = pool.submit(custom_concrete_job_list, cv_api, client_id, client_name)
-            t.add_done_callback(callback)
+            t = pool.submit(custom_concrete_job_list, cv_api, client_id, client_name, whole_list)
+            # t.add_done_callback(callback)
 
         while True:
             if t.done():
