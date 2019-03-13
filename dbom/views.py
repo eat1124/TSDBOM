@@ -422,7 +422,7 @@ def custom_concrete_job_list(cv_api, client_id, client_name):
             else:
                 if job["status"] in ["运行", "正常", "等待", "QueuedCompleted", "Queued"]:
                     status_label = "label-success"
-                elif job["status"] in ["阻塞", "Completed w/ one or more errors", "Completed w/ one or more warnings"]:
+                elif job["status"] in ["阻塞", "已完成，但有一个或多个错误", "已完成，但有一个或多个警告"]:
                     status_label = "label-warning"
                 else:
                     status_label = "label-danger"

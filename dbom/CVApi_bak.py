@@ -1051,7 +1051,7 @@ if __name__ == "__main__":
     # sp = cv_api.get_library_list()
     # sp = cv_api.get_library_info("auxdisk")
     # sp = cv_api.get_job_info("4440441")
-    # sp = cv_api.get_job_list("2",app_type_name="File System")
+    sp = cv_api.get_job_list("2",app_type_name="File System")
     # sp = cv_api.get_job_list("1")
     # sp = cv_api.get_sp_list()
     # sp = cv_api.get_sp_info("26")
