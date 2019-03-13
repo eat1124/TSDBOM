@@ -445,7 +445,7 @@ def custom_concrete_job_list(cv_api, client_id, client_name, whole_list):
 def index(request, funid):
     if request.user.is_authenticated():
         # 左侧菜单栏
-        global funlist, whole_list, warning_client_num
+        global funlist
         funlist = []
         if request.user.is_superuser == 1:
             allfunlist = Fun.objects.all()
@@ -501,9 +501,7 @@ def index(request, funid):
             # 线程池
             client_id = str(client["clientId"])
             client_name = client["clientName"]
-            temp_lock = threading.Lock()
             t = pool.submit(custom_concrete_job_list, cv_api, client_id, client_name, whole_list)
-            # t.add_done_callback(callback)
 
         while True:
             if t.done():
