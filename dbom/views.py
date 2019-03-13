@@ -502,6 +502,10 @@ def index(request, funid):
                     "agent_job_list": future.result(),
                     "agent_length": len(future.result())
                 })
+                for job in future.result():
+                    if "失败" in job["job_backup_status"]:
+                        warning_client_num += 1
+                        break
 
         return render(request, "index.html", {
             'username': request.user.userinfo.fullname,
