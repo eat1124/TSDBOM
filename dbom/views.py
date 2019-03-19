@@ -505,53 +505,55 @@ def index(request, funid):
                 value.sort = 0
         funlist = sorted(funlist, key=lambda fun: fun.sort)
 
-        # # 备份状态监控
-        # cv_token = CVRestApiToken()
-        # cv_token.login(info)
-        # print("登录成功。。。")
-        # cv_api = CVApiOperate(cv_token)
-        #
-        # # 服务状态/网络状态
-        # if cv_api.msg.startswith("连接失败") or cv_api.msg.startswith("登录失败"):
-        #     service_status = "中断"
-        #     net_status = "中断"
-        # else:
-        #     service_status = "正常"
-        #     net_status = "正常"
-        #
-        # # 客户端列表
-        # client_list = cv_api.get_client_list()
-        #
-        # # 报警客户端
-        # warning_client_num = 0
-        #
-        # whole_list = []
-        #
-        # pool = ThreadPoolExecutor(max_workers=5)
-        #
-        # # 并发
-        # all_tasks = [pool.submit(custom_concrete_job_list, cv_api, client["clientId"], client["clientName"]) for client in client_list]
-        #
-        # for future in as_completed(all_tasks):
-        #     if future.result():
-        #         whole_list.append({
-        #             "agent_job_list": future.result(),
-        #             "agent_length": len(future.result())
-        #         })
-        #         for job in future.result():
-        #             if "失败" in job["job_backup_status"]:
-        #                 warning_client_num += 1
-        #                 break
+        # 备份状态监控
+        cv_token = CVRestApiToken()
+        cv_token.login(info)
+        print("登录成功。。。")
+        cv_api = CVApiOperate(cv_token)
+
+        # 服务状态/网络状态
+        if cv_api.msg.startswith("连接失败") or cv_api.msg.startswith("登录失败"):
+            service_status = "中断"
+            net_status = "中断"
+        else:
+            service_status = "正常"
+            net_status = "正常"
+
+        # 客户端列表
+        client_list = cv_api.get_client_list()
+
+        # 报警客户端
+        warning_client_num = 0
+
+        whole_list = []
+
+        pool = ThreadPoolExecutor(max_workers=5)
+
+        # 并发
+        try:
+            all_tasks = [pool.submit(custom_concrete_job_list, cv_api, client["clientId"], client["clientName"]) for client in client_list]
+        except:
+            all_tasks = []
+        for future in as_completed(all_tasks):
+            if future.result():
+                whole_list.append({
+                    "agent_job_list": future.result(),
+                    "agent_length": len(future.result())
+                })
+                for job in future.result():
+                    if "失败" in job["job_backup_status"]:
+                        warning_client_num += 1
+                        break
 
         return render(request, "index.html", {
             'username': request.user.userinfo.fullname,
             "homepage": True,
             "pagefuns": getpagefuns(funid, request),
-            # "whole_list": whole_list,
-            # "service_status": service_status,
-            # "net_status": net_status,
-            # "warning_client_num": warning_client_num,
-            # "client_sum": len(client_list)
+            "whole_list": whole_list,
+            "service_status": service_status,
+            "net_status": net_status,
+            "warning_client_num": warning_client_num,
+            "client_sum": len(client_list) if client_list else ""
         })
     else:
         return HttpResponseRedirect("/login")
@@ -573,6 +575,7 @@ def inspection_report(request, funid):
         return HttpResponseRedirect("/login")
 
 
+@csrf_exempt
 def save_inspection(request):
     """
     保存巡检报告字段
@@ -582,8 +585,7 @@ def save_inspection(request):
     if request.user.is_authenticated():
         ret = request.POST
         print(ret)
-        return JsonResponse({"data":1})
-
+        return JsonResponse({"data": 1})
 
 
 def get_process_rto(request):
