@@ -6,6 +6,7 @@ import copy
 import threading
 import operator
 from concurrent.futures import ThreadPoolExecutor
+import json
 
 
 class CVRestApiToken(object):
@@ -186,7 +187,7 @@ class CVRestApiCmd(object):
         ret = self._rest_cmd("GET", command, update_cmd)
         if write_down and ret:
             with open(r"C:\Users\Administrator\Desktop\lookup.xml", "w") as f:
-                f.write(ret.decode("utf-8") if ret else "")
+                f.write(ret.decode("utf-8") or "")
         try:
             return etree.XML(ret)
         except Exception as e:
@@ -311,10 +312,27 @@ class CVApiOperate(CVRestApiCmd):
         self.is_new_client = True
         self._sub_client_list = []
         self.lock = threading.Lock()
-        self.library_list = []
 
         # 线程池
         self.pool = ThreadPoolExecutor(max_workers=10)
+
+    def get_console_alert_list(self):
+        """
+        控制台告警列表
+        :return:
+        """
+        alert_list = []
+        alert_rule = self.get_cmd("Alert?pageNo=1&pageCount=200")
+        if alert_rule is None:
+            return None
+
+        active_physical_node = alert_rule.xpath("//feedsList")
+        for feeds_list in active_physical_node:
+            alert_info = feeds_list.attrib
+            alert_time = feeds_list.xpath("./detectedTime")[0].attrib
+            alert_client = feeds_list.xpath("./client")[0].attrib
+            alert_list.append(dict(alert_info.items() + alert_time.items() + alert_client.items()))
+        return alert_list
 
     def get_sp_list(self):
         """
@@ -334,12 +352,28 @@ class CVApiOperate(CVRestApiCmd):
             sp_list.append(node.attrib)
         return sp_list
 
+    def get_sp_from_sub_client(self, sub_client_id):
+        """
+        获取子客户端关联存储策略
+        :param sub_client_id:
+        :return:
+        """
+        if sub_client_id is None:
+            return None
+        command = "Subclient/{0}".format(sub_client_id)
+        resp = self.get_cmd(command)
+        storage_policys = resp.xpath("//dataBackupStoragePolicy")
+        storage_policy_list = []
+        for storage_policy in storage_policys:
+            storage_policy_list.append(storage_policy.attrib)
+        return storage_policy_list
+
     def get_sp_info(self, sp_id):
         if sp_id is None:
             return None
         sp_info_list = []
         command = "StoragePolicy/{0}?propertyLevel=10".format(sp_id)
-        resp = self.get_cmd(command, write_down=True)
+        resp = self.get_cmd(command)
         if resp is None:
             return None
         active_physical_node = resp.findall(".//StoragePolicyCopy")
@@ -477,7 +511,7 @@ class CVApiOperate(CVRestApiCmd):
             return None
         job_info_list = []
         command = "/Job/{0}".format(job_id)
-        resp = self.get_cmd(command, write_down=True)
+        resp = self.get_cmd(command)
         if resp is None:
             return None
         active_physical_node = resp.findall(".//jobs/jobSummary")
@@ -655,6 +689,7 @@ class CVApiOperate(CVRestApiCmd):
         if self.get_client(client) is False:
             return None
         client_info = self.client_info
+        print("client_info", client_info)
         # 客户端安装时间
         self.is_new_client = False
         # get backupsetList
@@ -680,7 +715,7 @@ class CVApiOperate(CVRestApiCmd):
         my_content = []
         if sub_client_id is None:
             return None
-        command = "/Subclient/{0}".format(sub_client_id)
+        command = "Subclient/{0}".format(sub_client_id)
         resp = self.get_cmd(command)
         try:
             subClientEntity = resp.findall(".//subClientEntity")
@@ -965,7 +1000,7 @@ class CVApiOperate(CVRestApiCmd):
         获取库列表
         :return:
         """
-        self.library_list.clear()
+        library_list = []
         library = self.get_cmd('/Library')
         if library is None:
             return None
@@ -978,8 +1013,8 @@ class CVApiOperate(CVRestApiCmd):
                 library_dict["library_id"] = int(node.attrib["id"])
             except TypeError as e:
                 print("get_library_list", e)
-            self.library_list.append(library_dict)
-        return self.library_list
+            library_list.append(library_dict)
+        return library_list
 
     def get_library_info(self, library_name):
         """
@@ -1029,6 +1064,33 @@ class CVApiOperate(CVRestApiCmd):
             library_info["library_type"] = ""
         return library_info
 
+    def get_storage_pool_list(self):
+        """
+        获取存储池列表
+        :return:
+        """
+        storage_pool_list = []
+        storage_pool = self.get_cmd('/StoragePool')
+        if storage_pool is None:
+            return None
+        # active_physical_node = storage_pool.findall(".//entityInfo")
+        # for node in active_physical_node:
+        #     storage_pool = dict()
+        #
+        #     storage_pool["library_name"] = node.attrib["name"]
+        #     try:
+        #         storage_pool["library_id"] = int(node.attrib["id"])
+        #     except TypeError as e:
+        #         print("get_library_list", e)
+        #     storage_pool_list.append(storage_pool)
+        return storage_pool_list
+
+    def test(self):
+        temp_list = []
+        event = self.get_cmd('/Events')
+        if event is None:
+            return None
+
 
 if __name__ == "__main__":
     a = time.time()
@@ -1044,25 +1106,39 @@ if __name__ == "__main__":
     cv_api = CVApiOperate(cv_token)
     # sp = cv_api.get_client_list()  # 2357 11 12 13 14 22 24
     # sp = cv_api.custom_backup_tree_by_client(3)
-    # sp = cv_api.get_sub_client_info(33)
+    # sp = cv_api.get_sub_client_info(4)
+
     # sp = cv_api.get_backup_set_list(3)
     # sp = cv_api.get_client_instance(3)
     # sp = cv_api.get_client_list()
     # sp = cv_api.get_library_list()
     # sp = cv_api.get_library_info("auxdisk")
-    # sp = cv_api.get_job_info("4440441")
-    sp = cv_api.get_job_list("2",app_type_name="File System")
+    # sp = cv_api.get_job_info("4440437")
+    # sp = cv_api.get_job_list("2",app_type_name="File System")
     # sp = cv_api.get_job_list("1")
     # sp = cv_api.get_sp_list()
-    # sp = cv_api.get_sp_info("26")
-    sp = cv_api.get_copy_from_sp("26", "30")
+    sp = cv_api.get_sp_info("26")
+    # sp = cv_api.get_copy_from_sp("26", "30")
     # sp = cv_api.get_client_agent_list("3")
+    # sp = cv_api.get_console_alert_list()
+    # sp = cv_api.get_storage_pool_list()
+    # sp = cv_api.test()
+    # sp = cv_api.get_sub_client_list(3)
+    # sp = cv_api.get_sp_from_sub_client(4)
     if sp:
         print(len(sp), sp)
     else:
         print("没有数据")
-    # with open(r"C:\Users\Administrator\Desktop\lookup.json", "w") as f:
-    #     f.write(str(sp))
+    with open(r"C:\Users\Administrator\Desktop\lookup.json", "w") as f:
+        f.write(str(sp))
 
     b = time.time()
     print("登陆时间:", round(c - a, 3), "查询时间:", round(b - c, 3))
+    # import pymssql
+    # conn = pymssql.connect(host='192.168.100.149\COMMVAULT', user='sa_cloud', password='1qaz@WSX', database='CommServ')
+    # cur = conn.cursor()
+    # sql = """SELECT jobstatus, storagepolicy FROM [commserv].[dbo].[CommCellAuxCopyInfo] WHERE destcopyid=30 and storagepolicy LIKE 'SP-7DAY2'"""
+    # print("-----", sql)
+    # cur.execute(sql)
+    # aux_copy_info = cur.fetchall()
+    # print(aux_copy_info)

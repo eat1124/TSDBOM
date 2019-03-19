@@ -143,7 +143,7 @@
                                                     <span class="label label-sm {{ agent.status_label }}"> {{ agent.job_backup_status }} </span>
                                                 </td>
                                                 <td>
-                                                    <span class="label label-sm label-success"> 正常 </span>
+                                                    <span class="label label-sm {% if agent.aux_copy_info %}label-success{% endif %}"> {{ agent.aux_copy_info }} </span>
                                                 </td>
                                             </tr>
                                         {% endfor %}

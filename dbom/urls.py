@@ -21,20 +21,37 @@ urlpatterns = [
     url(r'^userpassword/$', userpassword),
 
     # 系统维护
-    url(r'^organization/$', organization, {'funid': '61'}),
+    url(r'^organization/$', organization, {'funid': '91'}),
     url(r'^orgdel/$', orgdel),
     url(r'^orgmove/$', orgmove),
     url(r'^orgpassword/$', orgpassword),
-    url(r'^group/$', group, {'funid': '62'}),
+    url(r'^group/$', group, {'funid': '92'}),
     url(r'^groupsave/$', groupsave),
     url(r'^groupdel/$', groupdel),
     url(r'^getusertree/$', getusertree),
     url(r'^groupsaveusertree/$', groupsaveusertree),
     url(r'^getfuntree/$', getfuntree),
     url(r'^groupsavefuntree/$', groupsavefuntree),
-    url(r'^function/$', function, {'funid': '63'}),
+    url(r'^function/$', function, {'funid': '93'}),
     url(r'^fundel/$', fundel),
     url(r'^funmove/$', funmove),
+
+    # 运维记录
+    url(r'^inspection/$', inspection_report, {'funid': 63}),  # 巡检报告
+    url(r'^save_inspection/$', save_inspection),
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     # 场景管理
     url(r'^scene/$', scene, {'funid': '70'}),
