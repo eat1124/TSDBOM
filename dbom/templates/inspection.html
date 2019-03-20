@@ -18,7 +18,7 @@
                 巡检报告
             </header>
             <div class="panel-body">
-                <form class="bs-example form-horizontal activate-form" id="formactivate">{% csrf_token %}
+                <form class="bs-example form-horizontal activate-form" id="inspection_form">{% csrf_token %}
                     <div class="form-body">
                         <div class="form-group">
                             <div class="col-md-5">
@@ -343,8 +343,8 @@
                             </div>
                             <label class="col-md-2 control-label">备注</label>
                             <div class="col-md-6">
-                                <input id="backup_plan_remark" autocomplete="off" type="text" name="backup_plan_remark"
-                                       class="form-control" placeholder="" value="{{ backup_plan_remark }}">
+                                <input id="backup_plan_run_remark" autocomplete="off" type="text" name="backup_plan_run_remark"
+                                       class="form-control" placeholder="" value="{{ backup_plan_run_remark }}">
                                 <div class="form-control-focus"></div>
                             </div>
                         </div>

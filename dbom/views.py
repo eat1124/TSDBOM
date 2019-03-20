@@ -583,7 +583,7 @@ def save_inspection(request):
     :return:
     """
     if request.user.is_authenticated():
-        ret = request.POST
+        ret = request.POST.get("inspection_data", "")
         print(ret)
         return JsonResponse({"data": 1})
 
