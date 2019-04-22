@@ -37,8 +37,9 @@ urlpatterns = [
     url(r'^funmove/$', funmove),
 
     # 运维记录
-    url(r'^inspection/$', inspection_report, {'funid': 63}),  # 巡检报告
+    url(r'^inspection/$', inspection_report, {'funid': 62}),  # 巡检报告
     url(r'^save_inspection/$', save_inspection),
+    url(r'^get_client_data/$', get_client_data),
 
 
 

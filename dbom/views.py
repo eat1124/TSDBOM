@@ -568,11 +568,38 @@ def inspection_report(request, funid):
     if request.user.is_authenticated():
         return render(request, "inspection.html", {
             'username': request.user.userinfo.fullname,
-            "homepage": True,
             "pagefuns": getpagefuns(funid, request),
         })
     else:
         return HttpResponseRedirect("/login")
+
+
+def get_client_data(request):
+    if request.user.is_authenticated():
+        client_id = request.POST.get("client_id", "")
+        try:
+            client_id = int(client_id)
+        except:
+            return JsonResponse({"ret": 0, "data": "该客户不存在。"})
+        cur_client_data = ClientData.objects.filter(id=client_id)
+        if cur_client_data.exists():
+            cur_client_data = cur_client_data[0]
+            return JsonResponse({
+                    "ret": 1,
+                    "data": {
+                        "client_name": cur_client_data.client_name,
+                        "address": cur_client_data.address,
+                        "contact": cur_client_data.contact,
+                        "position": cur_client_data.position,
+                        "tel": cur_client_data.tel,
+                        "fax": cur_client_data.fax,
+                        "email": cur_client_data.email,
+                    }
+                })
+        else:
+            return JsonResponse({"ret": 0, "data": "该客户不存在。"})
+    else:
+        return JsonResponse({"ret": 0, "data": "用户认证失败。"})
 
 
 @csrf_exempt
