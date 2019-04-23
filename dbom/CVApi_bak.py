@@ -1129,8 +1129,8 @@ if __name__ == "__main__":
         print(len(sp), sp)
     else:
         print("没有数据")
-    with open(r"C:\Users\Administrator\Desktop\lookup.json", "w") as f:
-        f.write(str(sp))
+    # with open(r"C:\Users\Administrator\Desktop\lookup.json", "w") as f:
+    #     f.write(str(sp))
 
     b = time.time()
     print("登陆时间:", round(c - a, 3), "查询时间:", round(b - c, 3))

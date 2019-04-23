@@ -566,13 +566,95 @@ def inspection_report(request, funid):
     :return:
     """
     if request.user.is_authenticated():
+        # 客户选项
+        all_client_data = ClientData.objects.exclude(state="9")
+        client_data_list = []
+        for client in all_client_data:
+            client_data_list.append({
+                "client_id": client.id,
+                "client_name": client.client_name,
+            })
+
         return render(request, "inspection.html", {
             'username': request.user.userinfo.fullname,
             "pagefuns": getpagefuns(funid, request),
+            "client_data_list": client_data_list,
         })
     else:
         return HttpResponseRedirect("/login")
 
+
+def inspection_report_data(request):
+    if request.user.is_authenticated():
+        result = []
+        all_inspection_report = InspectionReport.objects.exclude(state="9")
+        for inspection_report in all_inspection_report:
+            cur_client = inspection_report.client_data
+            cur_inspection_operate = inspection_report.inspection_operate
+
+            # 上次巡检时间
+
+            result.append({
+                # 1.客户资料
+                "client_id": cur_client.id,
+                "address": cur_client.address,
+                "contact": cur_client.contact,
+                "position": cur_client.position,
+                "tel": cur_client.tel,
+                "fax": cur_client.fax,
+                "email": cur_client.email,
+                # 2.巡检操作
+                "startdate":cur_inspection_operate.startdate.strftime("%Y-%m-%d") if cur_inspection_operate.startdate else "",
+                "enddate":cur_inspection_operate.enddate.strftime("%Y-%m-%d") if cur_inspection_operate.enddate else "",
+                "version":cur_inspection_operate.version,
+                "host_name":cur_inspection_operate.host_name,
+                "patch":cur_inspection_operate.patch,
+                "all_client":cur_inspection_operate.all_client,
+                "offline_client":cur_inspection_operate.offline_client,
+                "offline_client_content":cur_inspection_operate.offline_client_content,
+                "backup_time":cur_inspection_operate.backup_time,
+                "fail_time":cur_inspection_operate.fail_time,
+                "fail_log":cur_inspection_operate.fail_log,
+                "total_capacity":cur_inspection_operate.total_capacity,
+                "used_capacity":cur_inspection_operate.used_capacity,
+                "increase_capacity":cur_inspection_operate.increase_capacity,
+                # 3.报告信息
+                "inspection_id": inspection_report.id,
+                "report_title": inspection_report.title,
+                "client_name": cur_client.client_name,
+                "inspection_date": inspection_report.cur_date.strftime("%Y-%m-%d") if inspection_report.cur_date else "",
+                "engineer": inspection_report.engineer,
+                "last_inspection_date": inspection_report.last_date.strftime("%Y-%m-%d") if inspection_report.last_date else "",
+                "next_inspection_date": inspection_report.next_date.strftime("%Y-%m-%d") if inspection_report.next_date else "",
+                "hardware": inspection_report.hardware_error,
+                "hardware_error_content": inspection_report.hardware_error_content,
+                "software": inspection_report.software_error,
+                "software_error_content": inspection_report.software_error_content,
+                "aging_plan_run": inspection_report.aging_plan_run,
+                "aging_plan_run_remark": inspection_report.aging_plan_run_remark,
+                "backup_plan_run": inspection_report.backup_plan_run,
+                "backup_plan_run_remark": inspection_report.backup_plan_run_remark,
+                "running_status": inspection_report.running_status,
+                "running_remark": inspection_report.running_remark,
+                "client_add": inspection_report.client_add,
+                "client_add_remark": inspection_report.client_add_remark,
+                "backup_plan": inspection_report.backup_plan,
+                "backup_plan_remark": inspection_report.backup_plan_remark,
+                "aging_plan": inspection_report.aging_plan,
+                "aging_plan_remark": inspection_report.aging_plan_remark,
+                "error_send": inspection_report.error_send,
+                "error_send_remark": inspection_report.error_send_remark,
+                "cdr_running": inspection_report.cdr_running,
+                "cdr_running_remark": inspection_report.cdr_running_remark,
+                "media_run": inspection_report.media_run,
+                "media_run_remark": inspection_report.media_run_remark,
+                "extra_error_content": inspection_report.extra_error_content,
+                "suggestion_and_summary": inspection_report.suggestion_and_summary,
+                "client_sign": inspection_report.client_sign.strftime("%Y-%m-%d") if inspection_report.client_sign else "",
+                "engineer_sign": inspection_report.engineer_sign.strftime("%Y-%m-%d") if inspection_report.engineer_sign else "",
+            })
+
+        return JsonResponse({"data": result})
 
 def get_client_data(request):
     if request.user.is_authenticated():
@@ -602,7 +684,68 @@ def get_client_data(request):
         return JsonResponse({"ret": 0, "data": "用户认证失败。"})
 
 
-@csrf_exempt
+def get_clients_info(request):
+    if request.user.is_authenticated():
+        start_date = request.POST.get("start_date", "")
+        end_date = request.POST.get("end_date", "")
+
+        if start_date and end_date:
+            start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d")
+            end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d")
+        else:
+            return JsonResponse({"ret": 0, "data": "时间选择有误。"})
+
+        # 备份状态监控
+        cv_token = CVRestApiToken()
+        cv_token.login(info)
+        print("登录成功。。。")
+        cv_api = CVApiOperate(cv_token)
+
+        # 服务状态/网络状态
+        if cv_api.msg.startswith("连接失败") or cv_api.msg.startswith("登录失败"):
+            service_status = "中断"
+            net_status = "中断"
+        else:
+            service_status = "正常"
+            net_status = "正常"
+
+        # 客户端列表
+        client_list = cv_api.get_client_list()
+        # 脱机客户端
+
+        # 备份次数/失败次数
+        backup_time = 0
+        fail_time = 0
+        try:
+            conn = pymssql.connect(host='cv-server\COMMVAULT', user='sa_cloud', password='1qaz@WSX', database='CommServ')
+            cur = conn.cursor()
+        except:
+            print("链接失败!")
+        else:
+            try:
+                cur.execute(
+                    """SELECT [jobid] FROM [commserv].[dbo].[CommCellBackupInfo] WHERE startdate>='{0}' AND enddate<='{1}'""".format(start_date, end_date))
+                backup_time = len(cur.fetchall())
+            except:
+                print("备份任务不存在!")  
+            try:
+                cur.execute(
+                    """SELECT [jobid] FROM [commserv].[dbo].[CommCellBackupInfo] WHERE startdate>='{0}' AND enddate<='{1}' AND jobstatus!='Success'""".format(start_date, end_date))
+                fail_time = len(cur.fetchall())
+            except:
+                print("失败任务不存在!")  
+
+        # 存储总容量/已用容量/平均每月增长量
+
+        return JsonResponse({"ret": 1, "data":{
+            "all_client": len(client_list),
+            "backup_time": backup_time,
+            "fail_time": fail_time,
+        }})
+    else:
+        return JsonResponse({"ret": 0, "data": "用户认证失败。"})
+
+
 def save_inspection(request):
     """
     保存巡检报告字段
@@ -610,9 +753,311 @@ def save_inspection(request):
     :return:
     """
     if request.user.is_authenticated():
-        ret = request.POST.get("inspection_data", "")
-        print(ret)
-        return JsonResponse({"data": 1})
+        inspection_id = request.POST.get("inspection_id", "")
+        report_title = request.POST.get("report_title", "")
+        # 1.客户资料
+        client_id = request.POST.get("client_name", "")
+        engineer = request.POST.get("engineer", "")
+        inspection_date = request.POST.get("inspection_date", "")
+        last_inspection_date = request.POST.get("last_inspection_date", "")
+        next_inspection_date = request.POST.get("next_inspection_date", "")
+        startdate = request.POST.get("startdate", "")
+        enddate = request.POST.get("enddate", "")
+        version = request.POST.get("version", "")
+        host_name = request.POST.get("host_name", "")
+        patch = request.POST.get("patch", "")
+
+        # 2.巡检操作
+        all_client = request.POST.get("all_client", "")
+        offline_client = request.POST.get("offline_client", "")
+        backup_time = request.POST.get("backup_time", "")
+        fail_time = request.POST.get("fail_time", "")
+        fail_log = request.POST.get("fail_log", "")
+        total_capacity = request.POST.get("total_capacity", "")
+        used_capacity = request.POST.get("used_capacity", "")
+        increase_capacity = request.POST.get("increase_capacity", "")
+
+        # 3.系统错误报告
+        hardware = request.POST.get("hardware", "")
+        hardware_error_content = request.POST.get("hardware_error_content", "")
+
+        software = request.POST.get("software", "")
+        software_error_content = request.POST.get("software_error_content", "")
+
+        aging_plan_run = request.POST.get("aging_plan_run", "")
+        aging_plan_run_remark = request.POST.get("aging_plan_run_remark", "")
+
+        backup_plan_run = request.POST.get("backup_plan_run", "")
+        backup_plan_run_remark = request.POST.get("backup_plan_run_remark", "")
+
+        running_status = request.POST.get("running_status", "")
+        running_remark = request.POST.get("running_remark", "")
+
+        client_add = request.POST.get("client_add", "")
+        client_add_remark = request.POST.get("client_add_remark", "")
+
+        backup_plan = request.POST.get("backup_plan", "")
+        backup_plan_remark = request.POST.get("backup_plan_remark", "")
+
+        aging_plan = request.POST.get("aging_plan", "")
+        aging_plan_remark = request.POST.get("aging_plan_remark", "")
+
+        error_send = request.POST.get("error_send", "")
+        error_send_remark = request.POST.get("error_send_remark", "")
+
+        cdr_running = request.POST.get("cdr_running", "")
+        cdr_running_remark = request.POST.get("cdr_running_remark", "")
+
+        media_run = request.POST.get("media_run", "")
+        media_run_remark = request.POST.get("media_run_remark", "")
+
+        extra_error_content = request.POST.get("extra_error_content", "")
+        suggestion_and_summary = request.POST.get("suggestion_and_summary", "")
+        client_sign = request.POST.get("client_sign", "")
+        engineer_sign = request.POST.get("engineer_sign", "")
+
+        if report_title.strip() == "":
+            return JsonResponse({"ret": 0, "data": "报告标题不能为空。"})
+        if client_id.strip() == "":
+            return JsonResponse({"ret": 0, "data": "客户名称不能为空。"})
+        if engineer.strip() == "":
+            return JsonResponse({"ret": 0, "data": "责任工程师不能为空。"})
+        if startdate.strip() == "":
+            return JsonResponse({"ret": 0, "data": "开始时间不能为空。"})
+        if enddate.strip() == "":
+            return JsonResponse({"ret": 0, "data": "结束时间不能为空。"})
+        try:
+            inspection_id = int(inspection_id)
+        except:
+             return JsonResponse({"ret": 0, "data": "网络错误。"})
+        try:
+            client_id = int(client_id)
+        except:
+             return JsonResponse({"ret": 0, "data": "客户资料有误。"})
+        if inspection_date:
+            inspection_date = datetime.datetime.strptime(inspection_date, "%Y-%m-%d")
+        else:
+            inspection_date = None
+        if last_inspection_date:
+            last_inspection_date = datetime.datetime.strptime(last_inspection_date, "%Y-%m-%d") 
+        else:
+            last_inspection_date = None
+        if next_inspection_date:
+            next_inspection_date = datetime.datetime.strptime(next_inspection_date, "%Y-%m-%d") 
+        else:
+            next_inspection_date = None
+        if startdate:
+            startdate = datetime.datetime.strptime(startdate, "%Y-%m-%d")
+        else:
+            startdate = None
+        if enddate:
+            enddate = datetime.datetime.strptime(enddate, "%Y-%m-%d")   
+        else:
+            enddate = None
+
+        if all_client:
+            all_client = int(all_client)
+        else:
+            all_client = 0
+        if offline_client:
+            offline_client = int(offline_client)
+        else:
+            offline_client = 0
+        if backup_time:
+            backup_time = int(backup_time)
+        else:
+            backup_time = 0
+        if fail_time:
+            fail_time = int(fail_time)
+        else:
+            fail_time = 0
+        if total_capacity:
+            total_capacity = int(total_capacity)
+        else:
+            total_capacity = 0
+        if used_capacity:
+            used_capacity = int(used_capacity)
+        else:
+            used_capacity = 0
+        if increase_capacity:
+            increase_capacity = int(increase_capacity)
+        else:
+            increase_capacity = 0
+
+        if client_sign:
+            client_sign = datetime.datetime.strptime(client_sign, "%Y-%m-%d")
+        else:
+            client_sgin = None
+        if engineer_sign:
+            engineer_sign = datetime.datetime.strptime(engineer_sign, "%Y-%m-%d") 
+        else:
+            engineer_sign = None
+
+        # save add/modify
+        if not inspection_id:
+            inspection_report = InspectionReport()
+            inspection_operate = InspectionOperate()
+            try:
+                inspection_operate.startdate = startdate
+                inspection_operate.enddate = enddate
+                inspection_operate.version = version
+                inspection_operate.host_name = host_name
+                inspection_operate.patch = patch
+                inspection_operate.all_client = all_client
+                inspection_operate.offline_client = offline_client
+                inspection_operate.backup_time = backup_time
+                inspection_operate.fail_time = fail_time
+                inspection_operate.fail_log = fail_log
+                inspection_operate.total_capacity = total_capacity
+                inspection_operate.used_capacity = used_capacity
+                inspection_operate.increase_capacity = increase_capacity
+                inspection_operate.save()
+                inspection_report.client_data_id = client_id
+
+                inspection_report.title = report_title
+                inspection_report.cur_date = inspection_date
+                inspection_report.engineer = engineer
+                inspection_report.last_date = last_inspection_date
+                inspection_report.next_date = next_inspection_date
+
+                inspection_report.hardware_error = int(hardware)
+                inspection_report.hardware_error_content = hardware_error_content
+
+                inspection_report.software_error = int(software)
+                inspection_report.software_error_content = software_error_content
+
+                inspection_report.aging_plan_run = int(aging_plan_run)
+                inspection_report.aging_plan_run_remark = aging_plan_run_remark
+
+                inspection_report.backup_plan_run = int(backup_plan_run)
+                inspection_report.backup_plan_run_remark = backup_plan_run_remark
+
+                inspection_report.running_status = int(running_status)
+                inspection_report.running_remark = running_remark
+
+                inspection_report.client_add = int(client_add)
+                inspection_report.client_add_remark = client_add_remark
+
+                inspection_report.backup_plan = int(backup_plan)
+                inspection_report.backup_plan_remark = backup_plan_remark
+
+                inspection_report.aging_plan = int(aging_plan)
+                inspection_report.aging_plan_remark = aging_plan_remark
+
+                inspection_report.error_send = int(error_send)
+                inspection_report.error_send_remark = error_send_remark
+
+                inspection_report.cdr_running = int(cdr_running)
+                inspection_report.cdr_running_remark = cdr_running_remark
+
+                inspection_report.media_run = int(media_run)
+                inspection_report.media_run_remark = media_run_remark
+
+                inspection_report.extra_error_content = extra_error_content
+                inspection_report.suggestion_and_summary = suggestion_and_summary
+                inspection_report.client_sign = client_sign
+                inspection_report.engineer_sign = engineer_sign
+                inspection_report.save()
+            except Exception as e:
+                print(e)
+                return JsonResponse({"ret": 0, "data": "数据存储失败。"})
+            else:
+                return JsonResponse({"ret": 1, "data": "保存成功。"})
+        else:
+            inspection_operate = InspectionOperate()
+            try:
+                inspection_report = InspectionReport.objects.get(id=inspection_id)
+            except Exception as e:
+                return JsonResponse({"ret": 0, "data": "该巡检报告不存在。"})
+            try:
+                inspection_operate.startdate = startdate
+                inspection_operate.enddate = enddate
+                inspection_operate.version = version
+                inspection_operate.host_name = host_name
+                inspection_operate.patch = patch
+                inspection_operate.all_client = all_client
+                inspection_operate.offline_client = offline_client
+                inspection_operate.backup_time = backup_time
+                inspection_operate.fail_time = fail_time
+                inspection_operate.fail_log = fail_log
+                inspection_operate.total_capacity = total_capacity
+                inspection_operate.used_capacity = used_capacity
+                inspection_operate.increase_capacity = increase_capacity
+                inspection_operate.save()
+
+                inspection_report.client_data_id = client_id
+
+                inspection_report.title = report_title
+                inspection_report.cur_date = inspection_date
+                inspection_report.engineer = engineer
+                inspection_report.last_date = last_inspection_date
+                inspection_report.next_date = next_inspection_date
+
+                inspection_report.hardware_error = int(hardware)
+                inspection_report.hardware_error_content = hardware_error_content
+
+                inspection_report.software_error = int(software)
+                inspection_report.software_error_content = software_error_content
+
+                inspection_report.aging_plan_run = int(aging_plan_run)
+                inspection_report.aging_plan_run_remark = aging_plan_run_remark
+
+                inspection_report.backup_plan_run = int(backup_plan_run)
+                inspection_report.backup_plan_run_remark = backup_plan_run_remark
+
+                inspection_report.running_status = int(running_status)
+                inspection_report.running_remark = running_remark
+
+                inspection_report.client_add = int(client_add)
+                inspection_report.client_add_remark = client_add_remark
+
+                inspection_report.backup_plan = int(backup_plan)
+                inspection_report.backup_plan_remark = backup_plan_remark
+
+                inspection_report.aging_plan = int(aging_plan)
+                inspection_report.aging_plan_remark = aging_plan_remark
+
+                inspection_report.error_send = int(error_send)
+                inspection_report.error_send_remark = error_send_remark
+
+                inspection_report.cdr_running = int(cdr_running)
+                inspection_report.cdr_running_remark = cdr_running_remark
+
+                inspection_report.media_run = int(media_run)
+                inspection_report.media_run_remark = media_run_remark
+
+                inspection_report.extra_error_content = extra_error_content
+                inspection_report.suggestion_and_summary = suggestion_and_summary
+                inspection_report.client_sign = client_sign
+                inspection_report.engineer_sign = engineer_sign
+                inspection_report.save()
+            except:
+                return JsonResponse({"ret": 0, "data": "数据存储失败。"})
+            else:
+                return JsonResponse({"ret": 1, "data": '保存成功。'})
+    else:
+        return JsonResponse({"ret": 0, "data": "用户认证失败。"})
+
+
+def inspection_del(request):
+    if request.user.is_authenticated() and request.session['isadmin']:
+        if 'inspection_id' in request.POST:
+            inspection_id = request.POST.get('inspection_id', '')
+            try:
+                inspection_id = int(inspection_id)
+            except:
+                raise HttpResponse(0)
+
+            try:
+                inspection_report = InspectionReport.objects.get(id=inspection_id)
+                inspection_report.state = "9"
+                inspection_report.save()
+            except:
+                return HttpResponse(0)
+            else:
+                return HttpResponse(1)
+        else:
+            return HttpResponse(0)
 
 
 def get_process_rto(request):
