@@ -588,12 +588,16 @@ def inspection_report_data(request):
     if request.user.is_authenticated():
         result = []
         all_inspection_report = InspectionReport.objects.exclude(state="9")
+        last_inspection_report = ""
         for inspection_report in all_inspection_report:
             cur_client = inspection_report.client_data
             cur_inspection_operate = inspection_report.inspection_operate
 
             # 上次巡检时间
-
+            if last_inspection_report:
+                last_inspection_date = last_inspection_report.cur_date.strftime("%Y-%m-%d") if inspection_report.cur_date else ""
+            else:
+                last_inspection_date = ""
             result.append({
                 # 1.客户资料
                 "client_id": cur_client.id,
@@ -624,7 +628,7 @@ def inspection_report_data(request):
                 "client_name": cur_client.client_name,
                 "inspection_date": inspection_report.cur_date.strftime("%Y-%m-%d") if inspection_report.cur_date else "",
                 "engineer": inspection_report.engineer,
-                "last_inspection_date": inspection_report.last_date.strftime("%Y-%m-%d") if inspection_report.last_date else "",
+                "last_inspection_date": last_inspection_date,
                 "next_inspection_date": inspection_report.next_date.strftime("%Y-%m-%d") if inspection_report.next_date else "",
                 "hardware": inspection_report.hardware_error,
                 "hardware_error_content": inspection_report.hardware_error_content,
@@ -653,6 +657,7 @@ def inspection_report_data(request):
                 "client_sign": inspection_report.client_sign.strftime("%Y-%m-%d") if inspection_report.client_sign else "",
                 "engineer_sign": inspection_report.engineer_sign.strftime("%Y-%m-%d") if inspection_report.engineer_sign else "",
             })
+            last_inspection_report = inspection_report
 
         return JsonResponse({"data": result})
 
@@ -770,6 +775,7 @@ def save_inspection(request):
         # 2.巡检操作
         all_client = request.POST.get("all_client", "")
         offline_client = request.POST.get("offline_client", "")
+        offline_client_content = request.POST.get("offline_client_content", "")
         backup_time = request.POST.get("backup_time", "")
         fail_time = request.POST.get("fail_time", "")
         fail_log = request.POST.get("fail_log", "")
@@ -905,6 +911,7 @@ def save_inspection(request):
                 inspection_operate.patch = patch
                 inspection_operate.all_client = all_client
                 inspection_operate.offline_client = offline_client
+                inspection_operate.offline_client_content = offline_client_content
                 inspection_operate.backup_time = backup_time
                 inspection_operate.fail_time = fail_time
                 inspection_operate.fail_log = fail_log
@@ -912,6 +919,7 @@ def save_inspection(request):
                 inspection_operate.used_capacity = used_capacity
                 inspection_operate.increase_capacity = increase_capacity
                 inspection_operate.save()
+                inspection_report.inspection_operate = inspection_operate
                 inspection_report.client_data_id = client_id
 
                 inspection_report.title = report_title
@@ -964,9 +972,9 @@ def save_inspection(request):
             else:
                 return JsonResponse({"ret": 1, "data": "保存成功。"})
         else:
-            inspection_operate = InspectionOperate()
             try:
                 inspection_report = InspectionReport.objects.get(id=inspection_id)
+                inspection_operate = inspection_report.inspection_operate
             except Exception as e:
                 return JsonResponse({"ret": 0, "data": "该巡检报告不存在。"})
             try:
@@ -977,6 +985,7 @@ def save_inspection(request):
                 inspection_operate.patch = patch
                 inspection_operate.all_client = all_client
                 inspection_operate.offline_client = offline_client
+                inspection_operate.offline_client_content = offline_client_content
                 inspection_operate.backup_time = backup_time
                 inspection_operate.fail_time = fail_time
                 inspection_operate.fail_log = fail_log
@@ -985,6 +994,7 @@ def save_inspection(request):
                 inspection_operate.increase_capacity = increase_capacity
                 inspection_operate.save()
 
+                inspection_report.inspection_operate = inspection_operate
                 inspection_report.client_data_id = client_id
 
                 inspection_report.title = report_title

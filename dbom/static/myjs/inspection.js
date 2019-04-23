@@ -19,7 +19,7 @@ $(document).ready(function() {
             "targets": -1,
             "data": null,
             "width": "80px",
-            "defaultContent": "<button  id='edit' title='编辑' data-toggle='modal'  data-target='#static'  class='btn btn-xs btn-primary' type='button'><i class='fa fa-edit'></i></button><button title='删除'  id='delrow' class='btn btn-xs btn-primary' type='button'><i class='fa fa-trash-o'></i></button>"
+            "defaultContent": "<button  id='edit' title='编辑' data-toggle='modal'  data-target='#static'  class='btn btn-xs btn-primary' type='button'><i class='fa fa-search'></i></button><button title='删除'  id='delrow' class='btn btn-xs btn-primary' type='button'><i class='fa fa-trash-o'></i></button>"
         }],
         "oLanguage": {
             "sLengthMenu": "每页显示 _MENU_ 条记录",
@@ -65,6 +65,63 @@ $(document).ready(function() {
     $('#sample_1 tbody').on('click', 'button#edit', function() {
         var table = $('#sample_1').DataTable();
         var data = table.row($(this).parents('tr')).data();
+        // 隐藏
+        $('#report_title').prop("readonly", true);
+        $('#client_name').prop("disabled", true);
+        $('#inspection_date').prop("disabled", true);
+        $('#engineer').prop("readonly", true);
+        $('#next_inspection_date').prop("disabled", true);
+        $('#startdate').prop("disabled", true);
+        $('#enddate').prop("disabled", true);
+
+        $('#search_cv').css("visibility", "hidden");
+
+        $('#offline_client_content').prop("readonly", true);
+        $('#fail_log').prop("readonly", true);
+
+        $('input[name="hardware"]').prop("disabled", true);
+        $('#hardware_error_content').prop("readonly", true);
+
+        $('input[name="software"]').prop("disabled", true);
+        $('#software_error_content').prop("readonly", true);
+
+        $('input[name="aging_plan_run"]').prop("disabled", true);
+        $('#aging_plan_run_remark').prop("readonly", true);
+
+        $('input[name="backup_plan_run"]').prop("disabled", true);
+        $('#backup_plan_run_remark').prop("readonly", true);
+
+        $('input[name="running_status"]').prop("disabled", true);
+        $('#running_remark').prop("readonly", true);
+
+        $('input[name="client_add"]').prop("disabled", true);
+        $('#client_add_remark').prop("readonly", true);
+
+        $('input[name="backup_plan"]').prop("disabled", true);
+        $('#backup_plan_remark').prop("readonly", true);
+
+        $('input[name="aging_plan"]').prop("disabled", true);
+        $('#aging_plan_remark').prop("readonly", true);
+
+        $('input[name="error_send"]').prop("disabled", true);
+        $('#error_send_remark').prop("readonly", true);
+
+        $('input[name="cdr_running"]').prop("disabled", true);
+        $('#cdr_running_remark').prop("readonly", true);
+
+        $('input[name="media_run"]').prop("disabled", true);
+        $('#media_run_remark').prop("readonly", true);
+
+        $('#extra_error_content').prop("readonly", true);
+        $('#suggestion_and_summary').prop("readonly", true);
+        $('#media_run_remark').prop("readonly", true);
+
+        $('#client_sign').prop("disabled", true);
+        $('#engineer_sign').prop("disabled", true);
+
+        $('#inspection_save').hide();
+
+
         $("#inspection_id").val(data.inspection_id);
 
         $("#report_title").val(data.report_title);
@@ -135,6 +192,67 @@ $(document).ready(function() {
         $("#increase_capacity").val(data.increase_capacity);
     });
     $("#new").click(function() {
+        // radio重置
+        $("input:radio[value='0']").prop('checked', false);
+        $("input:radio[value='1']").prop('checked', true);
+
+        // 展示
+        $('#report_title').prop("readonly", false);
+        $('#client_name').prop("disabled", false);
+        $('#inspection_date').prop("disabled", false);
+        $('#engineer').prop("readonly", false);
+        $('#next_inspection_date').prop("disabled", false);
+        $('#startdate').prop("disabled", false);
+        $('#enddate').prop("disabled", false);
+
+        $('#search_cv').css("visibility", "visible");
+
+        $('#offline_client_content').prop("readonly", false);
+        $('#fail_log').prop("readonly", false);
+
+        $('input[name="hardware"]').prop("disabled", false);
+        $('#hardware_error_content').prop("readonly", false);
+
+        $('input[name="software"]').prop("disabled", false);
+        $('#software_error_content').prop("readonly", false);
+
+        $('input[name="aging_plan_run"]').prop("disabled", false);
+        $('#aging_plan_run_remark').prop("readonly", false);
+
+        $('input[name="backup_plan_run"]').prop("disabled", false);
+        $('#backup_plan_run_remark').prop("readonly", false);
+
+        $('input[name="running_status"]').prop("disabled", false);
+        $('#running_remark').prop("readonly", false);
+
+        $('input[name="client_add"]').prop("disabled", false);
+        $('#client_add_remark').prop("readonly", false);
+
+        $('input[name="backup_plan"]').prop("disabled", false);
+        $('#backup_plan_remark').prop("readonly", false);
+
+        $('input[name="aging_plan"]').prop("disabled", false);
+        $('#aging_plan_remark').prop("readonly", false);
+
+        $('input[name="error_send"]').prop("disabled", false);
+        $('#error_send_remark').prop("readonly", false);
+
+        $('input[name="cdr_running"]').prop("disabled", false);
+        $('#cdr_running_remark').prop("readonly", false);
+
+        $('input[name="media_run"]').prop("disabled", false);
+        $('#media_run_remark').prop("readonly", false);
+
+        $('#extra_error_content').prop("readonly", false);
+        $('#suggestion_and_summary').prop("readonly", false);
+        $('#media_run_remark').prop("readonly", false);
+
+        $('#client_sign').prop("disabled", false);
+        $('#engineer_sign').prop("disabled", false);
+
+        $('#inspection_save').show();
+
+
         $('#inspection_id').val(0);
         $("#report_title").val("");
         $("#client_name").val("");
