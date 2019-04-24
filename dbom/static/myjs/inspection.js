@@ -383,6 +383,8 @@ $('#search_cv').click(function () {
                     $("#all_client").val(data.data.all_client);
                     $("#backup_time").val(data.data.backup_time);
                     $("#fail_time").val(data.data.fail_time);
+                    $("#total_capacity").val(data.data.total_capacity);
+                    $("#used_capacity").val(data.data.total_available_capacity);
                 } else {
                     alert(data.data)
                 }

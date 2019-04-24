@@ -531,7 +531,8 @@ def index(request, funid):
 
         # 并发
         try:
-            all_tasks = [pool.submit(custom_concrete_job_list, cv_api, client["clientId"], client["clientName"]) for client in client_list]
+            all_tasks = [pool.submit(custom_concrete_job_list, cv_api, client["clientId"], client["clientName"]) for
+                         client in client_list]
         except:
             all_tasks = []
         for future in as_completed(all_tasks):
@@ -561,10 +562,9 @@ def index(request, funid):
 
 def client_data_index(request, funid):
     if request.user.is_authenticated():
-        return render(request, 'clients.html',
-                      {'username': request.user.userinfo.fullname,
-                       "pagefuns": getpagefuns(funid, request),},
-                       )
+        return render(request, 'clients.html', {'username': request.user.userinfo.fullname,
+                                                "pagefuns": getpagefuns(funid, request)
+                                                })
     else:
         return HttpResponseRedirect("/index")
 
@@ -585,6 +585,7 @@ def clients_data(request):
                 "email": client.email,
             })
         return JsonResponse({"data": result})
+
 
 def client_data_save(request):
     if request.user.is_authenticated():
@@ -725,28 +726,33 @@ def inspection_report_data(request):
                 "fax": cur_client.fax,
                 "email": cur_client.email,
                 # 2.巡检操作
-                "startdate":cur_inspection_operate.startdate.strftime("%Y-%m-%d") if cur_inspection_operate.startdate else "",
-                "enddate":cur_inspection_operate.enddate.strftime("%Y-%m-%d") if cur_inspection_operate.enddate else "",
-                "version":cur_inspection_operate.version,
-                "host_name":cur_inspection_operate.host_name,
-                "patch":cur_inspection_operate.patch,
-                "all_client":cur_inspection_operate.all_client,
-                "offline_client":cur_inspection_operate.offline_client,
-                "offline_client_content":cur_inspection_operate.offline_client_content,
-                "backup_time":cur_inspection_operate.backup_time,
-                "fail_time":cur_inspection_operate.fail_time,
-                "fail_log":cur_inspection_operate.fail_log,
-                "total_capacity":cur_inspection_operate.total_capacity,
-                "used_capacity":cur_inspection_operate.used_capacity,
-                "increase_capacity":cur_inspection_operate.increase_capacity,
+                "startdate": cur_inspection_operate.startdate.strftime(
+                    "%Y-%m-%d") if cur_inspection_operate.startdate else "",
+                "enddate": cur_inspection_operate.enddate.strftime(
+                    "%Y-%m-%d") if cur_inspection_operate.enddate else "",
+                "version": cur_inspection_operate.version,
+                "host_name": cur_inspection_operate.host_name,
+                "patch": cur_inspection_operate.patch,
+                "all_client": cur_inspection_operate.all_client,
+                "offline_client": cur_inspection_operate.offline_client,
+                "offline_client_content": cur_inspection_operate.offline_client_content,
+                "backup_time": cur_inspection_operate.backup_time,
+                "fail_time": cur_inspection_operate.fail_time,
+                "fail_log": cur_inspection_operate.fail_log,
+                "total_capacity": cur_inspection_operate.total_capacity,
+                "used_capacity": cur_inspection_operate.used_capacity,
+                "increase_capacity": cur_inspection_operate.increase_capacity,
                 # 3.报告信息
                 "inspection_id": inspection_report.id,
                 "report_title": inspection_report.title,
                 "client_name": cur_client.client_name,
-                "inspection_date": inspection_report.cur_date.strftime("%Y-%m-%d") if inspection_report.cur_date else "",
+                "inspection_date": inspection_report.cur_date.strftime(
+                    "%Y-%m-%d") if inspection_report.cur_date else "",
                 "engineer": inspection_report.engineer,
-                "last_inspection_date": inspection_report.last_date.strftime("%Y-%m-%d") if inspection_report.last_date else "",
-                "next_inspection_date": inspection_report.next_date.strftime("%Y-%m-%d") if inspection_report.next_date else "",
+                "last_inspection_date": inspection_report.last_date.strftime(
+                    "%Y-%m-%d") if inspection_report.last_date else "",
+                "next_inspection_date": inspection_report.next_date.strftime(
+                    "%Y-%m-%d") if inspection_report.next_date else "",
                 "hardware": inspection_report.hardware_error,
                 "hardware_error_content": inspection_report.hardware_error_content,
                 "software": inspection_report.software_error,
@@ -771,8 +777,10 @@ def inspection_report_data(request):
                 "media_run_remark": inspection_report.media_run_remark,
                 "extra_error_content": inspection_report.extra_error_content,
                 "suggestion_and_summary": inspection_report.suggestion_and_summary,
-                "client_sign": inspection_report.client_sign.strftime("%Y-%m-%d") if inspection_report.client_sign else "",
-                "engineer_sign": inspection_report.engineer_sign.strftime("%Y-%m-%d") if inspection_report.engineer_sign else "",
+                "client_sign": inspection_report.client_sign.strftime(
+                    "%Y-%m-%d") if inspection_report.client_sign else "",
+                "engineer_sign": inspection_report.engineer_sign.strftime(
+                    "%Y-%m-%d") if inspection_report.engineer_sign else "",
             })
             last_inspection_report = inspection_report
 
@@ -789,20 +797,21 @@ def get_client_data(request):
         cur_client_data = ClientData.objects.filter(id=client_id)
         if cur_client_data.exists():
             cur_client_data = cur_client_data[0]
-            cur_inspection_report = InspectionReport.objects.exclude(state="9").filter(client_data=cur_client_data).last()
+            cur_inspection_report = InspectionReport.objects.exclude(state="9").filter(
+                client_data=cur_client_data).last()
             return JsonResponse({
-                    "ret": 1,
-                    "data": {
-                        "client_name": cur_client_data.client_name,
-                        "address": cur_client_data.address,
-                        "contact": cur_client_data.contact,
-                        "position": cur_client_data.position,
-                        "tel": cur_client_data.tel,
-                        "fax": cur_client_data.fax,
-                        "email": cur_client_data.email,
-                        "last_inspection_date": cur_inspection_report.cur_date if cur_inspection_report else "",
-                    }
-                })
+                "ret": 1,
+                "data": {
+                    "client_name": cur_client_data.client_name,
+                    "address": cur_client_data.address,
+                    "contact": cur_client_data.contact,
+                    "position": cur_client_data.position,
+                    "tel": cur_client_data.tel,
+                    "fax": cur_client_data.fax,
+                    "email": cur_client_data.email,
+                    "last_inspection_date": cur_inspection_report.cur_date if cur_inspection_report else "",
+                }
+            })
         else:
             return JsonResponse({"ret": 0, "data": "该客户不存在。"})
     else:
@@ -826,14 +835,6 @@ def get_clients_info(request):
         print("登录成功。。。")
         cv_api = CVApiOperate(cv_token)
 
-        # 服务状态/网络状态
-        if cv_api.msg.startswith("连接失败") or cv_api.msg.startswith("登录失败"):
-            service_status = "中断"
-            net_status = "中断"
-        else:
-            service_status = "正常"
-            net_status = "正常"
-
         # 客户端列表
         client_list = cv_api.get_client_list()
         # 脱机客户端
@@ -842,30 +843,50 @@ def get_clients_info(request):
         backup_time = 0
         fail_time = 0
         try:
-            conn = pymssql.connect(host='cv-server\COMMVAULT', user='sa_cloud', password='1qaz@WSX', database='CommServ')
+            conn = pymssql.connect(host='cv-server\COMMVAULT', user='sa_cloud', password='1qaz@WSX',
+                                   database='CommServ')
             cur = conn.cursor()
         except:
             print("链接失败!")
         else:
             try:
                 cur.execute(
-                    """SELECT [jobid] FROM [commserv].[dbo].[CommCellBackupInfo] WHERE startdate>='{0}' AND enddate<='{1}'""".format(start_date, end_date))
+                    """SELECT [jobid] FROM [commserv].[dbo].[CommCellBackupInfo] WHERE startdate>='{0}' AND enddate<='{1}'""".format(
+                        start_date, end_date))
                 backup_time = len(cur.fetchall())
             except:
-                print("备份任务不存在!")  
+                print("备份任务不存在!")
             try:
                 cur.execute(
-                    """SELECT [jobid] FROM [commserv].[dbo].[CommCellBackupInfo] WHERE startdate>='{0}' AND enddate<='{1}' AND jobstatus!='Success'""".format(start_date, end_date))
+                    """SELECT [jobid] FROM [commserv].[dbo].[CommCellBackupInfo] WHERE startdate>='{0}' AND enddate<='{1}' AND jobstatus!='Success'""".format(
+                        start_date, end_date))
                 fail_time = len(cur.fetchall())
             except:
-                print("失败任务不存在!")  
+                print("失败任务不存在!")
 
         # 存储总容量/已用容量/平均每月增长量
+        total_capacity = 0
+        total_available_capacity = 0
+        library_list = cv_api.get_library_list()
+        for library in library_list:
+            library_info = cv_api.get_library_info(library["library_name"])
+            cur_total_capacity = library_info["total_capacity"]
+            cur_total_available_capacity = library_info["total_available_capacity"]
+            if "GB" in cur_total_capacity:
+                cur_total_capacity = float(cur_total_capacity[:-3])
+                total_capacity += cur_total_capacity
+            if "GB" in cur_total_available_capacity:
+                cur_total_available_capacity = float(cur_total_available_capacity[:-3])
+                total_available_capacity += cur_total_available_capacity
 
-        return JsonResponse({"ret": 1, "data":{
+        # print(total_capacity, total_available_capacity)
+        return JsonResponse({"ret": 1, "data": {
             "all_client": len(client_list),
             "backup_time": backup_time,
             "fail_time": fail_time,
+            "total_capacity": total_capacity,
+            "total_available_capacity": total_available_capacity,
+
         }})
     else:
         return JsonResponse({"ret": 0, "data": "用户认证失败。"})
@@ -955,21 +976,21 @@ def save_inspection(request):
         try:
             inspection_id = int(inspection_id)
         except:
-             return JsonResponse({"ret": 0, "data": "网络错误。"})
+            return JsonResponse({"ret": 0, "data": "网络错误。"})
         try:
             client_id = int(client_id)
         except:
-             return JsonResponse({"ret": 0, "data": "客户资料有误。"})
+            return JsonResponse({"ret": 0, "data": "客户资料有误。"})
         if inspection_date:
             inspection_date = datetime.datetime.strptime(inspection_date, "%Y-%m-%d")
         else:
             inspection_date = None
         if last_inspection_date:
-            last_inspection_date = datetime.datetime.strptime(last_inspection_date, "%Y-%m-%d") 
+            last_inspection_date = datetime.datetime.strptime(last_inspection_date, "%Y-%m-%d")
         else:
             last_inspection_date = None
         if next_inspection_date:
-            next_inspection_date = datetime.datetime.strptime(next_inspection_date, "%Y-%m-%d") 
+            next_inspection_date = datetime.datetime.strptime(next_inspection_date, "%Y-%m-%d")
         else:
             next_inspection_date = None
         if startdate:
@@ -977,7 +998,7 @@ def save_inspection(request):
         else:
             startdate = None
         if enddate:
-            enddate = datetime.datetime.strptime(enddate, "%Y-%m-%d")   
+            enddate = datetime.datetime.strptime(enddate, "%Y-%m-%d")
         else:
             enddate = None
 
@@ -1015,7 +1036,7 @@ def save_inspection(request):
         else:
             client_sgin = None
         if engineer_sign:
-            engineer_sign = datetime.datetime.strptime(engineer_sign, "%Y-%m-%d") 
+            engineer_sign = datetime.datetime.strptime(engineer_sign, "%Y-%m-%d")
         else:
             engineer_sign = None
 
@@ -4175,7 +4196,7 @@ def falconstorswitchdata(request):
         cursor = connection.cursor()
 
         exec_sql = """
-        select r.starttime, r.endtime, r.creatuser, r.state, r.process_id, r.id, r.run_reason, p.name, p.url, p.type from faconstor_processrun as r 
+        select r.starttime, r.endtime, r.creatuser, r.state, r.process_id, r.id, r.run_reason, p.name, p.url, p.type from faconstor_processrun as r
         left join faconstor_process as p on p.id = r.process_id where r.state != '9' and r.state != 'REJECT' and r.process_id = {0} order by r.starttime desc;
         """.format(process_id)
 
@@ -5720,7 +5741,7 @@ def falconstorsearchdata(request):
         cursor = connection.cursor()
 
         exec_sql = """
-        select r.starttime, r.endtime, r.creatuser, r.state, r.process_id, r.id, r.run_reason, p.name, p.url from faconstor_processrun as r 
+        select r.starttime, r.endtime, r.creatuser, r.state, r.process_id, r.id, r.run_reason, p.name, p.url from faconstor_processrun as r
         left join faconstor_process as p on p.id = r.process_id where r.state != '9' and r.state!='REJECT' and r.starttime between '{0}' and '{1}' order by r.starttime desc;
         """.format(start_time, end_time)
 
@@ -5734,43 +5755,43 @@ def falconstorsearchdata(request):
 
             if processname != "" and runstate != "":
                 exec_sql = """
-                select r.starttime, r.endtime, r.creatuser, r.state, r.process_id, r.id, r.run_reason, p.name, p.url from faconstor_processrun as r 
+                select r.starttime, r.endtime, r.creatuser, r.state, r.process_id, r.id, r.run_reason, p.name, p.url from faconstor_processrun as r
                 left join faconstor_process as p on p.id = r.process_id where r.state != '9' and r.state!='REJECT' and p.name='{0}' and r.state='{1}' and r.creatuser='{2}' and r.starttime between '{3}' and '{4}'  order by r.starttime desc;
                 """.format(processname, runstate, runperson, start_time, end_time)
 
             if processname == "" and runstate != "":
                 exec_sql = """
-                select r.starttime, r.endtime, r.creatuser, r.state, r.process_id, r.id, r.run_reason, p.name, p.url from faconstor_processrun as r 
+                select r.starttime, r.endtime, r.creatuser, r.state, r.process_id, r.id, r.run_reason, p.name, p.url from faconstor_processrun as r
                 left join faconstor_process as p on p.id = r.process_id where r.state != '9' and r.state!='REJECT' and r.state='{0}' and r.creatuser='{1}' and r.starttime between '{2}' and '{3}'  order by r.starttime desc;
                 """.format(runstate, runperson, start_time, end_time)
 
             if processname != "" and runstate == "":
                 exec_sql = """
-                select r.starttime, r.endtime, r.creatuser, r.state, r.process_id, r.id, r.run_reason, p.name, p.url from faconstor_processrun as r 
+                select r.starttime, r.endtime, r.creatuser, r.state, r.process_id, r.id, r.run_reason, p.name, p.url from faconstor_processrun as r
                 left join faconstor_process as p on p.id = r.process_id where r.state != '9' and r.state!='REJECT' and p.name='{0}' and r.creatuser='{1}' and r.starttime between '{2}' and '{3}'  order by r.starttime desc;
                 """.format(processname, runperson, start_time, end_time)
             if processname == "" and runstate == "":
                 exec_sql = """
-                select r.starttime, r.endtime, r.creatuser, r.state, r.process_id, r.id, r.run_reason, p.name, p.url from faconstor_processrun as r 
+                select r.starttime, r.endtime, r.creatuser, r.state, r.process_id, r.id, r.run_reason, p.name, p.url from faconstor_processrun as r
                 left join faconstor_process as p on p.id = r.process_id where r.state != '9' and r.state!='REJECT' and r.creatuser='{0}' and r.starttime between '{1}' and '{2}'  order by r.starttime desc;
                 """.format(runperson, start_time, end_time)
 
         else:
             if processname != "" and runstate != "":
                 exec_sql = """
-                select r.starttime, r.endtime, r.creatuser, r.state, r.process_id, r.id, r.run_reason, p.name, p.url from faconstor_processrun as r 
+                select r.starttime, r.endtime, r.creatuser, r.state, r.process_id, r.id, r.run_reason, p.name, p.url from faconstor_processrun as r
                 left join faconstor_process as p on p.id = r.process_id where r.state != '9' and r.state!='REJECT' and p.name='{0}' and r.state='{1}' and r.starttime between '{2}' and '{3}'  order by r.starttime desc;
                 """.format(processname, runstate, start_time, end_time)
 
             if processname == "" and runstate != "":
                 exec_sql = """
-                select r.starttime, r.endtime, r.creatuser, r.state, r.process_id, r.id, r.run_reason, p.name, p.url from faconstor_processrun as r 
+                select r.starttime, r.endtime, r.creatuser, r.state, r.process_id, r.id, r.run_reason, p.name, p.url from faconstor_processrun as r
                 left join faconstor_process as p on p.id = r.process_id where r.state != '9' and r.state!='REJECT' and r.state='{0}' and r.starttime between '{1}' and '{2}'  order by r.starttime desc;
                 """.format(runstate, start_time, end_time)
 
             if processname != "" and runstate == "":
                 exec_sql = """
-                select r.starttime, r.endtime, r.creatuser, r.state, r.process_id, r.id, r.run_reason, p.name, p.url from faconstor_processrun as r 
+                select r.starttime, r.endtime, r.creatuser, r.state, r.process_id, r.id, r.run_reason, p.name, p.url from faconstor_processrun as r
                 left join faconstor_process as p on p.id = r.process_id where r.state != '9' and r.state!='REJECT' and p.name='{0}' and r.starttime between '{1}' and '{2}'  order by r.starttime desc;
                 """.format(processname, start_time, end_time)
 
@@ -5838,25 +5859,25 @@ def tasksearchdata(request):
 
         cursor = connection.cursor()
         exec_sql = """
-        select t.id, t.content, t.starttime, t.endtime, t.type, t.processrun_id, p.name, p.url, t.state from faconstor_processtask as t 
+        select t.id, t.content, t.starttime, t.endtime, t.type, t.processrun_id, p.name, p.url, t.state from faconstor_processtask as t
         left join faconstor_processrun as r on t.processrun_id = r.id left join faconstor_process as p on p.id = r.process_id where t.type!='INFO' and r.state!='9' and t.starttime between '{0}' and '{1}' order by t.starttime desc;
         """.format(start_time, end_time)
 
         if task_type != "" and has_finished != "":
             exec_sql = """
-            select t.id, t.content, t.starttime, t.endtime, t.type, t.processrun_id, p.name, p.url, t.state from faconstor_processtask as t 
+            select t.id, t.content, t.starttime, t.endtime, t.type, t.processrun_id, p.name, p.url, t.state from faconstor_processtask as t
             left join faconstor_processrun as r on t.processrun_id = r.id left join faconstor_process as p on p.id = r.process_id where t.type='{0}' and r.state!='9' and t.state='{1}' and t.starttime between '{2}' and '{3}' order by t.starttime desc;
             """.format(task_type, has_finished, start_time, end_time)
 
         if task_type == "" and has_finished != "":
             exec_sql = """
-            select t.id, t.content, t.starttime, t.endtime, t.type, t.processrun_id, p.name, p.url, t.state from faconstor_processtask as t 
+            select t.id, t.content, t.starttime, t.endtime, t.type, t.processrun_id, p.name, p.url, t.state from faconstor_processtask as t
             left join faconstor_processrun as r on t.processrun_id = r.id left join faconstor_process as p on p.id = r.process_id where  t.type!='INFO' and r.state!='9' and t.state='{0}' and t.starttime between '{1}' and '{2}' order by t.starttime desc;
             """.format(has_finished, start_time, end_time)
 
         if task_type != "" and has_finished == "":
             exec_sql = """
-            select t.id, t.content, t.starttime, t.endtime, t.type, t.processrun_id, p.name, p.url, t.state from faconstor_processtask as t 
+            select t.id, t.content, t.starttime, t.endtime, t.type, t.processrun_id, p.name, p.url, t.state from faconstor_processtask as t
             left join faconstor_processrun as r on t.processrun_id = r.id left join faconstor_process as p on p.id = r.process_id where t.type='{0}' and r.state!='9' and t.starttime between '{1}' and '{2}' order by t.starttime desc;
             """.format(task_type, start_time, end_time)
 
