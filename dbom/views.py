@@ -559,6 +559,128 @@ def index(request, funid):
         return HttpResponseRedirect("/login")
 
 
+def client_data_index(request, funid):
+    if request.user.is_authenticated():
+        return render(request, 'clients.html',
+                      {'username': request.user.userinfo.fullname,
+                       "pagefuns": getpagefuns(funid, request),},
+                       )
+    else:
+        return HttpResponseRedirect("/index")
+
+
+def clients_data(request):
+    if request.user.is_authenticated():
+        result = []
+        clients_data = ClientData.objects.exclude(state="9")
+        for client in clients_data:
+            result.append({
+                "id": client.id,
+                "client_name": client.client_name,
+                "address": client.address,
+                "contact": client.contact,
+                "position": client.position,
+                "tel": client.tel,
+                "fax": client.fax,
+                "email": client.email,
+            })
+        return JsonResponse({"data": result})
+
+def client_data_save(request):
+    if request.user.is_authenticated():
+        client_id = request.POST.get("id", "")
+        client_name = request.POST.get("client_name", "")
+        address = request.POST.get("address", "")
+        contact = request.POST.get("contact", "")
+        position = request.POST.get("position", "")
+        tel = request.POST.get("tel", "")
+        fax = request.POST.get("fax", "")
+        email = request.POST.get("email", "")
+        try:
+            client_id = int(client_id)
+        except:
+            return JsonResponse({
+                "ret": 0,
+                "data": "网络错误。"
+            })
+
+        if client_name.strip() == "":
+            return JsonResponse({
+                "ret": 0,
+                "data": "必须填写客户名称。"
+            })
+        if contact.strip() == "":
+            return JsonResponse({
+                "ret": 0,
+                "data": "必须填写联系人。"
+            })
+        if client_id == 0:
+            try:
+                new_client_data = ClientData()
+                new_client_data.client_name = client_name
+                new_client_data.address = address
+                new_client_data.contact = contact
+                new_client_data.position = position
+                new_client_data.tel = tel
+                new_client_data.fax = fax
+                new_client_data.email = email
+                new_client_data.save()
+            except:
+                return JsonResponse({
+                    "ret": 0,
+                    "data": "客户信息保存失败。"
+                })
+            else:
+                return JsonResponse({
+                    "ret": 1,
+                    "data": "保存成功。"
+                })
+        else:
+            try:
+                new_client_data = ClientData.objects.get(id=client_id)
+                new_client_data.client_name = client_name
+                new_client_data.address = address
+                new_client_data.contact = contact
+                new_client_data.position = position
+                new_client_data.tel = tel
+                new_client_data.fax = fax
+                new_client_data.email = email
+                new_client_data.save()
+            except:
+                return JsonResponse({
+                    "ret": 0,
+                    "data": "客户信息修改失败。"
+                })
+            else:
+                return JsonResponse({
+                    "ret": 1,
+                    "data": "修改成功。"
+                })
+    else:
+        return JsonResponse({
+            "ret": 0,
+            "data": "用户认证失败。"
+        })
+
+
+def client_data_del(request):
+    if request.user.is_authenticated():
+        client_id = request.POST.get("id", "")
+        try:
+            client_id = int(client_id)
+        except:
+            return HttpResponse(0)
+        try:
+            cur_client_data = ClientData.objects.get(id=client_id)
+            cur_client_data.state = "9"
+            cur_client_data.save()
+            return HttpResponse(1)
+        except:
+            return HttpResponse(0)
+    else:
+        return HttpResponse(0)
+
+
 def inspection_report(request, funid):
     """
     巡检报告
@@ -593,11 +715,6 @@ def inspection_report_data(request):
             cur_client = inspection_report.client_data
             cur_inspection_operate = inspection_report.inspection_operate
 
-            # 上次巡检时间
-            if last_inspection_report:
-                last_inspection_date = last_inspection_report.cur_date.strftime("%Y-%m-%d") if inspection_report.cur_date else ""
-            else:
-                last_inspection_date = ""
             result.append({
                 # 1.客户资料
                 "client_id": cur_client.id,
@@ -628,7 +745,7 @@ def inspection_report_data(request):
                 "client_name": cur_client.client_name,
                 "inspection_date": inspection_report.cur_date.strftime("%Y-%m-%d") if inspection_report.cur_date else "",
                 "engineer": inspection_report.engineer,
-                "last_inspection_date": last_inspection_date,
+                "last_inspection_date": inspection_report.last_date.strftime("%Y-%m-%d") if inspection_report.last_date else "",
                 "next_inspection_date": inspection_report.next_date.strftime("%Y-%m-%d") if inspection_report.next_date else "",
                 "hardware": inspection_report.hardware_error,
                 "hardware_error_content": inspection_report.hardware_error_content,
@@ -661,6 +778,7 @@ def inspection_report_data(request):
 
         return JsonResponse({"data": result})
 
+
 def get_client_data(request):
     if request.user.is_authenticated():
         client_id = request.POST.get("client_id", "")
@@ -671,6 +789,7 @@ def get_client_data(request):
         cur_client_data = ClientData.objects.filter(id=client_id)
         if cur_client_data.exists():
             cur_client_data = cur_client_data[0]
+            cur_inspection_report = InspectionReport.objects.exclude(state="9").filter(client_data=cur_client_data).last()
             return JsonResponse({
                     "ret": 1,
                     "data": {
@@ -681,6 +800,7 @@ def get_client_data(request):
                         "tel": cur_client_data.tel,
                         "fax": cur_client_data.fax,
                         "email": cur_client_data.email,
+                        "last_inspection_date": cur_inspection_report.cur_date if cur_inspection_report else "",
                     }
                 })
         else:
@@ -1044,7 +1164,7 @@ def save_inspection(request):
             except:
                 return JsonResponse({"ret": 0, "data": "数据存储失败。"})
             else:
-                return JsonResponse({"ret": 1, "data": '保存成功。'})
+                return JsonResponse({"ret": 1, "data": '修改成功。'})
     else:
         return JsonResponse({"ret": 0, "data": "用户认证失败。"})
 

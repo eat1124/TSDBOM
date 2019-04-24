@@ -42,7 +42,13 @@ urlpatterns = [
     url(r'^get_client_data/$', get_client_data),  # 客户信息
     url(r'^get_clients_info/$', get_clients_info),  
     url(r'^inspection_report_data/$', inspection_report_data),  
-    url(r'^inspection_del/$', inspection_del),  
+    url(r'^inspection_del/$', inspection_del), 
+
+    # 客户录入 
+    url(r'^clients/$', client_data_index, {'funid': 95}),  
+    url(r'^clients_data/$', clients_data),  
+    url(r'^client_data_save/$', client_data_save),  
+    url(r'^client_data_del/$', client_data_del),  
 
 
 
