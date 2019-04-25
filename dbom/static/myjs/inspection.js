@@ -371,7 +371,7 @@ $('#search_cv').click(function () {
         $('#enddate').val(start_date);
     } else {
         // 加载...
-        $(this).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true">\n' +
+        $(this).html('<span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true">\n' +
             '</span>\n' + 'Loading...').css("pointer-events","none");
         $('#search_tag').val("load");
         $.ajax({
@@ -392,6 +392,9 @@ $('#search_cv').click(function () {
                     $("#fail_time").val(data.data.fail_time);
                     $("#total_capacity").val(data.data.total_capacity);
                     $("#used_capacity").val(data.data.total_available_capacity);
+                    $("#version").val(data.data.version);
+                    $("#host_name").val(data.data.host_name);
+                    $("#patch").val(data.data.patch);
                 } else {
                     alert(data.data)
                 }

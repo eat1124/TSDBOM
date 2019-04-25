@@ -1,6 +1,41 @@
 ﻿﻿{% extends "base1.html" %}
 {% block content %}
     {% csrf_token %}
+    <style>
+        @-webkit-keyframes spinner-grow {
+            0% {
+                -webkit-transform: scale(0);
+                transform: scale(0);
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+        @keyframes spinner-grow {
+            0% {
+                -webkit-transform: scale(0);
+                transform: scale(0);
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+        .spinner-grow {
+            display: inline-block;
+            width: 2rem;
+            height: 2rem;
+            vertical-align: text-bottom;
+            background-color: currentColor;
+            border-radius: 50%;
+            opacity: 0;
+            -webkit-animation: spinner-grow .75s linear infinite;
+            animation: spinner-grow .75s linear infinite;
+        }
+        .spinner-grow-sm {
+            width: 1rem;
+            height: 1rem;
+        }
+    </style>
     <div style="height:10px"></div>
     <div class="table-toolbar">
         <div id="error">
@@ -175,7 +210,8 @@
                                 </div>
                                 <div class="col-md-2"></div>
                                 <div class="col-md-2">
-                                    <a href="javascript:;" class="btn default" id='search_cv'> 查询<i class="fa fa-search"></i></a>
+                                    <a href="javascript:;" class="btn default" id='search_cv'> 查询<i
+                                            class="fa fa-search"></i></a>
                                     <input type="text" id="search_tag" value="" hidden>
                                 </div>
                             </div>

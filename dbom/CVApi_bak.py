@@ -382,7 +382,7 @@ class CVApiOperate(CVRestApiCmd):
         return sp_info_list
 
     def get_copy_from_sp(self, sp_id, copy_id):
-        command = "StoragePolicy/{0}/Copy/{1}".format(sp_id, copy_id)
+        command = "V2/StoragePolicy/{0}/Copy/{1}".format(sp_id, copy_id)
         resp = self.get_cmd(command)
         # if resp is None:
         #     return None
@@ -534,9 +534,14 @@ class CVApiOperate(CVRestApiCmd):
             client_entity = resp.findall(".//clientEntity")
             if not client_entity:
                 return False
+            # versionInfo,GalaxyRelease
+            version_info = resp.findall(".//versionInfo")
+            galaxy_release = resp.findall(".//GalaxyRelease")
 
             client_info["clientId"] = client_entity[0].attrib["clientId"]
             client_info["clientName"] = client_entity[0].attrib["clientName"]
+            client_info["versionInfo"] = version_info[0].attrib["version"]
+            client_info["GalaxyRelease"] = galaxy_release[0].attrib["ReleaseString"]
         else:
             command = "GetId?clientName={0}".format(client)
             resp = self.get_cmd(command)
@@ -689,7 +694,6 @@ class CVApiOperate(CVRestApiCmd):
         if self.get_client(client) is False:
             return None
         client_info = self.client_info
-        print("client_info", client_info)
         # 客户端安装时间
         self.is_new_client = False
         # get backupsetList
@@ -701,6 +705,48 @@ class CVApiOperate(CVRestApiCmd):
         if (client_info["platform"]["platform"]).upper() == "ANY":
             client_info["instance"] = self.get_client_instance(client_info["clientId"])
         return client_info
+
+    def get_client_info_by_id(self, client_id):
+        client_info = {}
+        if isinstance(client_id, int):
+            command = "Client/{0}".format(str(client_id))
+            resp = self.get_cmd(command, write_down=True)
+            if resp is None:
+                return None
+            client_entity = resp.findall(".//clientEntity")
+            if not client_entity:
+                return None
+            # versionInfo,GalaxyRelease
+            version_info = resp.findall(".//versionInfo")
+            galaxy_release = resp.findall(".//GalaxyRelease")
+
+            client_info["clientId"] = client_entity[0].attrib["clientId"]
+            client_info["clientName"] = client_entity[0].attrib["clientName"]
+            client_info["commCellName"] = client_entity[0].attrib["commCellName"]
+            client_info["versionInfo"] = version_info[0].attrib["version"]
+            client_info["GalaxyRelease"] = galaxy_release[0].attrib["ReleaseString"]
+            return client_info
+        else:
+            return None
+
+    def get_client_info_by_name(self, client_name):
+        if isinstance(client_name, str):
+            command = "GetId?clientName={0}".format(client_name)
+            resp = self.get_cmd(command)
+            if resp is None:
+                return None
+
+            client_id = resp.attrib["clientId"]
+            try:
+                client_id = int(client_id)
+            except:
+                return False
+            if client_id <= 0:
+                return False
+            client_info = self.get_client_info_by_id(client_id)
+            return client_info
+        else:
+            return None
 
     def get_is_new_client(self):
         return self.is_new_client
@@ -1105,6 +1151,7 @@ if __name__ == "__main__":
     c = time.time()
     cv_api = CVApiOperate(cv_token)
     # sp = cv_api.get_client_list()  # 2357 11 12 13 14 22 24
+    sp = cv_api.get_client_info("cv-server")  # 2357 11 12 13 14 22 24
     # sp = cv_api.custom_backup_tree_by_client(3)
     # sp = cv_api.get_sub_client_info(4)
 
@@ -1117,8 +1164,8 @@ if __name__ == "__main__":
     # sp = cv_api.get_job_list("2",app_type_name="File System")
     # sp = cv_api.get_job_list("1")
     # sp = cv_api.get_sp_list()
-    sp = cv_api.get_sp_info("26")
-    # sp = cv_api.get_copy_from_sp("26", "30")
+    # sp = cv_api.get_sp_info("26")
+    # sp = cv_api.get_copy_from_sp("26", "25")
     # sp = cv_api.get_client_agent_list("3")
     # sp = cv_api.get_console_alert_list()
     # sp = cv_api.get_storage_pool_list()

@@ -835,6 +835,13 @@ def get_clients_info(request):
         print("登录成功。。。")
         cv_api = CVApiOperate(cv_token)
 
+        # 客户端版本/主机名/补丁
+        cv_server_client_info = cv_api.get_client_info_by_name("cv-server")
+        # cv_server_client_info = cv_api.get_client_info_by_id("3")
+        client_name = cv_server_client_info["clientName"]
+        client_version = cv_server_client_info["GalaxyRelease"]
+        patch = cv_server_client_info["versionInfo"]
+
         # 客户端列表
         client_list = cv_api.get_client_list()
         # 脱机客户端
@@ -881,6 +888,9 @@ def get_clients_info(request):
 
         # print(total_capacity, total_available_capacity)
         return JsonResponse({"ret": 1, "data": {
+            "host_name": client_name,
+            "version": client_version,
+            "patch": patch,
             "all_client": len(client_list),
             "backup_time": backup_time,
             "fail_time": fail_time,
