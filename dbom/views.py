@@ -884,9 +884,8 @@ def get_clients_info(request):
             "all_client": len(client_list),
             "backup_time": backup_time,
             "fail_time": fail_time,
-            "total_capacity": total_capacity,
-            "total_available_capacity": total_available_capacity,
-
+            "total_capacity": "%.2f" % total_capacity,
+            "total_available_capacity": "%.2f" % total_available_capacity,
         }})
     else:
         return JsonResponse({"ret": 0, "data": "用户认证失败。"})

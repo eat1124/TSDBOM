@@ -370,6 +370,10 @@ $('#search_cv').click(function () {
         alert("结束时间不可小于开始时间，请重新选择。");
         $('#enddate').val(start_date);
     } else {
+        // 加载...
+        $(this).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true">\n' +
+            '</span>\n' + 'Loading...').css("pointer-events","none");
+        $('#search_tag').val("load");
         $.ajax({
             type: "POST",
             url: "../get_clients_info/",
@@ -379,6 +383,9 @@ $('#search_cv').click(function () {
                 "csrfmiddlewaretoken": csrfToken,
             },
             success: function (data) {
+                // 取消加载
+                $('#search_cv').html('查询<i class="fa fa-search"></i>').css("pointer-events","auto");
+                $('#search_tag').val("");
                 if (data.ret == 1) {
                     $("#all_client").val(data.data.all_client);
                     $("#backup_time").val(data.data.backup_time);
@@ -422,10 +429,14 @@ $("#inspection_save").click(function () {
     var next_inspection_date = $('#next_inspection_date').val();
     var inspection_date_sec = new Date(inspection_date);
     var next_inspection_date_sec = new Date(next_inspection_date);
+
+    var search_tag = $('#search_tag').val();
     if (next_inspection_date_sec.getTime() < inspection_date_sec.getTime()) {
         alert("下次时间不可小于本次巡检时间，请重新选择。");
         $('#next_inspection_date').val(inspection_date);
-    } else {
+    } else if(search_tag=="load"){
+        alert("正在载入客户端数据，不可操作。");
+    } else{
         var inspection_data = $('#inspection_form').serialize();
 
         $.ajax({
