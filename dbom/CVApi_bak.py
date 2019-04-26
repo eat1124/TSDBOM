@@ -732,7 +732,7 @@ class CVApiOperate(CVRestApiCmd):
     def get_client_info_by_name(self, client_name):
         if isinstance(client_name, str):
             command = "GetId?clientName={0}".format(client_name)
-            resp = self.get_cmd(command)
+            resp = self.get_cmd(command, write_down=True)
             if resp is None:
                 return None
 
@@ -1047,7 +1047,7 @@ class CVApiOperate(CVRestApiCmd):
         :return:
         """
         library_list = []
-        library = self.get_cmd('/Library')
+        library = self.get_cmd('Library')
         if library is None:
             return None
         active_physical_node = library.findall(".//entityInfo")
@@ -1151,7 +1151,7 @@ if __name__ == "__main__":
     c = time.time()
     cv_api = CVApiOperate(cv_token)
     # sp = cv_api.get_client_list()  # 2357 11 12 13 14 22 24
-    sp = cv_api.get_client_info("cv-server")  # 2357 11 12 13 14 22 24
+    sp = cv_api.get_client_info_by_name("cv-server")  # 2357 11 12 13 14 22 24
     # sp = cv_api.custom_backup_tree_by_client(3)
     # sp = cv_api.get_sub_client_info(4)
 

@@ -78,9 +78,9 @@ class InspectionOperate(models.Model):
     backup_time = models.IntegerField("备份次数", default=0)
     fail_time = models.IntegerField("失败次数", default=0)
     fail_log = models.CharField("失败日志", max_length=512, blank=True, default="")
-    total_capacity = models.IntegerField("存储总容量", default=0)
-    used_capacity = models.IntegerField("已用容量", default=0)
-    increase_capacity = models.IntegerField("平均每月增长量", default=0)
+    total_capacity = models.DecimalField("存储总容量", null=True, max_digits=10, decimal_places=2)
+    used_capacity = models.DecimalField("已用容量", null=True, max_digits=10, decimal_places=2)
+    increase_capacity = models.DecimalField("平均每月增长量", null=True, max_digits=10, decimal_places=2)
     state = models.CharField("状态", blank=True, max_length=20, default="")
 
 

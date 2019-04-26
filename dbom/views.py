@@ -1028,18 +1028,18 @@ def save_inspection(request):
         else:
             fail_time = 0
         if total_capacity:
-            total_capacity = int(total_capacity)
+            total_capacity = float(total_capacity)
         else:
             total_capacity = 0
         if used_capacity:
-            used_capacity = int(used_capacity)
+            used_capacity = float(used_capacity)
         else:
             used_capacity = 0
         if increase_capacity:
-            increase_capacity = int(increase_capacity)
+            increase_capacity = float(increase_capacity)
         else:
             increase_capacity = 0
-
+        print(float(increase_capacity))
         if client_sign:
             client_sign = datetime.datetime.strptime(client_sign, "%Y-%m-%d")
         else:
@@ -1201,23 +1201,25 @@ def save_inspection(request):
 
 def inspection_del(request):
     if request.user.is_authenticated() and request.session['isadmin']:
-        if 'inspection_id' in request.POST:
-            inspection_id = request.POST.get('inspection_id', '')
-            try:
-                inspection_id = int(inspection_id)
-            except:
-                raise HttpResponse(0)
-
-            try:
-                inspection_report = InspectionReport.objects.get(id=inspection_id)
-                inspection_report.state = "9"
-                inspection_report.save()
-            except:
-                return HttpResponse(0)
-            else:
-                return HttpResponse(1)
-        else:
+        inspection_id = request.POST.get('inspection_id', '')
+        print(inspection_id)
+        try:
+            inspection_id = int(inspection_id)
+        except Exception as e:
+            print(e)
             return HttpResponse(0)
+
+        try:
+            inspection_report = InspectionReport.objects.get(id=inspection_id)
+            inspection_report.state = "9"
+            inspection_report.save()
+        except Exception as e:
+            print(e)
+            return HttpResponse(0)
+        else:
+            return HttpResponse(1)
+    else:
+        return HttpResponse(0)
 
 
 def get_process_rto(request):
