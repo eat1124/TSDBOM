@@ -1170,9 +1170,9 @@ if __name__ == "__main__":
     # sp = cv_api.get_CS()
     # get_cs
     # print(sp)
-    # sp = cv_api.get_client_list()  # 2357 11 12 13 14 22 24
+    sp = cv_api.get_client_list()  # 2357 11 12 13 14 22 24
     # sp = cv_api.get_client_info_by_name("cv-server")  # 2357 11 12 13 14 22 24
-    sp = cv_api.get_client_info_by_id(2)
+    sp = cv_api.get_client_info_by_id(12)
     # sp = cv_api.custom_backup_tree_by_client(3)
     # sp = cv_api.get_sub_client_info(4)
 

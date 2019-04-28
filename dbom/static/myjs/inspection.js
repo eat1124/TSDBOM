@@ -240,6 +240,7 @@ $("#new").click(function () {
                         $("#host_name").val(data.data.host_name);
                         $("#patch").val(data.data.patch);
                         $("#os_platform").val(data.data.os_platform);
+                        $("#offline_client").val(data.data.offline_client);
                     } else {
                         alert(data.data)
                     }

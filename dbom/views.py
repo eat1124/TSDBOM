@@ -851,11 +851,11 @@ def get_clients_info(request):
         print(os_platform)
         # 客户端列表
         client_list = cv_api.get_client_list()
-        # 脱机客户端
 
         # 备份次数/失败次数
         backup_time = 0
         fail_time = 0
+        offline_client = 0
         try:
             conn = pymssql.connect(host='cv-server\COMMVAULT', user='sa_cloud', password='1qaz@WSX',
                                    database='CommServ')
@@ -863,6 +863,13 @@ def get_clients_info(request):
         except:
             print("链接失败!")
         else:
+            # 脱机客户端
+            try:
+                cur.execute(
+                    """SELECT COUNT([Offline]) FROM [commserv].[dbo].[CNClientInfoView] WHERE [Offline]=1 GROUP BY [Offline];""")
+                offline_client = cur.fetchone()
+            except:
+                print("备份任务不存在!")
             try:
                 cur.execute(
                     """SELECT [jobid] FROM [commserv].[dbo].[CommCellBackupInfo] WHERE startdate>='{0}' AND enddate<='{1}'""".format(
@@ -904,6 +911,7 @@ def get_clients_info(request):
             "fail_time": fail_time,
             "total_capacity": "%.2f" % total_capacity,
             "total_available_capacity": "%.2f" % total_available_capacity,
+            "offline_client": offline_client,
         }})
     else:
         return JsonResponse({"ret": 0, "data": "用户认证失败。"})
@@ -981,7 +989,6 @@ def save_inspection(request):
 
         client_sign = request.POST.get("client_sign", "")
         engineer_sign = request.POST.get("engineer_sign", "")
-        print(engineer_sign)
         client_sign_date = request.POST.get("client_sign_date", "")
         engineer_sign_date = request.POST.get("engineer_sign_date", "")
 
