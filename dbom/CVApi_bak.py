@@ -585,7 +585,7 @@ class CVApiOperate(CVRestApiCmd):
             return None
         self.backup_set_list.clear()
         cmd = 'Backupset?clientId={0}'.format(client_id)
-        sub_client = self.get_cmd(cmd, write_down=True)
+        sub_client = self.get_cmd(cmd)
         if sub_client is None:
             return None
         active_physical_node = sub_client.findall(".//backupSetEntity")
@@ -736,7 +736,7 @@ class CVApiOperate(CVRestApiCmd):
     def get_client_info_by_name(self, client_name):
         if isinstance(client_name, str):
             command = "GetId?clientName={0}".format(client_name)
-            resp = self.get_cmd(command, write_down=True)
+            resp = self.get_cmd(command)
             if resp is None:
                 return None
 
@@ -1137,7 +1137,7 @@ class CVApiOperate(CVRestApiCmd):
         return storage_pool_list
 
     def get_CS(self):
-        cs_info = self.get_cmd('CommServ', write_down=True)
+        cs_info = self.get_cmd('CommServ')
         commcell_info = cs_info.findall(".//commcell")
         commcell_info_dict = {}
         if commcell_info is not None:
@@ -1172,11 +1172,11 @@ if __name__ == "__main__":
     # print(sp)
     # sp = cv_api.get_client_list()  # 2357 11 12 13 14 22 24
     # sp = cv_api.get_client_info_by_name("cv-server")  # 2357 11 12 13 14 22 24
-    # sp = cv_api.get_client_info_by_id(2)
+    sp = cv_api.get_client_info_by_id(2)
     # sp = cv_api.custom_backup_tree_by_client(3)
     # sp = cv_api.get_sub_client_info(4)
 
-    sp = cv_api.get_backup_set_list(3)
+    # sp = cv_api.get_backup_set_list(3)
     # sp = cv_api.get_client_instance(3)
     # sp = cv_api.get_client_list()
     # sp = cv_api.get_library_list()
