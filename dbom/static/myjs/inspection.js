@@ -81,37 +81,37 @@ $('#sample_1 tbody').on('click', 'button#edit', function () {
     $("#last_inspection_date").val(data.last_inspection_date);
     $("#next_inspection_date").val(data.next_inspection_date);
 
-    $("input[name='hardware']:radio[value='" + data.hardware + "']").attr('checked', 'true');
+    $("input[name='hardware']:radio[value='" + data.hardware + "']").prop('checked', 'true');
     $("#hardware_error_content").val(data.hardware_error_content);
 
-    $("input[name='software']:radio[value='" + data.software + "']").attr('checked', 'true');
+    $("input[name='software']:radio[value='" + data.software + "']").prop('checked', 'true');
     $("#software_error_content").val(data.software_error_content);
 
-    $("input[name='aging_plan_run']:radio[value='" + data.aging_plan_run + "']").attr('checked', 'true');
+    $("input[name='aging_plan_run']:radio[value='" + data.aging_plan_run + "']").prop('checked', 'true');
     $("#aging_plan_run_remark").val(data.aging_plan_run_remark);
 
-    $("input[name='backup_plan_run']:radio[value='" + data.backup_plan_run + "']").attr('checked', 'true');
+    $("input[name='backup_plan_run']:radio[value='" + data.backup_plan_run + "']").prop('checked', 'true');
     $("#backup_plan_run_remark").val(data.backup_plan_run_remark);
 
-    $("input[name='running_status']:radio[value='" + data.running_status + "']").attr('checked', 'true');
+    $("input[name='running_status']:radio[value='" + data.running_status + "']").prop('checked', 'true');
     $("#running_remark").val(data.running_remark);
 
-    $("input[name='client_add']:radio[value='" + data.client_add + "']").attr('checked', 'true');
+    $("input[name='client_add']:radio[value='" + data.client_add + "']").prop('checked', 'true');
     $("#client_add_remark").val(data.client_add_remark);
 
-    $("input[name='backup_plan']:radio[value='" + data.backup_plan + "']").attr('checked', 'true');
+    $("input[name='backup_plan']:radio[value='" + data.backup_plan + "']").prop('checked', 'true');
     $("#backup_plan_remark").val(data.backup_plan_remark);
 
-    $("input[name='aging_plan']:radio[value='" + data.aging_plan + "']").attr('checked', 'true');
+    $("input[name='aging_plan']:radio[value='" + data.aging_plan + "']").prop('checked', 'true');
     $("#aging_plan_remark").val(data.aging_plan_remark);
 
-    $("input[name='error_send']:radio[value='" + data.error_send + "']").attr('checked', 'true');
+    $("input[name='error_send']:radio[value='" + data.error_send + "']").prop('checked', 'true');
     $("#error_send_remark").val(data.error_send_remark);
 
-    $("input[name='cdr_running']:radio[value='" + data.cdr_running + "']").attr('checked', 'true');
+    $("input[name='cdr_running']:radio[value='" + data.cdr_running + "']").prop('checked', 'true');
     $("#cdr_running_remark").val(data.cdr_running_remark);
 
-    $("input[name='media_run']:radio[value='" + data.media_run + "']").attr('checked', 'true');
+    $("input[name='media_run']:radio[value='" + data.media_run + "']").prop('checked', 'true');
     $("#media_run_remark").val(data.media_run_remark);
 
     $("#extra_error_content").val(data.extra_error_content);
