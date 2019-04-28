@@ -118,6 +118,8 @@ $('#sample_1 tbody').on('click', 'button#edit', function () {
     $("#suggestion_and_summary").val(data.suggestion_and_summary);
     $("#client_sign").val(data.client_sign);
     $("#engineer_sign").val(data.engineer_sign);
+    $("#client_sign_date").val(data.client_sign_date);
+    $("#engineer_sign_date").val(data.engineer_sign_date);
 
     $("#address").val(data.address);
     $("#contact").val(data.contact);
@@ -130,6 +132,7 @@ $('#sample_1 tbody').on('click', 'button#edit', function () {
     $("#enddate").val(data.enddate);
     $("#version").val(data.version);
     $("#host_name").val(data.host_name);
+    $("#os_platform").val(data.os_platform);
     $("#patch").val(data.patch);
     $("#all_client").val(data.all_client);
     $("#offline_client").val(data.offline_client);
@@ -150,7 +153,8 @@ $('#sample_1 tbody').on('click', 'button#edit', function () {
     $('#startdate').prop("disabled", true);
     $('#enddate').prop("disabled", true);
 
-    $('#search_cv').css("visibility", "hidden");
+    $('#search_cv').css("cursor", "not-allowed");
+    $('#search_cv').unbind();
 
     $('#offline_client_content').prop("readonly", true);
     $('#fail_log').prop("readonly", true);
@@ -194,10 +198,56 @@ $('#sample_1 tbody').on('click', 'button#edit', function () {
 
     $('#client_sign').prop("disabled", true);
     $('#engineer_sign').prop("disabled", true);
-
+    $('#client_sign_date').prop("disabled", true);
+    $('#engineer_sign_date').prop("disabled", true);
     $('#inspection_save').hide();
 });
 $("#new").click(function () {
+    // search
+    $('#search_cv').css("cursor", "pointer");
+    $('#search_cv').click(function () {
+        var start_date = $('#startdate').val();
+        var end_date = $('#enddate').val();
+        var start_date_sec = new Date(start_date);
+        var end_date_sec = new Date(end_date);
+        if (end_date_sec.getTime() < start_date_sec.getTime()) {
+            alert("结束时间不可小于开始时间，请重新选择。");
+            $('#enddate').val(start_date);
+        } else {
+            // 加载...
+            $(this).html('<span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true">\n' +
+                '</span>\n' + 'Loading...').css("pointer-events", "none");
+            $('#search_tag').val("load");
+            $.ajax({
+                type: "POST",
+                url: "../get_clients_info/",
+                data: {
+                    "start_date": start_date,
+                    "end_date": end_date,
+                    "csrfmiddlewaretoken": csrfToken,
+                },
+                success: function (data) {
+                    // 取消加载
+                    $('#search_cv').html('查询<i class="fa fa-search"></i>').css("pointer-events", "auto");
+                    $('#search_tag').val("");
+                    if (data.ret == 1) {
+                        $("#all_client").val(data.data.all_client);
+                        $("#backup_time").val(data.data.backup_time);
+                        $("#fail_time").val(data.data.fail_time);
+                        $("#total_capacity").val(data.data.total_capacity);
+                        $("#used_capacity").val(data.data.total_available_capacity);
+                        $("#version").val(data.data.version);
+                        $("#host_name").val(data.data.host_name);
+                        $("#patch").val(data.data.patch);
+                        $("#os_platform").val(data.data.os_platform);
+                    } else {
+                        alert(data.data)
+                    }
+                }
+            })
+        }
+    });
+
     // radio重置
     $("input:radio[value='0']").prop('checked', false);
     $("input:radio[value='1']").prop('checked', true);
@@ -210,8 +260,6 @@ $("#new").click(function () {
     $('#next_inspection_date').prop("disabled", false);
     $('#startdate').prop("disabled", false);
     $('#enddate').prop("disabled", false);
-
-    $('#search_cv').css("visibility", "visible");
 
     $('#offline_client_content').prop("readonly", false);
     $('#fail_log').prop("readonly", false);
@@ -255,9 +303,10 @@ $("#new").click(function () {
 
     $('#client_sign').prop("disabled", false);
     $('#engineer_sign').prop("disabled", false);
+    $('#client_sign_date').prop("disabled", false);
+    $('#engineer_sign_date').prop("disabled", false);
 
     $('#inspection_save').show();
-
 
     $('#inspection_id').val(0);
     $("#report_title").val("");
@@ -293,6 +342,8 @@ $("#new").click(function () {
     $("#suggestion_and_summary").val("");
     $("#client_sign").val("");
     $("#engineer_sign").val("");
+    $('#client_sign_date').val("");
+    $('#engineer_sign_date').val("");
 
     $("#address").val("");
     $("#contact").val("");
@@ -305,6 +356,7 @@ $("#new").click(function () {
     $("#enddate").val("");
     $("#version").val("");
     $("#host_name").val("");
+    $("#os_platform").val("");
     $("#patch").val("");
     $("#all_client").val("");
     $("#offline_client").val("");
@@ -355,47 +407,7 @@ $('#enddate').datetimepicker({
     startView: 2,
     minView: 2,
 });
-$('#search_cv').click(function () {
-    var start_date = $('#startdate').val();
-    var end_date = $('#enddate').val();
-    var start_date_sec = new Date(start_date);
-    var end_date_sec = new Date(end_date);
-    if (end_date_sec.getTime() < start_date_sec.getTime()) {
-        alert("结束时间不可小于开始时间，请重新选择。");
-        $('#enddate').val(start_date);
-    } else {
-        // 加载...
-        $(this).html('<span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true">\n' +
-            '</span>\n' + 'Loading...').css("pointer-events", "none");
-        $('#search_tag').val("load");
-        $.ajax({
-            type: "POST",
-            url: "../get_clients_info/",
-            data: {
-                "start_date": start_date,
-                "end_date": end_date,
-                "csrfmiddlewaretoken": csrfToken,
-            },
-            success: function (data) {
-                // 取消加载
-                $('#search_cv').html('查询<i class="fa fa-search"></i>').css("pointer-events", "auto");
-                $('#search_tag').val("");
-                if (data.ret == 1) {
-                    $("#all_client").val(data.data.all_client);
-                    $("#backup_time").val(data.data.backup_time);
-                    $("#fail_time").val(data.data.fail_time);
-                    $("#total_capacity").val(data.data.total_capacity);
-                    $("#used_capacity").val(data.data.total_available_capacity);
-                    $("#version").val(data.data.version);
-                    $("#host_name").val(data.data.host_name);
-                    $("#patch").val(data.data.patch);
-                } else {
-                    alert(data.data)
-                }
-            }
-        })
-    }
-})
+
 $('#inspection_date').datetimepicker({
     format: 'yyyy-mm-dd',
     autoclose: true,
@@ -408,13 +420,13 @@ $('#next_inspection_date').datetimepicker({
     startView: 2,
     minView: 2,
 });
-$('#client_sign').datetimepicker({
+$('#client_sign_date').datetimepicker({
     format: 'yyyy-mm-dd',
     autoclose: true,
     startView: 2,
     minView: 2,
 });
-$('#engineer_sign').datetimepicker({
+$('#engineer_sign_date').datetimepicker({
     format: 'yyyy-mm-dd',
     autoclose: true,
     startView: 2,

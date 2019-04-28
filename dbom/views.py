@@ -732,6 +732,7 @@ def inspection_report_data(request):
                     "%Y-%m-%d") if cur_inspection_operate.enddate else "",
                 "version": cur_inspection_operate.version,
                 "host_name": cur_inspection_operate.host_name,
+                "os_platform": cur_inspection_operate.os_platform,
                 "patch": cur_inspection_operate.patch,
                 "all_client": cur_inspection_operate.all_client,
                 "offline_client": cur_inspection_operate.offline_client,
@@ -777,10 +778,12 @@ def inspection_report_data(request):
                 "media_run_remark": inspection_report.media_run_remark,
                 "extra_error_content": inspection_report.extra_error_content,
                 "suggestion_and_summary": inspection_report.suggestion_and_summary,
-                "client_sign": inspection_report.client_sign.strftime(
-                    "%Y-%m-%d") if inspection_report.client_sign else "",
-                "engineer_sign": inspection_report.engineer_sign.strftime(
-                    "%Y-%m-%d") if inspection_report.engineer_sign else "",
+                "client_sign": inspection_report.client_sign,
+                "engineer_sign": inspection_report.engineer_sign,
+                "client_sign_date": inspection_report.client_sign_date.strftime(
+                    "%Y-%m-%d") if inspection_report.client_sign_date else "",
+                "engineer_sign_date": inspection_report.engineer_sign_date.strftime(
+                    "%Y-%m-%d") if inspection_report.engineer_sign_date else "",
             })
             last_inspection_report = inspection_report
 
@@ -836,12 +839,16 @@ def get_clients_info(request):
         cv_api = CVApiOperate(cv_token)
 
         # 客户端版本/主机名/补丁
-        cv_server_client_info = cv_api.get_client_info_by_name("cv-server")
-        # cv_server_client_info = cv_api.get_client_info_by_id("3")
-        client_name = cv_server_client_info["clientName"]
-        client_version = cv_server_client_info["GalaxyRelease"]
-        patch = cv_server_client_info["versionInfo"]
-
+        host_client = cv_api.get_CS()
+        try:
+            client_name = host_client["commCellName"]
+            cv_server_client_info = cv_api.get_client_info_by_name(client_name)
+            client_version = cv_server_client_info["GalaxyRelease"]
+            patch = cv_server_client_info["versionInfo"]
+            os_platform = cv_server_client_info["os_info"]
+        except:
+            return JsonResponse({"ret": 0, "data": "获取客户端信息失败。"})
+        print(os_platform)
         # 客户端列表
         client_list = cv_api.get_client_list()
         # 脱机客户端
@@ -891,6 +898,7 @@ def get_clients_info(request):
             "host_name": client_name,
             "version": client_version,
             "patch": patch,
+            "os_platform": os_platform,
             "all_client": len(client_list),
             "backup_time": backup_time,
             "fail_time": fail_time,
@@ -921,6 +929,7 @@ def save_inspection(request):
         version = request.POST.get("version", "")
         host_name = request.POST.get("host_name", "")
         patch = request.POST.get("patch", "")
+        os_platform = request.POST.get("os_platform", "")
 
         # 2.巡检操作
         all_client = request.POST.get("all_client", "")
@@ -969,8 +978,12 @@ def save_inspection(request):
 
         extra_error_content = request.POST.get("extra_error_content", "")
         suggestion_and_summary = request.POST.get("suggestion_and_summary", "")
+
         client_sign = request.POST.get("client_sign", "")
         engineer_sign = request.POST.get("engineer_sign", "")
+        print(engineer_sign)
+        client_sign_date = request.POST.get("client_sign_date", "")
+        engineer_sign_date = request.POST.get("engineer_sign_date", "")
 
         if report_title.strip() == "":
             return JsonResponse({"ret": 0, "data": "报告标题不能为空。"})
@@ -982,6 +995,10 @@ def save_inspection(request):
             return JsonResponse({"ret": 0, "data": "开始时间不能为空。"})
         if enddate.strip() == "":
             return JsonResponse({"ret": 0, "data": "结束时间不能为空。"})
+        if client_sign.strip() == "":
+            return JsonResponse({"ret": 0, "data": "客户必须签字。"})
+        if engineer_sign.strip() == "":
+            return JsonResponse({"ret": 0, "data": "维修工程师必须签字。"})
         try:
             inspection_id = int(inspection_id)
         except:
@@ -1039,15 +1056,14 @@ def save_inspection(request):
             increase_capacity = float(increase_capacity)
         else:
             increase_capacity = 0
-        print(float(increase_capacity))
-        if client_sign:
-            client_sign = datetime.datetime.strptime(client_sign, "%Y-%m-%d")
+        if client_sign_date:
+            client_sign_date = datetime.datetime.strptime(client_sign_date, "%Y-%m-%d")
         else:
-            client_sgin = None
-        if engineer_sign:
-            engineer_sign = datetime.datetime.strptime(engineer_sign, "%Y-%m-%d")
+            client_sign_date = None
+        if engineer_sign_date:
+            engineer_sign_date = datetime.datetime.strptime(engineer_sign_date, "%Y-%m-%d")
         else:
-            engineer_sign = None
+            engineer_sign_date = None
 
         # save add/modify
         if not inspection_id:
@@ -1058,6 +1074,7 @@ def save_inspection(request):
                 inspection_operate.enddate = enddate
                 inspection_operate.version = version
                 inspection_operate.host_name = host_name
+                inspection_operate.os_platform = os_platform
                 inspection_operate.patch = patch
                 inspection_operate.all_client = all_client
                 inspection_operate.offline_client = offline_client
@@ -1115,6 +1132,8 @@ def save_inspection(request):
                 inspection_report.suggestion_and_summary = suggestion_and_summary
                 inspection_report.client_sign = client_sign
                 inspection_report.engineer_sign = engineer_sign
+                inspection_report.client_sign_date = client_sign_date
+                inspection_report.engineer_sign_date = engineer_sign_date
                 inspection_report.save()
             except Exception as e:
                 print(e)
@@ -1132,6 +1151,7 @@ def save_inspection(request):
                 inspection_operate.enddate = enddate
                 inspection_operate.version = version
                 inspection_operate.host_name = host_name
+                inspection_operate.os_platform = os_platform
                 inspection_operate.patch = patch
                 inspection_operate.all_client = all_client
                 inspection_operate.offline_client = offline_client
@@ -1190,6 +1210,8 @@ def save_inspection(request):
                 inspection_report.suggestion_and_summary = suggestion_and_summary
                 inspection_report.client_sign = client_sign
                 inspection_report.engineer_sign = engineer_sign
+                inspection_report.client_sign_date = client_sign_date
+                inspection_report.engineer_sign_date = engineer_sign_date
                 inspection_report.save()
             except:
                 return JsonResponse({"ret": 0, "data": "数据存储失败。"})

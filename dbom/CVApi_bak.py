@@ -585,7 +585,7 @@ class CVApiOperate(CVRestApiCmd):
             return None
         self.backup_set_list.clear()
         cmd = 'Backupset?clientId={0}'.format(client_id)
-        sub_client = self.get_cmd(cmd)
+        sub_client = self.get_cmd(cmd, write_down=True)
         if sub_client is None:
             return None
         active_physical_node = sub_client.findall(".//backupSetEntity")
@@ -710,7 +710,7 @@ class CVApiOperate(CVRestApiCmd):
         client_info = {}
         if isinstance(client_id, int):
             command = "Client/{0}".format(str(client_id))
-            resp = self.get_cmd(command, write_down=True)
+            resp = self.get_cmd(command)
             if resp is None:
                 return None
             client_entity = resp.findall(".//clientEntity")
@@ -719,12 +719,16 @@ class CVApiOperate(CVRestApiCmd):
             # versionInfo,GalaxyRelease
             version_info = resp.findall(".//versionInfo")
             galaxy_release = resp.findall(".//GalaxyRelease")
-
-            client_info["clientId"] = client_entity[0].attrib["clientId"]
-            client_info["clientName"] = client_entity[0].attrib["clientName"]
-            client_info["commCellName"] = client_entity[0].attrib["commCellName"]
-            client_info["versionInfo"] = version_info[0].attrib["version"]
-            client_info["GalaxyRelease"] = galaxy_release[0].attrib["ReleaseString"]
+            os_info = resp.findall(".//OsDisplayInfo")
+            try:
+                client_info["os_info"] = os_info[0].attrib["OSName"]
+                client_info["clientId"] = client_entity[0].attrib["clientId"]
+                client_info["clientName"] = client_entity[0].attrib["clientName"]
+                client_info["commCellName"] = client_entity[0].attrib["commCellName"]
+                client_info["versionInfo"] = version_info[0].attrib["version"]
+                client_info["GalaxyRelease"] = galaxy_release[0].attrib["ReleaseString"]
+            except:
+                return None
             return client_info
         else:
             return None
@@ -1082,7 +1086,8 @@ class CVApiOperate(CVRestApiCmd):
             library_info["total_available_capacity"] = mag_lib_summary.attrib["totalAvailableSpace"].strip()
             library_info["is_online"] = mag_lib_summary.attrib["isOnline"]
         else:
-            raise Exception("该库不存在")
+            return None
+            # raise Exception("该库不存在")
             # library_info["total_capacity"] = ""
             # library_info["total_available_capacity"] = ""
             # library_info["is_online"] = ""
@@ -1116,7 +1121,7 @@ class CVApiOperate(CVRestApiCmd):
         :return:
         """
         storage_pool_list = []
-        storage_pool = self.get_cmd('/StoragePool')
+        storage_pool = self.get_cmd('StoragePool')
         if storage_pool is None:
             return None
         # active_physical_node = storage_pool.findall(".//entityInfo")
@@ -1130,6 +1135,18 @@ class CVApiOperate(CVRestApiCmd):
         #         print("get_library_list", e)
         #     storage_pool_list.append(storage_pool)
         return storage_pool_list
+
+    def get_CS(self):
+        cs_info = self.get_cmd('CommServ', write_down=True)
+        commcell_info = cs_info.findall(".//commcell")
+        commcell_info_dict = {}
+        if commcell_info is not None:
+            commcell_info = commcell_info[0]
+            commcell_info_dict["commCellName"] = commcell_info.attrib["commCellName"]
+            commcell_info_dict["commCellId"] = commcell_info.attrib["commCellId"]
+            commcell_info_dict["csGUID"] = commcell_info.attrib["csGUID"]
+
+        return commcell_info_dict
 
     def test(self):
         temp_list = []
@@ -1150,12 +1167,16 @@ if __name__ == "__main__":
     print("-----成功登陆")
     c = time.time()
     cv_api = CVApiOperate(cv_token)
+    # sp = cv_api.get_CS()
+    # get_cs
+    # print(sp)
     # sp = cv_api.get_client_list()  # 2357 11 12 13 14 22 24
-    sp = cv_api.get_client_info_by_name("cv-server")  # 2357 11 12 13 14 22 24
+    # sp = cv_api.get_client_info_by_name("cv-server")  # 2357 11 12 13 14 22 24
+    # sp = cv_api.get_client_info_by_id(2)
     # sp = cv_api.custom_backup_tree_by_client(3)
     # sp = cv_api.get_sub_client_info(4)
 
-    # sp = cv_api.get_backup_set_list(3)
+    sp = cv_api.get_backup_set_list(3)
     # sp = cv_api.get_client_instance(3)
     # sp = cv_api.get_client_list()
     # sp = cv_api.get_library_list()
@@ -1172,7 +1193,7 @@ if __name__ == "__main__":
     # sp = cv_api.test()
     # sp = cv_api.get_sub_client_list(3)
     # sp = cv_api.get_sp_from_sub_client(4)
-    if sp:
+    if sp is not None:
         print(len(sp), sp)
     else:
         print("没有数据")

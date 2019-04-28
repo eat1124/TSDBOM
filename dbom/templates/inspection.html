@@ -11,6 +11,7 @@
                 opacity: 1;
             }
         }
+
         @keyframes spinner-grow {
             0% {
                 -webkit-transform: scale(0);
@@ -20,6 +21,7 @@
                 opacity: 1;
             }
         }
+
         .spinner-grow {
             display: inline-block;
             width: 2rem;
@@ -31,6 +33,7 @@
             -webkit-animation: spinner-grow .75s linear infinite;
             animation: spinner-grow .75s linear infinite;
         }
+
         .spinner-grow-sm {
             width: 1rem;
             height: 1rem;
@@ -217,21 +220,30 @@
                             </div>
                             <div class="form-group">
                                 <label class="col-md-2 control-label">CommVault版本</label>
-                                <div class="col-md-2">
+                                <div class="col-md-4">
                                     <input id="version" autocomplete="off" type="text" name="version"
                                            class="form-control" placeholder="" value="" readonly>
                                     <div class="form-control-focus"></div>
                                 </div>
-                                <label class="col-md-2 control-label">OS平台/主机名</label>
-                                <div class="col-md-2">
+
+                                <label class="col-md-2 control-label">补丁</label>
+                                <div class="col-md-4">
+                                    <input id="patch" autocomplete="off" type="text" name="patch" class="form-control"
+                                           placeholder="" value="" readonly>
+                                    <div class="form-control-focus"></div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-md-2 control-label">主机名</label>
+                                <div class="col-md-4">
                                     <input id="host_name" autocomplete="off" type="text" name="host_name"
                                            class="form-control" placeholder="" value="" readonly>
                                     <div class="form-control-focus"></div>
                                 </div>
-                                <label class="col-md-2 control-label">补丁</label>
-                                <div class="col-md-2">
-                                    <input id="patch" autocomplete="off" type="text" name="patch" class="form-control"
-                                           placeholder="" value="" readonly>
+                                <label class="col-md-2 control-label">OS平台</label>
+                                <div class="col-md-4">
+                                    <input id="os_platform" autocomplete="off" type="text" name="os_platform"
+                                           class="form-control" placeholder="" value="" readonly>
                                     <div class="form-control-focus"></div>
                                 </div>
                             </div>
@@ -245,21 +257,23 @@
                             </div>
                             <div class="form-group">
                                 <label class="col-md-2 control-label">全部客户端</label>
-                                <div class="col-md-2">
+                                <div class="col-md-4">
                                     <input id="all_client" autocomplete="off" type="number" name="all_client"
                                            class="form-control" placeholder="" value="" readonly>
                                     <div class="form-control-focus"></div>
                                 </div>
                                 <label class="col-md-2 control-label">脱机客户端</label>
-                                <div class="col-md-2">
+                                <div class="col-md-4">
                                     <input id="offline_client" autocomplete="off" type="number" name="offline_client"
                                            class="form-control" placeholder="" value="" readonly>
                                     <div class="form-control-focus"></div>
                                 </div>
+                            </div>
+                            <div class="form-group">
                                 <label class="col-md-2 control-label">故障内容</label>
-                                <div class="col-md-2">
-                                    <input id="offline_client_content" autocomplete="off" type="text"
-                                           name="offline_client_content" class="form-control" placeholder="" value="">
+                                <div class="col-md-10">
+                                    <textarea id="offline_client_content" name="offline_client_content" rows="10"
+                                              class="form-control"></textarea>
                                     <div class="form-control-focus"></div>
                                 </div>
                             </div>
@@ -273,21 +287,22 @@
                             </div>
                             <div class="form-group">
                                 <label class="col-md-2 control-label">备份次数</label>
-                                <div class="col-md-2">
+                                <div class="col-md-4">
                                     <input id="backup_time" autocomplete="off" type="text" name="backup_time"
                                            class="form-control" placeholder="" value="" readonly>
                                     <div class="form-control-focus"></div>
                                 </div>
                                 <label class="col-md-2 control-label">失败次数</label>
-                                <div class="col-md-2">
+                                <div class="col-md-4">
                                     <input id="fail_time" autocomplete="off" type="text" name="fail_time"
                                            class="form-control" placeholder="" value="" readonly>
                                     <div class="form-control-focus"></div>
                                 </div>
+                            </div>
+                            <div class="form-group">
                                 <label class="col-md-2 control-label">失败日志</label>
-                                <div class="col-md-2">
-                                    <input id="fail_log" autocomplete="off" type="text" name="fail_log"
-                                           class="form-control" placeholder="" value="">
+                                <div class="col-md-10">
+                                    <textarea id="fail_log" name="fail_log" rows="10" class="form-control"></textarea>
                                     <div class="form-control-focus"></div>
                                 </div>
                             </div>
@@ -591,18 +606,35 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-md-2 control-label">客户签字/日期</label>
+                                <label class="col-md-2 control-label"><span style="color:red;">*</span>客户签字</label>
                                 <div class="col-md-4">
-                                    <input id="client_sign" autocomplete="off" type="datetime" name="client_sign"
+                                    <input id="client_sign" autocomplete="off" type="text" name="client_sign"
                                            class="form-control" placeholder="" value="">
                                     <div class="form-control-focus"></div>
                                 </div>
-                                <label class="col-md-2 control-label">维修工程师签字/日期</label>
+                                <label class="col-md-2 control-label">签字日期</label>
                                 <div class="col-md-4">
-                                    <input id="engineer_sign" autocomplete="off" type="datetime" name="engineer_sign"
+                                    <input id="client_sign_date" autocomplete="off" type="datetime" name="client_sign_date"
                                            class="form-control" placeholder="" value="">
                                     <div class="form-control-focus"></div>
                                 </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-md-2 control-label"><span style="color:red;">*</span>维修工程师签字</label>
+                                <div class="col-md-4">
+                                    <input id="engineer_sign" autocomplete="off" type="text" name="engineer_sign"
+                                           class="form-control" placeholder="" value="">
+                                    <div class="form-control-focus"></div>
+                                </div>
+                                <label class="col-md-2 control-label">签字日期</label>
+                                <div class="col-md-4">
+                                    <input id="engineer_sign_date" autocomplete="off" type="datetime" name="engineer_sign_date"
+                                           class="form-control" placeholder="" value="">
+                                    <div class="form-control-focus"></div>
+                                </div>
+                            </div>
+                            <div style="height: 50px;">
+
                             </div>
                         </div>
                     </form>
