@@ -410,11 +410,16 @@ def custom_concrete_job_list(cv_api, client_id, client_name):
     :param client_name:
     :return:
     """
-    # # client_id >> sub_client_id >> storage_id >> copy_id >> job_info
-    # conn = pymssql.connect(host='192.168.100.149\COMMVAULT', user='sa_cloud', password='1qaz@WSX', database='CommServ')
-    # cur = conn.cursor()
+    status_list = {"Running": "运行", "Waiting": "等待", "Pending": "阻塞", "Suspend": "终止", "Completed": "正常",
+               "Failed": "失败", "Failed to Start": "启动失败", "Killed": "杀掉",
+               "Completed w/ one or more errors": "已完成，但有一个或多个错误",
+               "Completed w/ one or more warnings": "已完成，但有一个或多个警告", "Success": "成功"}
+    # client_id >> sub_client_id >> storage_id >> copy_id >> job_info
+    conn = pymssql.connect(host='192.168.100.149\COMMVAULT', user='sa_cloud', password='1qaz@WSX', database='CommServ')
+    cur = conn.cursor()
 
     job_list = cv_api.get_job_list(client_id, time_sorted=True)
+    sub_client_list = cv_api.get_sub_client_list(client_id)
 
     agent_job_list = []
     job_pre_agent_list = []
@@ -422,38 +427,41 @@ def custom_concrete_job_list(cv_api, client_id, client_name):
     if job_list:
         for job in job_list:
             if job["agentType"] in job_pre_agent_list:
-                continue
+                pass
             else:
-                # # client,agent
-                # # > sub_client_list
-                # # >> storage_list
-                # # >>> storage_info (copy)
-                # # >>>> sql查询
-                # aux_copy_info = ""
-                # sub_client_list = cv_api.get_sub_client_list(client_id)
-                # for sub_client in sub_client_list:
-                #     if job["agentType"] in sub_client["appName"]:
-                #         storage_policy_name = ""
-                #         copy_id = ""
-                #         storage_policy_list = cv_api.get_sp_from_sub_client(sub_client["subclientId"])
-                #         for storage_policy in storage_policy_list:
-                #             # print(storage_policy["storagePolicyName"])
-                #             try:
-                #                 storage_policy_name = storage_policy["storagePolicyName"]
-                #                 sp_info_list = cv_api.get_sp_info(storage_policy["storagePolicyId"])
-                #                 if len(sp_info_list) > 1:
-                #                     copy_id = sp_info_list[1]["copyId"]
-                #                     break
-                #             except:
-                #                 pass
-                #
-                #         if storage_policy_name and copy_id:
-                #             sql = """SELECT jobstatus FROM [commserv].[dbo].[CommCellAuxCopyInfo] WHERE storagepolicy LIKE '{0}' and destcopyid='{1}' ORDER BY startdate DESC""".format(
-                #                 storage_policy_name, copy_id)
-                #             cur.execute(sql)
-                #             aux_copy_info = cur.fetchall()
-                #             aux_copy_info = aux_copy_info[0][0]
-                #             break
+                # client,agent
+                # > sub_client_list
+                # >> storage_list
+                # >>> storage_info (copy)
+                # >>>> sql查询
+                aux_copy_info = ""
+                for sub_client in sub_client_list:
+                    if job["agentType"] in sub_client["appName"]:
+                        storage_policy_name = ""
+                        source_copy_id = ""
+                        dest_copy_id = ""
+                        # 存储策略列表
+                        storage_policy_list = cv_api.get_sp_from_sub_client(sub_client["subclientId"])
+                        for storage_policy in storage_policy_list:
+                            try:
+                                storage_policy_name = storage_policy["storagePolicyName"]
+                                # 存储策略信息
+                                sp_info_list = cv_api.get_sp_info(storage_policy["storagePolicyId"])
+                                if len(sp_info_list) > 1:
+                                    source_copy_id = sp_info_list[0]["copyId"]
+                                    dest_copy_id = sp_info_list[1]["copyId"]
+                                    break
+                            except:
+                                pass
+                
+                        sql = """SELECT jobstatus FROM [commserv].[dbo].[CommCellAuxCopyInfo] WHERE storagepolicy LIKE '{0}' and sourcecopyid='{1}' and destcopyid='{2}' ORDER BY startdate DESC""".format(
+                            storage_policy_name, source_copy_id, dest_copy_id)
+                        cur.execute(sql)
+                        aux_copy_info = cur.fetchall()
+                        if aux_copy_info:
+                            aux_copy_info = aux_copy_info[0][0]
+                        break
+
                 if job["status"] in ["运行", "正常", "等待", "QueuedCompleted", "Queued"]:
                     status_label = "label-success"
                 elif job["status"] in ["阻塞", "已完成，但有一个或多个错误", "已完成，但有一个或多个警告"]:
@@ -462,7 +470,6 @@ def custom_concrete_job_list(cv_api, client_id, client_name):
                     status_label = "label-danger"
 
                 job_pre_agent_list.append(job["agentType"])
-                # print("aux_copy_info", aux_copy_info)
                 agent_job_list.append({
                     "client_id": client_id,
                     "client_name": client_name,
@@ -470,7 +477,7 @@ def custom_concrete_job_list(cv_api, client_id, client_name):
                     "job_start_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(job["StartTime"]))),
                     "job_backup_status": job["status"],
                     "status_label": status_label,
-                    # "aux_copy_info": aux_copy_info if aux_copy_info else "",
+                    "aux_copy_info": status_list[aux_copy_info] if aux_copy_info else "",
                 })
         return agent_job_list
 
@@ -525,6 +532,7 @@ def index(request, funid):
         # 报警客户端
         warning_client_num = 0
 
+        # client>>agent>>last_job_time>> last_job_status>>last_aux_job_status
         whole_list = []
 
         pool = ThreadPoolExecutor(max_workers=5)

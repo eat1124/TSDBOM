@@ -67,7 +67,6 @@ class CVRestApiToken(object):
             self.msg = "连接失败：web_addr {0} port {1}".format(self.credit["web_addr"], self.credit["port"])
             print(self.msg, e)
             return False
-
         if ret.status_code == 200:
             try:
                 root = etree.XML(ret.content)
@@ -120,7 +119,7 @@ class CVRestApiCmd(object):
             return None
 
         client_props_req = self.service + command
-        print("请求链接：", client_props_req)
+        # print("请求链接：", client_props_req)
         try:
             update = update_cmd.encode(encoding="utf-8")
         except:
@@ -562,15 +561,15 @@ class CVApiOperate(CVRestApiCmd):
         """
         if client_id is None:
             return None
-        self.sub_client_list.clear()
+        sub_client_list = []
         cmd = 'Subclient?clientId={0}'.format(client_id)
         sub_client = self.get_cmd(cmd)
         if sub_client is None:
             return None
         active_physical_node = sub_client.findall(".//subClientEntity")
         for node in active_physical_node:
-            self.sub_client_list.append(node.attrib)
-        return self.sub_client_list
+            sub_client_list.append(node.attrib)
+        return sub_client_list
 
     def get_backup_set_list(self, client_id):
         """
@@ -1170,11 +1169,11 @@ if __name__ == "__main__":
     # sp = cv_api.get_CS()
     # get_cs
     # print(sp)
-    sp = cv_api.get_client_list()  # 2357 11 12 13 14 22 24
+    # sp = cv_api.get_client_list()  # 2357 11 12 13 14 22 24
     # sp = cv_api.get_client_info_by_name("cv-server")  # 2357 11 12 13 14 22 24
-    sp = cv_api.get_client_info_by_id(12)
+    # sp = cv_api.get_client_info_by_id(12)
     # sp = cv_api.custom_backup_tree_by_client(3)
-    # sp = cv_api.get_sub_client_info(4)
+    sp = cv_api.get_sub_client_info(4)
 
     # sp = cv_api.get_backup_set_list(3)
     # sp = cv_api.get_client_instance(3)
@@ -1185,7 +1184,11 @@ if __name__ == "__main__":
     # sp = cv_api.get_job_list("2",app_type_name="File System")
     # sp = cv_api.get_job_list("1")
     # sp = cv_api.get_sp_list()
-    # sp = cv_api.get_sp_info("26")
+    sp = cv_api.get_sp_info("26")
+
+    # 通过数据库过滤辅助拷贝状态destcopyid
+
+
     # sp = cv_api.get_copy_from_sp("26", "25")
     # sp = cv_api.get_client_agent_list("3")
     # sp = cv_api.get_console_alert_list()
