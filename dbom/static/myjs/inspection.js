@@ -192,7 +192,7 @@ $('#sample_1 tbody').on('click', 'button#edit', function () {
     $('input[name="media_run"]').prop("disabled", true);
     $('#media_run_remark').prop("readonly", true);
 
-    
+
     $('#extra_error_content').prop("readonly", true);
     $('#suggestion_and_summary').prop("readonly", true);
     $('#media_run_remark').prop("readonly", true);
