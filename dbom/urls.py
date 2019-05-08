@@ -36,6 +36,18 @@ urlpatterns = [
     url(r'^fundel/$', fundel),
     url(r'^funmove/$', funmove),
 
+    # 备份状态
+    url(r'^backup_status/$', backup_status, {'funid': '31'}),
+    # 备份内容
+    url(r'^backup_content/$', backup_content, {'funid': '32'}),
+
+    # 计划策略
+
+    # 存储策略
+    url(r'^storage_policy/$', storage_policy, {'funid': '34'}),
+
+
+
     # 运维记录
     url(r'^inspection/$', inspection_report, {'funid': 62}),  # 巡检报告
     url(r'^save_inspection/$', save_inspection),
@@ -49,17 +61,6 @@ urlpatterns = [
     url(r'^clients_data/$', clients_data),  
     url(r'^client_data_save/$', client_data_save),  
     url(r'^client_data_del/$', client_data_del),  
-
-
-
-
-
-
-
-
-
-
-
 
 
 

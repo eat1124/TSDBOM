@@ -38,6 +38,7 @@ from django.utils.encoding import escape_uri_path
 from django.core.mail import send_mail
 from django.forms.models import model_to_dict
 from django.template.response import TemplateResponse
+from django.contrib.auth.decorators import login_required
 
 from dbom.tasks import *
 from dbom.models import *
@@ -566,6 +567,248 @@ def index(request, funid):
         })
     else:
         return HttpResponseRedirect("/login")
+
+
+@login_required
+def backup_status(request, funid):
+    # client>>agent>>last_job_time>> last_job_status>>last_aux_job_status
+    whole_list = []
+    cv_token = CVRestApiToken()
+    cv_token.login(info)
+    cv_api = CVApiOperate(cv_token)
+    client_list = cv_api.get_client_list()
+    pool = ThreadPoolExecutor(max_workers=5)
+    # 并发
+    try:
+        all_tasks = [pool.submit(custom_concrete_job_list, cv_api, client["clientId"], client["clientName"]) for
+                     client in client_list]
+    except Exception as e:
+        print(e)
+        all_tasks = []
+    for future in as_completed(all_tasks):
+        if future.result():
+            whole_list.append({
+                "agent_job_list": future.result(),
+                "agent_length": len(future.result())
+            })
+            for job in future.result():
+                if "失败" in job["job_backup_status"]:
+                    warning_client_num += 1
+                    break
+    return render(request, "backup_status.html", {
+            'username': request.user.userinfo.fullname,
+            "pagefuns": getpagefuns(funid, request),
+            "whole_list": whole_list,
+        })
+
+
+def get_backup_content(cv_api, client_id, client_name):
+    status_list = {"Running": "运行", "Waiting": "等待", "Pending": "阻塞", "Suspend": "终止", "Completed": "正常",
+               "Failed": "失败", "Failed to Start": "启动失败", "Killed": "杀掉",
+               "Completed w/ one or more errors": "已完成，但有一个或多个错误",
+               "Completed w/ one or more warnings": "已完成，但有一个或多个警告", "Success": "成功"}
+    # client_id >> sub_client_id >> storage_id >> copy_id >> job_info
+    conn = pymssql.connect(host='192.168.100.149\COMMVAULT', user='sa_cloud', password='1qaz@WSX', database='CommServ')
+    cur = conn.cursor()
+
+    job_list = cv_api.get_job_list(client_id, time_sorted=True)
+    sub_client_list = cv_api.get_sub_client_list(client_id)
+
+    agent_job_list = []
+    job_pre_agent_list = []
+
+    if job_list:
+        for job in job_list:
+            if job["agentType"] in job_pre_agent_list:
+                pass
+            else:
+                # client,agent
+                # > sub_client_list
+                # >> storage_list
+                # >>> storage_info (copy)
+                # >>>> sql查询
+                aux_copy_info = ""
+                for sub_client in sub_client_list:
+                    if job["agentType"] in sub_client["appName"]:
+                        storage_policy_name = ""
+                        source_copy_id = ""
+                        dest_copy_id = ""
+                        # 存储策略列表
+                        storage_policy_list = cv_api.get_sp_from_sub_client(sub_client["subclientId"])
+                        for storage_policy in storage_policy_list:
+                            try:
+                                storage_policy_name = storage_policy["storagePolicyName"]
+                                # 存储策略信息
+                                sp_info_list = cv_api.get_sp_info(storage_policy["storagePolicyId"])
+                                if len(sp_info_list) > 1:
+                                    source_copy_id = sp_info_list[0]["copyId"]
+                                    dest_copy_id = sp_info_list[1]["copyId"]
+                                    break
+                            except:
+                                pass
+                
+                        sql = """SELECT jobstatus FROM [commserv].[dbo].[CommCellAuxCopyInfo] WHERE storagepolicy LIKE '{0}' and sourcecopyid='{1}' and destcopyid='{2}' ORDER BY startdate DESC""".format(
+                            storage_policy_name, source_copy_id, dest_copy_id)
+                        cur.execute(sql)
+                        aux_copy_info = cur.fetchall()
+                        if aux_copy_info:
+                            aux_copy_info = aux_copy_info[0][0]
+                        break
+
+                if job["status"] in ["运行", "正常", "等待", "QueuedCompleted", "Queued"]:
+                    status_label = "label-success"
+                elif job["status"] in ["阻塞", "已完成，但有一个或多个错误", "已完成，但有一个或多个警告"]:
+                    status_label = "label-warning"
+                else:
+                    status_label = "label-danger"
+
+                job_pre_agent_list.append(job["agentType"])
+                agent_job_list.append({
+                    "client_id": client_id,
+                    "client_name": client_name,
+                    "agent_type_name": job["agentType"],
+                    "job_start_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(job["StartTime"]))),
+                    "job_backup_status": job["status"],
+                    "status_label": status_label,
+                    "aux_copy_info": status_list[aux_copy_info] if aux_copy_info else "",
+                })
+        return agent_job_list
+
+
+@login_required
+def backup_content(request, funid):
+    whole_list = []
+    cv_token = CVRestApiToken()
+    cv_token.login(info)
+    cv_api = CVApiOperate(cv_token)
+    client_list = cv_api.get_client_list()
+    pool = ThreadPoolExecutor(max_workers=5)
+    # 并发
+    try:
+        all_tasks = [pool.submit(custom_concrete_job_list, cv_api, client["clientId"], client["clientName"]) for
+                     client in client_list]
+    except Exception as e:
+        print(e)
+        all_tasks = []
+    for future in as_completed(all_tasks):
+        if future.result():
+            whole_list.append({
+                "agent_job_list": future.result(),
+                "agent_length": len(future.result())
+            })
+            for job in future.result():
+                if "失败" in job["job_backup_status"]:
+                    warning_client_num += 1
+                    break
+    return render(request, "backup_content.html", {
+            'username': request.user.userinfo.fullname,
+            "pagefuns": getpagefuns(funid, request),
+            "whole_list": whole_list,
+        })
+
+
+def get_storage_policy(cv_api, client_id, client_name):
+    sub_client_list = cv_api.get_sub_client_list(client_id)
+    storage_policy_list = []
+    # app_name = None
+    # app_name_count = 1
+    # backup_set_name = None
+    # backup_set_name_count = 1
+    # first_app = False
+    # first_backup_set = False
+    # app_name_count_list = []
+    # backup_set_name_count_list = []
+
+    if sub_client_list:
+        for num, sub_client in enumerate(sub_client_list):
+            sub_client_info = cv_api.get_simple_sub_client_info(sub_client["subclientId"])
+
+            if sub_client_info:
+                try:
+                    # # if first app
+                    # if app_name is None or app_name != sub_client_info["appName"]:
+                    #     if num+1 < len(sub_client_list):
+                    #         app_name_count_list.append(app_name_count)
+
+                    #     app_name_count = 1
+                    #     first_app = True
+                    #     backup_set_name = None
+                    # else:
+                    #     first_app = False
+
+                    # # if first backup_set
+                    # if backup_set_name is None or backup_set_name != sub_client_info["backupsetName"] and first_app is False:
+                    #     if num+1 < len(sub_client_list):
+                    #         backup_set_name_count_list.append(backup_set_name_count)
+
+                    #     first_backup_set = True
+                    #     backup_set_name_count = 1
+                    # else:
+                    #     first_backup_set = False
+
+                    # if num+1 == len(sub_client_list):
+                    #     app_name_count_list.append(app_name_count)
+                    #     backup_set_name_count_list.append(backup_set_name_count)
+
+                    app_name = sub_client_info["appName"]
+                    backup_set_name = sub_client_info["backupsetName"]
+                    storage_policy_list.append({
+                            "client_id": client_id,
+                            "client_name": client_name,
+                            "agent_type_name": app_name,
+                            "backupsetName": backup_set_name,
+                            "subclientName": sub_client_info["subclientName"],
+                            "storagePolicyId": sub_client_info["storagePolicyId"],
+                            "storagePolicyName": sub_client_info["storagePolicyName"],
+                            # "first_app": first_app,
+                            # "first_backup_set": first_backup_set,
+                        })
+                    # # add
+                    # app_name_count += 1
+                    # backup_set_name_count += 1
+                except KeyError as e:
+                    print(e)
+       
+        # app_name_count_list.reverse() 
+        # backup_set_name_count_list.reverse() 
+
+        # for storage_policy in storage_policy_list:
+        #     if storage_policy["first_app"] is True and app_name_count_list:
+        #         index = app_name_count_list.pop()
+        #         storage_policy["app_sum"] = index
+
+        #     if storage_policy["first_backup_set"] is True and backup_set_name_count_list:
+        #         index = backup_set_name_count_list.pop()
+        #         storage_policy["backup_set_sum"] = index
+    return storage_policy_list
+
+
+@login_required
+def storage_policy(request, funid):
+    whole_list = []
+    cv_token = CVRestApiToken()
+    cv_token.login(info)
+    cv_api = CVApiOperate(cv_token)
+    client_list = cv_api.get_client_list()
+    pool = ThreadPoolExecutor(max_workers=5)
+
+    try:
+        all_tasks = [pool.submit(get_storage_policy, cv_api, client["clientId"], client["clientName"]) for client in client_list]
+    except Exception as e:
+        print(e)
+        all_tasks = []
+    for future in as_completed(all_tasks):
+        if future.result():
+            whole_list.append({
+                "storage_policy_list": future.result(),
+                "agent_length": len(future.result())
+            })
+
+    return render(request, "storage_policy.html", {
+            'username': request.user.userinfo.fullname,
+            "pagefuns": getpagefuns(funid, request),
+            "whole_list": whole_list,
+        })
 
 
 def client_data_index(request, funid):

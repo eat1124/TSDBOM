@@ -164,3 +164,5 @@ EMAIL_PORT = 25
 #         },
 #     }
 # }
+
+LOGIN_URL = '/login/'

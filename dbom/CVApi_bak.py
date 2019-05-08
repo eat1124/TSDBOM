@@ -119,7 +119,7 @@ class CVRestApiCmd(object):
             return None
 
         client_props_req = self.service + command
-        # print("请求链接：", client_props_req)
+        print("request:", client_props_req)
         try:
             update = update_cmd.encode(encoding="utf-8")
         except:
@@ -305,7 +305,6 @@ class CVApiOperate(CVRestApiCmd):
         self.client_info = {"clientName": None, "clientId": None, "platform": self.platform, "backupsetList": [],
                             "agentList": []}
         self.sub_client_list = []
-        self.backup_set_list = []
         self.agent_list = []
         self.instance_list = []
         self.is_new_client = True
@@ -423,25 +422,8 @@ class CVApiOperate(CVRestApiCmd):
             client_list.append(rec)
         return client_list
 
-    def get_job_list(self, client_id, job_type="", app_type_name=None, backup_set_name=None,
-                     sub_client_name=None, time_sorted=False, period=604800):
+    def get_job_list(self, client_id, job_type="", app_type_name=None, backup_set_name=None, sub_client_name=None, time_sorted=False, period=604800):
         """
-        获取作业信息
-        :param client_id:
-        :param job_type:
-        :param app_type_name:
-        :param backup_set_name:
-        :param sub_client_name:
-        :param time_sorted:
-        :param period: 默认一周内作业
-        :return:
-        """
-        job_list = []
-        status_list = {"Running": "运行", "Waiting": "等待", "Pending": "阻塞", "Suspend": "终止", "Completed": "正常",
-                       "Failed": "失败", "Failed to Start": "启动失败", "Killed": "杀掉",
-                       "Completed w/ one or more errors": "已完成，但有一个或多个错误",
-                       "Completed w/ one or more warnings": "已完成，但有一个或多个警告"}
-        '''
         Running
         Waiting
         Pending
@@ -456,7 +438,12 @@ class CVApiOperate(CVRestApiCmd):
         Failed
         Failed to Start
         Killed
-        '''
+        """
+        job_list = []
+        status_list = {"Running": "运行", "Waiting": "等待", "Pending": "阻塞", "Suspend": "终止", "Completed": "正常",
+                       "Failed": "失败", "Failed to Start": "启动失败", "Killed": "杀掉",
+                       "Completed w/ one or more errors": "已完成，但有一个或多个错误",
+                       "Completed w/ one or more warnings": "已完成，但有一个或多个警告"}
         cmd = """Job?clientId={client_id}&limit={limit}&offset={offset}&completedJobLookupTime={completedJobLookupTime}&jobFilter={job_type}""".format(
             **{
                 "client_id": client_id,
@@ -571,6 +558,185 @@ class CVApiOperate(CVRestApiCmd):
             sub_client_list.append(node.attrib)
         return sub_client_list
 
+    def get_simple_sub_client_info(self, sub_client_id):
+        try:
+            sub_client_id = int(sub_client_id)
+        except Exception as e:
+            print(e)
+            return None
+        else:
+            sub_client_info = {}
+            command = "Subclient/{0}".format(sub_client_id)
+            resp = self.get_cmd(command)
+            subClientEntity = resp.findall(".//subClientEntity")
+            if subClientEntity:
+                # 子客户端名称
+                sub_client_info["subclientName"] = subClientEntity[0].get("subclientName", "")
+                sub_client_info["subclientId"] = subClientEntity[0].get("subclientId", "")
+                sub_client_info["backupsetId"] = subClientEntity[0].get("backupsetId", "")
+                sub_client_info["backupsetName"] = subClientEntity[0].get("backupsetName", "")
+                sub_client_info["instanceId"] = subClientEntity[0].get("instanceId", "")
+                sub_client_info["instanceName"] = subClientEntity[0].get("instanceName", "")
+                sub_client_info["applicationId"] = subClientEntity[0].get("applicationId", "")
+                sub_client_info["appName"] = subClientEntity[0].get("appName", "")
+                sub_client_info["clientId"] = subClientEntity[0].get("clientId", "")
+                sub_client_info["clientName"] = subClientEntity[0].get("clientName", "")
+
+            # dataBackupStoragePolicy
+            dataBackupStoragePolicy = resp.findall(".//dataBackupStoragePolicy")
+            if dataBackupStoragePolicy:
+                sub_client_info["storagePolicyId"] = dataBackupStoragePolicy[0].get("storagePolicyId", "")
+                sub_client_info["storagePolicyName"] = dataBackupStoragePolicy[0].get("storagePolicyName", "")
+            return sub_client_info
+
+    def get_sub_client_info(self, sub_client_id):
+        """
+        获取子客户端信息
+        :param sub_client_id:
+        :return:
+        """
+        backup_info = {}
+        my_content = []
+        if sub_client_id is None:
+            return None
+        command = "Subclient/{0}".format(sub_client_id)
+        resp = self.get_cmd(command)
+        try:
+            subClientEntity = resp.findall(".//subClientEntity")
+            # 子客户端名称
+            backup_info["sub_client_name"] = subClientEntity[0].get("subclientName", "")
+
+            # 应用名
+            backup_info["appName"] = subClientEntity[0].get("appName", "")
+            # 存储策略
+            dataBackupStoragePolicy = resp.findall(".//dataBackupStoragePolicy")
+
+            # 存储策略具体内容
+            storagePolicyId = dataBackupStoragePolicy[0].get("storagePolicyId", "")
+            storage_policy_cmd = "/StoragePolicy/{0}?propertyLevel=10".format(storagePolicyId)
+            storage_policy_xml = self.get_cmd(storage_policy_cmd)
+            storage_policy_copy = storage_policy_xml.findall(
+                ".//StoragePolicyCopy") if storage_policy_xml is not None else []
+            storage_library = storage_policy_xml.findall(".//library") if storage_policy_xml is not None else []
+            storage_drive_pool = storage_policy_xml.findall(".//drivePool") if storage_policy_xml is not None else []
+            storage_retention_rules = storage_policy_xml.findall(
+                ".//retentionRules") if storage_policy_xml is not None else []
+
+            backup_info["storage_info"] = {
+                "storage_id": dataBackupStoragePolicy[0].get("storagePolicyId", ""),
+                "storage_name": dataBackupStoragePolicy[0].get("storagePolicyName", ""),
+                "storage_policy_copy": dict(storage_policy_copy[0].items()) if storage_policy_copy else "",
+                "storage_library": dict(storage_library[0].items()) if storage_library else "",
+                "storage_drive_pool": dict(storage_drive_pool[0].items()) if storage_drive_pool else "",
+                "storage_retention_rules": dict(storage_retention_rules[0].items()) if storage_retention_rules else "",
+            }
+            # 计划策略
+            schduleList = []
+            cmd = "Schedules?subclientId={0}".format(sub_client_id)
+            client = self.get_cmd(cmd)
+            try:
+                activePhysicalNode = client.findall(".//task")
+                for node in activePhysicalNode:
+                    schduleList.append(node.attrib)
+            except Exception as e:
+                self.msg = "未获取到任务"
+                print(self.msg, e)
+            schedule_policy_list = []
+            for schedule in schduleList:
+                task_id = schedule["taskId"] if schduleList else ""
+
+                # 计划策略具体内容
+                cmd_get_schedule_name = "SchedulePolicy/{0}".format(task_id)
+                content = self.get_cmd(cmd_get_schedule_name)
+                schedule_info = content.findall(".//pattern") if content is not None else []
+                if schedule_info:
+                    schedule_info = schedule_info[0]
+                    schedule_policy_dict = dict(schedule_info.items())
+                    schedule_policy_dict["schdule_name"] = schduleList[0]["taskName"] if schduleList else ""
+
+                    schedule_policy_list.append(schedule_policy_dict)
+            backup_info["schedule_info"] = schedule_policy_list
+
+            # 客户端备份内容
+            # 文件备份集信息
+            if backup_info["appName"] == "File System":
+                # content
+                contentlist = resp.findall(".//content")
+                for content in contentlist:
+                    my_content.append(content.get("path", ""))
+                backup_info["content"] = my_content
+                # backupSystemState
+                fsSubClientProp = resp.findall(".//fsSubClientProp")
+                backup_info["backupSystemState"] = fsSubClientProp[0].get("backupSystemState", "")
+                if backup_info["backupSystemState"] == "0" or backup_info["backupSystemState"] == "false":
+                    backup_info["backupSystemState"] = "FALSE"
+                if backup_info["backupSystemState"] == "1" or backup_info["backupSystemState"] == "true":
+                    backup_info["backupSystemState"] = "TRUE"
+            # 数据库实例信息
+            if backup_info["appName"] == "SQL Server":
+                command = "/instance?clientId={0}".format(subClientEntity[0].get("clientId", ""))
+                resp = self.get_cmd(command)
+                instancenodes = resp.findall(".//instanceProperties")
+                for instancenode in instancenodes:
+                    instance = instancenode.findall(".//instance")
+
+                    if instance[0].get("instanceId", "") == subClientEntity[0].get("instanceId", ""):
+                        backup_info["instanceName"] = instance[0].get("instanceName", "")
+                        mssqlInstance = instancenode.findall(".//mssqlInstance")
+                        backup_info["vss"] = mssqlInstance[0].get("useVss", "")
+                        if backup_info["vss"] == "0" or backup_info["vss"] == "false":
+                            backup_info["vss"] = "FALSE"
+                        if backup_info["vss"] == "1" or backup_info["vss"] == "true":
+                            backup_info["vss"] = "TRUE"
+
+                        # iscover
+                        iscover = instancenode.findall(".//mssqlInstance/overrideHigherLevelSettings")
+                        if iscover:
+                            iscover = iscover[0]
+                            backup_info["iscover"] = iscover.get("overrideGlobalAuthentication", "")
+                        else:
+                            backup_info["iscover"] = ""
+
+                        if backup_info["iscover"] == "0" or backup_info["iscover"] == "false":
+                            backup_info["iscover"] = "FALSE"
+                        if backup_info["iscover"] == "1" or backup_info["iscover"] == "true":
+                            backup_info["iscover"] = "TRUE"
+                        # user:<userAccount/>
+                        userAccount = instancenode.findall(".//mssqlInstance/overrideHigherLevelSettings/userAccount")
+                        if userAccount:
+                            backup_info["userName"] = userAccount[0].get("userName", "")
+                        else:
+                            backup_info["userName"] = ""
+                        break
+            if backup_info["appName"] == "Oracle":
+                command = "/instance?clientId={0}".format(subClientEntity[0].get("clientId", ""))
+                resp = self.get_cmd(command)
+                instancenodes = resp.findall(".//instanceProperties")
+                for instancenode in instancenodes:
+                    instance = instancenode.findall(".//instance")
+                    if instance[0].get("instanceId", "") == subClientEntity[0].get("instanceId", ""):
+                        backup_info["instanceName"] = instance[0].get("instanceName", "")
+                        oracleInstance = instancenode.findall(".//oracleInstance")
+                        backup_info["oracleHome"] = oracleInstance[0].get("oracleHome", "")
+                        oracleUser = instancenode.findall(".//oracleInstance/oracleUser")
+                        backup_info["oracleUser"] = oracleUser[0].get("userName", "")
+                        # connect
+                        sqlConnect = instancenode.findall(".//oracleInstance/sqlConnect")
+                        backup_info["conn1"] = sqlConnect[0].get("userName", "")
+                        backup_info["conn2"] = ""  # sys密码，没有
+                        backup_info["conn3"] = sqlConnect[0].get("domainName", "")
+                        break
+            if backup_info["appName"] == "Virtual Server":
+                children = resp.findall(".//vmContent/children")
+                for child in children:
+                    my_content.append(child.get("displayName", ""))
+                backup_info["content"] = my_content
+                backup_info["backupsetName"] = subClientEntity[0].get("backupsetName", "")
+        except Exception as e:
+            self.msg = "获取客户端实例失败"
+            print(self.msg, e)
+        return backup_info
+
     def get_backup_set_list(self, client_id):
         """
         备份集列表
@@ -582,15 +748,15 @@ class CVApiOperate(CVRestApiCmd):
         # 'clientName': 'win-2qls3b7jx3v.hzx', 'applicationId': '33'}
         if client_id is None:
             return None
-        self.backup_set_list.clear()
+        backup_set_list = []
         cmd = 'Backupset?clientId={0}'.format(client_id)
         sub_client = self.get_cmd(cmd)
         if sub_client is None:
             return None
         active_physical_node = sub_client.findall(".//backupSetEntity")
         for node in active_physical_node:
-            self.backup_set_list.append(node.attrib)
-        return self.backup_set_list
+            backup_set_list.append(node.attrib)
+        return backup_set_list
 
     def get_backup_set_info(self, backup_set_id):
         """
@@ -599,6 +765,16 @@ class CVApiOperate(CVRestApiCmd):
         :return:
         """
         pass
+        # try:
+        #     backup_set_id = int(backup_set_id)
+        # except Exception as e:
+        #     print(e)
+        #     return None
+        # else:
+        #     backup_set_info = {}
+        #     cmd = 'Backupset/{0}'.format(backup_set_id)
+        #     backup_set = self.get_cmd(cmd)
+        #     return backup_set
 
     def get_client_os_info(self, client_id):
         """
@@ -753,154 +929,6 @@ class CVApiOperate(CVRestApiCmd):
 
     def get_is_new_client(self):
         return self.is_new_client
-
-    def get_sub_client_info(self, sub_client_id):
-        """
-        获取子客户端信息
-        :param sub_client_id:
-        :return:
-        """
-        backup_info = {}
-        my_content = []
-        if sub_client_id is None:
-            return None
-        command = "Subclient/{0}".format(sub_client_id)
-        resp = self.get_cmd(command)
-        try:
-            subClientEntity = resp.findall(".//subClientEntity")
-            # 子客户端名称
-            backup_info["sub_client_name"] = subClientEntity[0].get("subclientName", "")
-
-            # 应用名
-            backup_info["appName"] = subClientEntity[0].get("appName", "")
-            # 存储策略
-            dataBackupStoragePolicy = resp.findall(".//dataBackupStoragePolicy")
-
-            # 存储策略具体内容
-            storagePolicyId = dataBackupStoragePolicy[0].get("storagePolicyId", "")
-            storage_policy_cmd = "/StoragePolicy/{0}?propertyLevel=10".format(storagePolicyId)
-            storage_policy_xml = self.get_cmd(storage_policy_cmd)
-            storage_policy_copy = storage_policy_xml.findall(
-                ".//StoragePolicyCopy") if storage_policy_xml is not None else []
-            storage_library = storage_policy_xml.findall(".//library") if storage_policy_xml is not None else []
-            storage_drive_pool = storage_policy_xml.findall(".//drivePool") if storage_policy_xml is not None else []
-            storage_retention_rules = storage_policy_xml.findall(
-                ".//retentionRules") if storage_policy_xml is not None else []
-
-            backup_info["storage_info"] = {
-                "storage_id": dataBackupStoragePolicy[0].get("storagePolicyId", ""),
-                "storage_name": dataBackupStoragePolicy[0].get("storagePolicyName", ""),
-                "storage_policy_copy": dict(storage_policy_copy[0].items()) if storage_policy_copy else "",
-                "storage_library": dict(storage_library[0].items()) if storage_library else "",
-                "storage_drive_pool": dict(storage_drive_pool[0].items()) if storage_drive_pool else "",
-                "storage_retention_rules": dict(storage_retention_rules[0].items()) if storage_retention_rules else "",
-            }
-            # 计划策略
-            schduleList = []
-            cmd = "Schedules?subclientId={0}".format(sub_client_id)
-            client = self.get_cmd(cmd)
-            try:
-                activePhysicalNode = client.findall(".//task")
-                for node in activePhysicalNode:
-                    schduleList.append(node.attrib)
-            except Exception as e:
-                self.msg = "未获取到任务"
-                print(self.msg, e)
-            schedule_policy_list = []
-            for schedule in schduleList:
-                task_id = schedule["taskId"] if schduleList else ""
-
-                # 计划策略具体内容
-                cmd_get_schedule_name = "SchedulePolicy/{0}".format(task_id)
-                content = self.get_cmd(cmd_get_schedule_name)
-                schedule_info = content.findall(".//pattern") if content is not None else []
-                if schedule_info:
-                    schedule_info = schedule_info[0]
-                    schedule_policy_dict = dict(schedule_info.items())
-                    schedule_policy_dict["schdule_name"] = schduleList[0]["taskName"] if schduleList else ""
-
-                    schedule_policy_list.append(schedule_policy_dict)
-            backup_info["schedule_info"] = schedule_policy_list
-
-            # 客户端备份内容
-            # 文件备份集信息
-            if backup_info["appName"] == "File System":
-                # content
-                contentlist = resp.findall(".//content")
-                for content in contentlist:
-                    my_content.append(content.get("path", ""))
-                backup_info["content"] = my_content
-                # backupSystemState
-                fsSubClientProp = resp.findall(".//fsSubClientProp")
-                backup_info["backupSystemState"] = fsSubClientProp[0].get("backupSystemState", "")
-                if backup_info["backupSystemState"] == "0" or backup_info["backupSystemState"] == "false":
-                    backup_info["backupSystemState"] = "FALSE"
-                if backup_info["backupSystemState"] == "1" or backup_info["backupSystemState"] == "true":
-                    backup_info["backupSystemState"] = "TRUE"
-            # 数据库实例信息
-            if backup_info["appName"] == "SQL Server":
-                command = "/instance?clientId={0}".format(subClientEntity[0].get("clientId", ""))
-                resp = self.get_cmd(command)
-                instancenodes = resp.findall(".//instanceProperties")
-                for instancenode in instancenodes:
-                    instance = instancenode.findall(".//instance")
-
-                    if instance[0].get("instanceId", "") == subClientEntity[0].get("instanceId", ""):
-                        backup_info["instanceName"] = instance[0].get("instanceName", "")
-                        mssqlInstance = instancenode.findall(".//mssqlInstance")
-                        backup_info["vss"] = mssqlInstance[0].get("useVss", "")
-                        if backup_info["vss"] == "0" or backup_info["vss"] == "false":
-                            backup_info["vss"] = "FALSE"
-                        if backup_info["vss"] == "1" or backup_info["vss"] == "true":
-                            backup_info["vss"] = "TRUE"
-
-                        # iscover
-                        iscover = instancenode.findall(".//mssqlInstance/overrideHigherLevelSettings")
-                        if iscover:
-                            iscover = iscover[0]
-                            backup_info["iscover"] = iscover.get("overrideGlobalAuthentication", "")
-                        else:
-                            backup_info["iscover"] = ""
-
-                        if backup_info["iscover"] == "0" or backup_info["iscover"] == "false":
-                            backup_info["iscover"] = "FALSE"
-                        if backup_info["iscover"] == "1" or backup_info["iscover"] == "true":
-                            backup_info["iscover"] = "TRUE"
-                        # user:<userAccount/>
-                        userAccount = instancenode.findall(".//mssqlInstance/overrideHigherLevelSettings/userAccount")
-                        if userAccount:
-                            backup_info["userName"] = userAccount[0].get("userName", "")
-                        else:
-                            backup_info["userName"] = ""
-                        break
-            if backup_info["appName"] == "Oracle":
-                command = "/instance?clientId={0}".format(subClientEntity[0].get("clientId", ""))
-                resp = self.get_cmd(command)
-                instancenodes = resp.findall(".//instanceProperties")
-                for instancenode in instancenodes:
-                    instance = instancenode.findall(".//instance")
-                    if instance[0].get("instanceId", "") == subClientEntity[0].get("instanceId", ""):
-                        backup_info["instanceName"] = instance[0].get("instanceName", "")
-                        oracleInstance = instancenode.findall(".//oracleInstance")
-                        backup_info["oracleHome"] = oracleInstance[0].get("oracleHome", "")
-                        oracleUser = instancenode.findall(".//oracleInstance/oracleUser")
-                        backup_info["oracleUser"] = oracleUser[0].get("userName", "")
-                        # connect
-                        sqlConnect = instancenode.findall(".//oracleInstance/sqlConnect")
-                        backup_info["conn1"] = sqlConnect[0].get("userName", "")
-                        backup_info["conn2"] = ""  # sys密码，没有
-                        backup_info["conn3"] = sqlConnect[0].get("domainName", "")
-                        break
-            if backup_info["appName"] == "Virtual Server":
-                children = resp.findall(".//vmContent/children")
-                for child in children:
-                    my_content.append(child.get("displayName", ""))
-                backup_info["content"] = my_content
-                backup_info["backupsetName"] = subClientEntity[0].get("backupsetName", "")
-        except Exception as e:
-            self.msg = "获取客户端实例失败"
-            print(self.msg, e)
-        return backup_info
 
     def custom_backup_tree_by_client(self, client):
         """
@@ -1153,6 +1181,32 @@ class CVApiOperate(CVRestApiCmd):
         if event is None:
             return None
 
+    def get_agent_list(self, client_id):
+        pass
+        # try:
+        #     client_id = int(client_id)
+        # except Exception as e:
+        #     print(e)
+        #     return None
+        # else:
+        #     agent_list = []
+        #     cmd = 'Agent?clientId={0}'.format(client_id)
+        #     agent = self.get_cmd(cmd, write_down=True)
+            # if library is None:
+            #     return None
+            # active_physical_node = library.findall(".//entityInfo")
+            # for node in active_physical_node:
+            #     library_dict = dict()
+
+            #     library_dict["library_name"] = node.attrib["name"]
+            #     try:
+            #         library_dict["library_id"] = int(node.attrib["id"])
+            #     except TypeError as e:
+            #         print("get_library_list", e)
+            #     library_list.append(library_dict)
+            # return agent
+
+
 
 if __name__ == "__main__":
     a = time.time()
@@ -1173,9 +1227,11 @@ if __name__ == "__main__":
     # sp = cv_api.get_client_info_by_name("cv-server")  # 2357 11 12 13 14 22 24
     # sp = cv_api.get_client_info_by_id(12)
     # sp = cv_api.custom_backup_tree_by_client(3)
-    sp = cv_api.get_sub_client_info(4)
+    # sp = cv_api.get_sub_client_info(34)
+    sp = cv_api.get_simple_sub_client_info(34)
 
     # sp = cv_api.get_backup_set_list(3)
+    # sp = cv_api.get_backup_set_info(5)
     # sp = cv_api.get_client_instance(3)
     # sp = cv_api.get_client_list()
     # sp = cv_api.get_library_list()
@@ -1184,8 +1240,8 @@ if __name__ == "__main__":
     # sp = cv_api.get_job_list("2",app_type_name="File System")
     # sp = cv_api.get_job_list("1")
     # sp = cv_api.get_sp_list()
-    sp = cv_api.get_sp_info("26")
-
+    # sp = cv_api.get_sp_info("26")
+    # sp = cv_api.get_agent_list(3)
     # 通过数据库过滤辅助拷贝状态destcopyid
 
 
@@ -1194,7 +1250,7 @@ if __name__ == "__main__":
     # sp = cv_api.get_console_alert_list()
     # sp = cv_api.get_storage_pool_list()
     # sp = cv_api.test()
-    # sp = cv_api.get_sub_client_list(3)
+    # sp = cv_api.get_sub_client_list(3)  # mysql 89  filesystem 4 oracle 118 sqlserver34
     # sp = cv_api.get_sp_from_sub_client(4)
     if sp is not None:
         print(len(sp), sp)
