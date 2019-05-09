@@ -811,6 +811,93 @@ def storage_policy(request, funid):
         })
 
 
+def get_schedule_policy(cv_api, client_id, client_name):
+    sub_client_list = cv_api.get_sub_client_list(client_id)
+    schedule_policy_list = []
+
+    if sub_client_list:
+        for num, sub_client in enumerate(sub_client_list):
+            schedule_list = cv_api.get_schedule_list(sub_client["subclientId"])
+
+            if schedule_list:
+                for schedule in schedule_list:
+                    schedule_policy_list.append({
+                            "client_id": client_id,
+                            "client_name": client_name,
+                            "taskName": schedule["taskName"],
+                            "backupLevel": schedule["backupLevel"],
+                            "description": schedule["description"],
+                            "backupsetName": schedule["backupsetName"],
+                            "agent_type_name": schedule["appName"],
+                            "subclientName": schedule["subclientName"],
+                        })
+
+    return schedule_policy_list
+
+
+@login_required
+def schedule_policy(request, funid):
+    whole_list = []
+    # 1
+    cv_token = CVRestApiToken()
+    cv_token.login(info)
+    cv_api = CVApiOperate(cv_token)
+
+    # 计划策略
+    schedule_policy_list = cv_api.get_schedule_policy_list()
+    c_schedule_policy_info_list = []
+    for schedule_policy in schedule_policy_list:
+        taskId = schedule_policy["taskId"]
+        taskName = schedule_policy["taskName"]
+        schedule_policy_info_list = cv_api.get_schedule_policy_info(taskId)
+        c_schedule_policy_info_list += schedule_policy_info_list
+
+    # 2
+    # client_list = cv_api.get_client_list()
+    # pool = ThreadPoolExecutor(max_workers=5)
+
+    # try:
+    #     all_tasks = [pool.submit(get_schedule_policy, cv_api, client["clientId"], client["clientName"]) for client in client_list]
+    # except Exception as e:
+    #     print(e)
+    #     all_tasks = []
+    # for future in as_completed(all_tasks):
+    #     if future.result():
+    #         whole_list.append({
+    #             "storage_policy_list": future.result(),
+    #             "agent_length": len(future.result())
+    #         })
+
+    # # 3 数据库查询
+    # conn = pymssql.connect(host=r'192.168.100.149\COMMVAULT', user='sa_cloud', password='1qaz@WSX', database='CommServ')
+    # cur = conn.cursor()
+
+    # sql = """SELECT [scheduleId],[scheduePolicy],[scheduleName],[scheduletask],[schedbackuptype],[schedpattern],[schedinterval],[schedbackupday],[schedbackupTime],[schednextbackuptime],[appid],[clientName],[idaagent],[instance],[backupset],[subclient]
+    #         FROM [commserv].[dbo].[CommCellBkScheduleForSubclients]"""
+    # cur.execute(sql)
+    # schedule_list = cur.fetchall()
+    # schedule_info_list = []
+    # for schedule in schedule_list:
+    #     schedule_info_list.append({
+    #             "clientName": schedule[11],
+    #             "appName": schedule[12],
+    #             "Instance": schedule[13],
+    #             "backupsetName": schedule[14],
+    #             "subclientName": schedule[15],
+    #             "backupLevel": schedule[4],
+    #             "description": schedule[5] + "&" +schedule[6] + "&" + schedule[7] + "&" + schedule[8],
+    #             "taskName": schedule[3],
+    #         })
+
+    # print(schedule_list)
+    return render(request, "schedule_policy.html", {
+            'username': request.user.userinfo.fullname,
+            "pagefuns": getpagefuns(funid, request),
+            "whole_list": c_schedule_policy_info_list,
+        })
+
+
+
 def client_data_index(request, funid):
     if request.user.is_authenticated():
         return render(request, 'clients.html', {'username': request.user.userinfo.fullname,

@@ -298,7 +298,6 @@ class CVApiOperate(CVRestApiCmd):
     def __init__(self, token):
         super().__init__(token)
         self.sp_list = []
-        self.schedule_list = []
         self.client_list = []
         self.job_list = []
         self.platform = {"platform": None, "ProcessorType": 0, "hostName": None}
@@ -385,21 +384,185 @@ class CVApiOperate(CVRestApiCmd):
         # if resp is None:
         #     return None
 
-    def get_schedule_list(self):
+    def get_schedule_policy_list(self):
         """
         获取所有计划策略
         :return:
         """
-        self.schedule_list.clear()
+        schedule_policy_list = []
         schedule_policy = self.get_cmd('SchedulePolicy')
         if schedule_policy is None:
             return None
-        active_physical_node = schedule_policy.findall(".//taskDetail/task")
-        for node in active_physical_node:
-            if "System Created " in node.attrib["taskName"]:
-                continue
-            self.schedule_list.append(node.attrib)
-        return self.schedule_list
+        schedule_tasks = schedule_policy.xpath("//taskDetail/task")
+
+        if schedule_tasks:
+            for schedule_task in schedule_tasks:
+                taskIds = schedule_task.xpath("./@taskId")
+                if taskIds:
+                    taskId = taskIds[0]
+                else:
+                    taskId = ""
+                taskNames = schedule_task.xpath("./@taskName")
+                if taskNames:
+                    taskName = taskNames[0]
+                else:
+                    taskName = ""
+                schedule_policy_list.append({
+                        "taskId": taskId,
+                        "taskName": taskName,
+                    })
+
+        return schedule_policy_list
+
+    def get_schedule_list(self, sub_client_id):
+        schduleList = []
+        cmd = "Schedules?subclientId={0}".format(sub_client_id)
+        schedules = self.get_cmd(cmd)
+
+        taskDetails = schedules.xpath("//taskDetail")
+        if taskDetails:
+            taskDetail = taskDetails[0]
+            # 策略名称
+            taskIds = taskDetail.xpath("./task/@taskId")
+            if taskIds:
+                taskId = taskIds[0]
+            else:
+                taskId = ""
+            taskNames = taskDetail.xpath("./task/@taskName")
+            if taskNames:
+                taskName = taskNames[0]
+            else:
+                taskName = ""
+            # backset_name/app_name
+            backupsetNames = taskDetail.xpath("./associations/@backupsetName")
+            appNames = taskDetail.xpath("./associations/@appName")
+            subclientNames = taskDetail.xpath("./associations/@subclientName")
+            if backupsetNames:
+                backupsetName = backupsetNames[0]
+            else:
+                backupsetName = ""
+            if appNames:
+                appName = appNames[0]
+            else:
+                appName = ""
+            if subclientNames:
+                subclientName = subclientNames[0]
+            else:
+                subclientName = ""
+            subTasks = taskDetail.xpath("./subTasks")
+            for subTask in subTasks:
+                # backupOpts(备份模式),pattern(计划模式)
+                backupOpts = subTask.xpath("./options/backupOpts")
+                for backupOpt in backupOpts:
+                    backupLevels = backupOpt.xpath("./@backupLevel")
+                    if backupLevels:
+                        backupLevel = backupLevels[0]
+                    else:
+                        backupLevel = ""
+
+                    incLevels = backupOpt.xpath("./@incLevel")
+                    if incLevels:
+                        incLevel = incLevels[0]
+                    else:
+                        incLevel = ""
+                patterns = subTask.xpath("./pattern")
+                for pattern in patterns:
+                    descriptions = pattern.xpath("./@description")
+                    if descriptions:
+                        description = descriptions[0]
+                    else:
+                        description = ""
+
+                schduleList.append({
+                        "taskId": taskId,
+                        "taskName": taskName,
+                        "backupLevel": backupLevel,
+                        "incLevels": incLevel,
+                        "description": description,
+                        "backupsetName": backupsetName,
+                        "appName": appName,
+                        "subclientName": subclientName,
+                    })
+
+        return schduleList
+
+    def get_schedule_policy_info(self, task_id):
+        get_schedule_policy_info_list = []
+        cmd = "SchedulePolicy/{0}".format(task_id)
+        schedule_info = self.get_cmd(cmd)
+        # taskInfo/associations  taskInfo/subTasks/options/backupOpts taskInfo/subTasks/pattern
+        taskInfo = schedule_info.xpath("//taskInfo")
+        if taskInfo:
+            taskInfo = taskInfo[0]
+            # backset_name/app_name
+            clientNames = taskInfo.xpath("./associations/@clientName")
+            backupsetNames = taskInfo.xpath("./associations/@backupsetName")
+            appNames = taskInfo.xpath("./associations/@appName")
+            subclientNames = taskInfo.xpath("./associations/@subclientName")
+            taskNames = taskInfo.xpath("./task/@taskName")
+            if clientNames:
+                clientName = clientNames[0]
+            else:
+                clientName = ""
+            if backupsetNames:
+                backupsetName = backupsetNames[0]
+            else:
+                backupsetName = ""
+            if appNames:
+                appName = appNames[0]
+            else:
+                appName = ""
+            if subclientNames:
+                subclientName = subclientNames[0]
+            else:
+                subclientName = ""
+            if taskNames:
+                taskName = taskNames[0]
+            else:
+                taskName = ""
+            subTasks = taskInfo.xpath("./subTasks")
+            for num, subTask in enumerate(subTasks):
+                if num == 0:
+                    first_schedule = 1
+                else:
+                    first_schedule = 0
+                # backupOpts(备份模式),pattern(计划模式)
+                backupOpts = subTask.xpath("./options/backupOpts")
+                for backupOpt in backupOpts:
+                    backupLevels = backupOpt.xpath("./@backupLevel")
+                    if backupLevels:
+                        backupLevel = backupLevels[0]
+                    else:
+                        backupLevel = ""
+
+                    incLevels = backupOpt.xpath("./@incLevel")
+                    if incLevels:
+                        incLevel = incLevels[0]
+                    else:
+                        incLevel = ""
+                patterns = subTask.xpath("./pattern")
+                for pattern in patterns:
+                    descriptions = pattern.xpath("./@description")
+                    if descriptions:
+                        description = descriptions[0]
+                    else:
+                        description = ""
+                if subclientName:
+                    get_schedule_policy_info_list.append({
+                            "first_schedule": first_schedule,
+                            "schedule_count": len(subTasks),
+                            "backupLevel": backupLevel,
+                            "incLevels": incLevel,
+                            "description": description,
+                            "backupsetName": backupsetName,
+                            "appName": appName,
+                            "subclientName": subclientName,
+                            "clientName": clientName,
+                            "taskName": taskName,
+                        })
+
+        return get_schedule_policy_info_list
+
 
     def get_client_list(self):
         """
@@ -1191,7 +1354,7 @@ class CVApiOperate(CVRestApiCmd):
         # else:
         #     agent_list = []
         #     cmd = 'Agent?clientId={0}'.format(client_id)
-        #     agent = self.get_cmd(cmd, write_down=True)
+        #     agent = self.get_cmd(cmd)
             # if library is None:
             #     return None
             # active_physical_node = library.findall(".//entityInfo")
@@ -1228,7 +1391,10 @@ if __name__ == "__main__":
     # sp = cv_api.get_client_info_by_id(12)
     # sp = cv_api.custom_backup_tree_by_client(3)
     # sp = cv_api.get_sub_client_info(34)
-    sp = cv_api.get_simple_sub_client_info(34)
+    # sp = cv_api.get_simple_sub_client_info(34)
+    # sp = cv_api.get_schedule_list(4)
+    sp = cv_api.get_schedule_policy_info(30)
+    # sp = cv_api.get_schedule_policy_list()
 
     # sp = cv_api.get_backup_set_list(3)
     # sp = cv_api.get_backup_set_info(5)
