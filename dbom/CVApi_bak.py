@@ -768,7 +768,7 @@ class CVApiOperate(CVRestApiCmd):
         if sub_client_id is None:
             return None
         command = "Subclient/{0}".format(sub_client_id)
-        resp = self.get_cmd(command, write_down=True)
+        resp = self.get_cmd(command)
 
         subClientEntity = resp.findall(".//subClientEntity")
         # 子客户端名称
