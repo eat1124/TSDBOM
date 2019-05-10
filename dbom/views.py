@@ -591,10 +591,7 @@ def backup_status(request, funid):
                 "agent_job_list": future.result(),
                 "agent_length": len(future.result())
             })
-            for job in future.result():
-                if "失败" in job["job_backup_status"]:
-                    warning_client_num += 1
-                    break
+
     return render(request, "backup_status.html", {
             'username': request.user.userinfo.fullname,
             "pagefuns": getpagefuns(funid, request),
@@ -603,76 +600,33 @@ def backup_status(request, funid):
 
 
 def get_backup_content(cv_api, client_id, client_name):
-    status_list = {"Running": "运行", "Waiting": "等待", "Pending": "阻塞", "Suspend": "终止", "Completed": "正常",
-               "Failed": "失败", "Failed to Start": "启动失败", "Killed": "杀掉",
-               "Completed w/ one or more errors": "已完成，但有一个或多个错误",
-               "Completed w/ one or more warnings": "已完成，但有一个或多个警告", "Success": "成功"}
-    # client_id >> sub_client_id >> storage_id >> copy_id >> job_info
-    conn = pymssql.connect(host='192.168.100.149\COMMVAULT', user='sa_cloud', password='1qaz@WSX', database='CommServ')
-    cur = conn.cursor()
-
-    job_list = cv_api.get_job_list(client_id, time_sorted=True)
     sub_client_list = cv_api.get_sub_client_list(client_id)
+    backup_content_list = []
 
-    agent_job_list = []
-    job_pre_agent_list = []
+    if sub_client_list:
+        for num, sub_client in enumerate(sub_client_list):
+            backup_content = cv_api.get_backup_content(sub_client["subclientId"])
 
-    if job_list:
-        for job in job_list:
-            if job["agentType"] in job_pre_agent_list:
-                pass
-            else:
-                # client,agent
-                # > sub_client_list
-                # >> storage_list
-                # >>> storage_info (copy)
-                # >>>> sql查询
-                aux_copy_info = ""
-                for sub_client in sub_client_list:
-                    if job["agentType"] in sub_client["appName"]:
-                        storage_policy_name = ""
-                        source_copy_id = ""
-                        dest_copy_id = ""
-                        # 存储策略列表
-                        storage_policy_list = cv_api.get_sp_from_sub_client(sub_client["subclientId"])
-                        for storage_policy in storage_policy_list:
-                            try:
-                                storage_policy_name = storage_policy["storagePolicyName"]
-                                # 存储策略信息
-                                sp_info_list = cv_api.get_sp_info(storage_policy["storagePolicyId"])
-                                if len(sp_info_list) > 1:
-                                    source_copy_id = sp_info_list[0]["copyId"]
-                                    dest_copy_id = sp_info_list[1]["copyId"]
-                                    break
-                            except:
-                                pass
-                
-                        sql = """SELECT jobstatus FROM [commserv].[dbo].[CommCellAuxCopyInfo] WHERE storagepolicy LIKE '{0}' and sourcecopyid='{1}' and destcopyid='{2}' ORDER BY startdate DESC""".format(
-                            storage_policy_name, source_copy_id, dest_copy_id)
-                        cur.execute(sql)
-                        aux_copy_info = cur.fetchall()
-                        if aux_copy_info:
-                            aux_copy_info = aux_copy_info[0][0]
-                        break
+            if backup_content:
+                try:
+                    if backup_content["appName"] in ["File System", "Virtual Server"]:
+                        backupsetName = backup_content["backupsetName"]
+                    else:
+                        backupsetName = backup_content["instanceName"]
+                    content = ""
+                    for i in backup_content["content"]:
+                        content += i + "|"
 
-                if job["status"] in ["运行", "正常", "等待", "QueuedCompleted", "Queued"]:
-                    status_label = "label-success"
-                elif job["status"] in ["阻塞", "已完成，但有一个或多个错误", "已完成，但有一个或多个警告"]:
-                    status_label = "label-warning"
-                else:
-                    status_label = "label-danger"
-
-                job_pre_agent_list.append(job["agentType"])
-                agent_job_list.append({
-                    "client_id": client_id,
-                    "client_name": client_name,
-                    "agent_type_name": job["agentType"],
-                    "job_start_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(job["StartTime"]))),
-                    "job_backup_status": job["status"],
-                    "status_label": status_label,
-                    "aux_copy_info": status_list[aux_copy_info] if aux_copy_info else "",
-                })
-        return agent_job_list
+                    backup_content_list.append({
+                        "client_name": client_name,
+                        "agent_type_name": backup_content["appName"],
+                        "backupsetName": backupsetName,
+                        "subclientName": backup_content["subclientName"],
+                        "content": content[:-1] if content else "",
+                    })
+                except KeyError as e:
+                    print(e)
+    return backup_content_list
 
 
 @login_required
@@ -685,7 +639,7 @@ def backup_content(request, funid):
     pool = ThreadPoolExecutor(max_workers=5)
     # 并发
     try:
-        all_tasks = [pool.submit(custom_concrete_job_list, cv_api, client["clientId"], client["clientName"]) for
+        all_tasks = [pool.submit(get_backup_content, cv_api, client["clientId"], client["clientName"]) for
                      client in client_list]
     except Exception as e:
         print(e)
@@ -693,13 +647,10 @@ def backup_content(request, funid):
     for future in as_completed(all_tasks):
         if future.result():
             whole_list.append({
-                "agent_job_list": future.result(),
+                "backup_content_list": future.result(),
                 "agent_length": len(future.result())
             })
-            for job in future.result():
-                if "失败" in job["job_backup_status"]:
-                    warning_client_num += 1
-                    break
+    print(whole_list)
     return render(request, "backup_content.html", {
             'username': request.user.userinfo.fullname,
             "pagefuns": getpagefuns(funid, request),
@@ -827,11 +778,11 @@ def get_schedule_policy(cv_api, client_id, client_name):
                             "taskName": schedule["taskName"],
                             "backupLevel": schedule["backupLevel"],
                             "description": schedule["description"],
-                            "backupsetName": schedule["backupsetName"],
+                            "backupsetName": schedule["backupsetName"] if schedule["appName"] in ["File System", "Virtual Server"] else schedule["instanceName"],
                             "agent_type_name": schedule["appName"],
                             "subclientName": schedule["subclientName"],
                         })
-
+    print(schedule_policy_list)
     return schedule_policy_list
 
 
@@ -848,7 +799,6 @@ def schedule_policy(request, funid):
     c_schedule_policy_info_list = []
     for schedule_policy in schedule_policy_list:
         taskId = schedule_policy["taskId"]
-        taskName = schedule_policy["taskName"]
         schedule_policy_info_list = cv_api.get_schedule_policy_info(taskId)
         c_schedule_policy_info_list += schedule_policy_info_list
 

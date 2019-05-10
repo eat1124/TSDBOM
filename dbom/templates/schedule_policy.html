@@ -11,27 +11,25 @@
                                 <th></th>
                                 <th> 客户端</th>
                                 <th> 类型</th>
-                                <th> 备份集</th>
+                                <th> 备份集/实例</th>
                                 <th> 子客户端</th>
                                 <th> 计划策略</th>
                                 <th> 计划模式</th>
                             </tr>
                         </thead>
-                        <!--
-                        <tbody>
-                            {% for schedule in whole_list %}
-                                <tr>
-                                    <td> {{ forloop.forloop.counter }} </td>
-                                    <td> {{ schedule.clientName }}</td>
-                                    <td> {{ schedule.appName }}</td>
-                                    <td> {{ schedule.backupsetName }}</td>
-                                    <td> {{ schedule.subclientName }}</td>
-                                    <td> {{ schedule.taskName }}</td>
-                                    <td> {{ schedule.description }}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    -->
+{#                        <tbody>#}
+{#                            {% for schedule in whole_list %}#}
+{#                                <tr>#}
+{#                                    <td> {{ forloop.forloop.counter }} </td>#}
+{#                                    <td> {{ schedule.clientName }}</td>#}
+{#                                    <td> {{ schedule.appName }}</td>#}
+{#                                    <td> {{ schedule.backupsetName }}</td>#}
+{#                                    <td> {{ schedule.subclientName }}</td>#}
+{#                                    <td> {{ schedule.taskName }}</td>#}
+{#                                    <td> {{ schedule.description }}</td>#}
+{#                                </tr>#}
+{#                            {% endfor %}#}
+{#                        </tbody>#}
                         <tbody>
                             {% for schedule in whole_list %}
                                 <tr>
@@ -47,26 +45,24 @@
                                 </tr>
                             {% endfor %}
                         </tbody>
-                        <!--
-                        <tbody>
-                            {% for client in whole_list %}
-                                {% for agent in client.storage_policy_list %}
-                                <tr>
-                                    {% if forloop.counter == 1 %}
-                                    <td rowspan="{{ client.agent_length }}" style="vertical-align:middle"> {{ forloop.parentloop.counter }}</td>
-                                    <td rowspan="{{ client.agent_length }}" style="vertical-align:middle"> {{ agent.client_name }}</td>
-                                    {% endif %}
-                                    <td> {{ agent.agent_type_name }}</td>
-                                    <td> {{ agent.backupsetName }}</td>
-                                    <td> {{ agent.subclientName }}</td>
-                                    <td> {{ agent.taskName }}</td>
-                                    <td> {{ agent.description }}</td>
-                                    <td> {{ agent.backupLevel }}</td>
-                                </tr>
-                                {% endfor %}
-                            {% endfor %}
-                        </tbody>
-                    -->
+{#                        <tbody>#}
+{#                            {% for client in whole_list %}#}
+{#                                {% for agent in client.storage_policy_list %}#}
+{#                                <tr>#}
+{#                                    {% if forloop.counter == 1 %}#}
+{#                                    <td rowspan="{{ client.agent_length }}" style="vertical-align:middle"> {{ forloop.parentloop.counter }}</td>#}
+{#                                    <td rowspan="{{ client.agent_length }}" style="vertical-align:middle"> {{ agent.client_name }}</td>#}
+{#                                    {% endif %}#}
+{#                                    <td> {{ agent.agent_type_name }}</td>#}
+{#                                    <td> {{ agent.backupsetName }}</td>#}
+{#                                    <td> {{ agent.subclientName }}</td>#}
+{#                                    <td> {{ agent.taskName }}</td>#}
+{#                                    <td> {{ agent.description }}</td>#}
+{#                                    <td> {{ agent.backupLevel }}</td>#}
+{#                                </tr>#}
+{#                                {% endfor %}#}
+{#                            {% endfor %}#}
+{#                        </tbody>#}
                     </table>
                 </div>
             </div>

@@ -31,24 +31,24 @@
                                 </tr>
                                 {% endfor %}
                             {% endfor %}
-                            <!--{% for client in whole_list %}
-                                {% for agent in client.storage_policy_list %}
-                                <tr>
-                                    {% if forloop.counter == 1 %}
-                                    <td rowspan="{{ client.agent_length }}" style="vertical-align:middle"> {{ forloop.parentloop.counter }}</td>
-                                    <td rowspan="{{ client.agent_length }}" style="vertical-align:middle"> {{ agent.client_name }}</td>
-                                    {% endif %}
-                                    {% if agent.first_app == True %}
-                                    <td rowspan="{{ agent.app_sum }}" style="vertical-align:middle"> {{ agent.agent_type_name }}</td>
-                                    {% endif %}
-                                    {% if agent.first_backup_set == True %}
-                                    <td rowspan="{{ agent.backup_set_sum }}" style="vertical-align:middle"> {{ agent.backupsetName }}</td>
-                                    {% endif %}
-                                    <td> {{ agent.subclientName }}</td>
-                                    <td> {{ agent.storagePolicyName }}</td>
-                                </tr>
-                                {% endfor %}
-                            {% endfor %}-->
+{#                            {% for client in whole_list %}#}
+{#                                {% for agent in client.storage_policy_list %}#}
+{#                                <tr>#}
+{#                                    {% if forloop.counter == 1 %}#}
+{#                                    <td rowspan="{{ client.agent_length }}" style="vertical-align:middle"> {{ forloop.parentloop.counter }}</td>#}
+{#                                    <td rowspan="{{ client.agent_length }}" style="vertical-align:middle"> {{ agent.client_name }}</td>#}
+{#                                    {% endif %}#}
+{#                                    {% if agent.first_app == True %}#}
+{#                                    <td rowspan="{{ agent.app_sum }}" style="vertical-align:middle"> {{ agent.agent_type_name }}</td>#}
+{#                                    {% endif %}#}
+{#                                    {% if agent.first_backup_set == True %}#}
+{#                                    <td rowspan="{{ agent.backup_set_sum }}" style="vertical-align:middle"> {{ agent.backupsetName }}</td>#}
+{#                                    {% endif %}#}
+{#                                    <td> {{ agent.subclientName }}</td>#}
+{#                                    <td> {{ agent.storagePolicyName }}</td>#}
+{#                                </tr>#}
+{#                                {% endfor %}#}
+{#                            {% endfor %}#}
                         </tbody>
                     </table>
                 </div>

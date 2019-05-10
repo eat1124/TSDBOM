@@ -408,9 +408,9 @@ class CVApiOperate(CVRestApiCmd):
                 else:
                     taskName = ""
                 schedule_policy_list.append({
-                        "taskId": taskId,
-                        "taskName": taskName,
-                    })
+                    "taskId": taskId,
+                    "taskName": taskName,
+                })
 
         return schedule_policy_list
 
@@ -437,6 +437,7 @@ class CVApiOperate(CVRestApiCmd):
             backupsetNames = taskDetail.xpath("./associations/@backupsetName")
             appNames = taskDetail.xpath("./associations/@appName")
             subclientNames = taskDetail.xpath("./associations/@subclientName")
+            instanceNames = taskDetail.xpath("./associations/@instanceName")
             if backupsetNames:
                 backupsetName = backupsetNames[0]
             else:
@@ -449,6 +450,10 @@ class CVApiOperate(CVRestApiCmd):
                 subclientName = subclientNames[0]
             else:
                 subclientName = ""
+            if instanceNames:
+                instanceName = instanceNames[0]
+            else:
+                instanceName = ""
             subTasks = taskDetail.xpath("./subTasks")
             for subTask in subTasks:
                 # backupOpts(备份模式),pattern(计划模式)
@@ -474,16 +479,16 @@ class CVApiOperate(CVRestApiCmd):
                         description = ""
 
                 schduleList.append({
-                        "taskId": taskId,
-                        "taskName": taskName,
-                        "backupLevel": backupLevel,
-                        "incLevels": incLevel,
-                        "description": description,
-                        "backupsetName": backupsetName,
-                        "appName": appName,
-                        "subclientName": subclientName,
-                    })
-
+                    "taskId": taskId,
+                    "taskName": taskName,
+                    "backupLevel": backupLevel,
+                    "incLevels": incLevel,
+                    "description": description,
+                    "backupsetName": backupsetName,
+                    "appName": appName,
+                    "subclientName": subclientName,
+                    "instanceName": instanceName,
+                })
         return schduleList
 
     def get_schedule_policy_info(self, task_id):
@@ -500,6 +505,7 @@ class CVApiOperate(CVRestApiCmd):
             appNames = taskInfo.xpath("./associations/@appName")
             subclientNames = taskInfo.xpath("./associations/@subclientName")
             taskNames = taskInfo.xpath("./task/@taskName")
+            instanceNames = taskInfo.xpath("./associations/@instanceName")
             if clientNames:
                 clientName = clientNames[0]
             else:
@@ -520,6 +526,10 @@ class CVApiOperate(CVRestApiCmd):
                 taskName = taskNames[0]
             else:
                 taskName = ""
+            if instanceNames:
+                instanceName = instanceNames[0]
+            else:
+                instanceName = ""
             subTasks = taskInfo.xpath("./subTasks")
             for num, subTask in enumerate(subTasks):
                 if num == 0:
@@ -549,20 +559,19 @@ class CVApiOperate(CVRestApiCmd):
                         description = ""
                 if subclientName:
                     get_schedule_policy_info_list.append({
-                            "first_schedule": first_schedule,
-                            "schedule_count": len(subTasks),
-                            "backupLevel": backupLevel,
-                            "incLevels": incLevel,
-                            "description": description,
-                            "backupsetName": backupsetName,
-                            "appName": appName,
-                            "subclientName": subclientName,
-                            "clientName": clientName,
-                            "taskName": taskName,
-                        })
+                        "first_schedule": first_schedule,
+                        "schedule_count": len(subTasks),
+                        "backupLevel": backupLevel,
+                        "incLevels": incLevel,
+                        "description": description,
+                        "backupsetName": backupsetName if appName in ["File System", "Virtual Server"] else instanceName,
+                        "appName": appName,
+                        "subclientName": subclientName,
+                        "clientName": clientName,
+                        "taskName": taskName,
+                    })
 
         return get_schedule_policy_info_list
-
 
     def get_client_list(self):
         """
@@ -751,6 +760,68 @@ class CVApiOperate(CVRestApiCmd):
                 sub_client_info["storagePolicyId"] = dataBackupStoragePolicy[0].get("storagePolicyId", "")
                 sub_client_info["storagePolicyName"] = dataBackupStoragePolicy[0].get("storagePolicyName", "")
             return sub_client_info
+
+    def get_backup_content(self, sub_client_id):
+        bacukup_content = {}
+        my_content = []
+
+        if sub_client_id is None:
+            return None
+        command = "Subclient/{0}".format(sub_client_id)
+        resp = self.get_cmd(command, write_down=True)
+
+        subClientEntity = resp.findall(".//subClientEntity")
+        # 子客户端名称
+        bacukup_content["subclientName"] = subClientEntity[0].get("subclientName", "")
+
+        # 应用名
+        bacukup_content["appName"] = subClientEntity[0].get("appName", "")
+        # 备份集
+        bacukup_content["backupsetName"] = subClientEntity[0].get("backupsetName", "")
+        if bacukup_content["appName"] == "File System":
+            # content
+            contentlist = resp.findall(".//content")
+            for content in contentlist:
+                my_content.append(content.get("path", ""))
+            bacukup_content["content"] = my_content
+        # 数据库实例信息
+        if bacukup_content["appName"] == "SQL Server":
+            command = "/instance?clientId={0}".format(subClientEntity[0].get("clientId", ""))
+            resp = self.get_cmd(command)
+            instancenodes = resp.findall(".//instanceProperties")
+            for instancenode in instancenodes:
+                instance = instancenode.findall(".//instance")
+                if instance[0].get("instanceId", "") == subClientEntity[0].get("instanceId", ""):
+                    bacukup_content["instanceName"] = instance[0].get("instanceName", "")
+                    bacukup_content["content"] = [instance[0].get("instanceName", "")]
+                    break
+        if bacukup_content["appName"] == "Oracle":
+            command = "instance?clientId={0}".format(subClientEntity[0].get("clientId", ""))
+            resp = self.get_cmd(command)
+            instancenodes = resp.findall(".//instanceProperties")
+            for instancenode in instancenodes:
+                instance = instancenode.findall(".//instance")
+                if instance[0].get("instanceId", "") == subClientEntity[0].get("instanceId", ""):
+                    bacukup_content["instanceName"] = instance[0].get("instanceName", "")
+                    bacukup_content["content"] = [instance[0].get("instanceName", "")]
+                    break
+        if bacukup_content["appName"] == "Virtual Server":
+            children = resp.findall(".//vmContent/children")
+            for child in children:
+                my_content.append(child.get("displayName", ""))
+            bacukup_content["content"] = my_content
+            bacukup_content["backupsetName"] = subClientEntity[0].get("backupsetName", "")
+        if bacukup_content["appName"] == "MySQL":
+            contents = resp.xpath("//content/mySQLContent")
+            db_list = []
+            if contents:
+                for content in contents:
+                    db_names = content.xpath("./@databaseName")
+                    if db_names:
+                        db_list.append(db_names[0])
+            bacukup_content["content"] = db_list
+
+        return bacukup_content
 
     def get_sub_client_info(self, sub_client_id):
         """
@@ -1355,20 +1426,76 @@ class CVApiOperate(CVRestApiCmd):
         #     agent_list = []
         #     cmd = 'Agent?clientId={0}'.format(client_id)
         #     agent = self.get_cmd(cmd)
-            # if library is None:
-            #     return None
-            # active_physical_node = library.findall(".//entityInfo")
-            # for node in active_physical_node:
-            #     library_dict = dict()
+        # if library is None:
+        #     return None
+        # active_physical_node = library.findall(".//entityInfo")
+        # for node in active_physical_node:
+        #     library_dict = dict()
 
-            #     library_dict["library_name"] = node.attrib["name"]
-            #     try:
-            #         library_dict["library_id"] = int(node.attrib["id"])
-            #     except TypeError as e:
-            #         print("get_library_list", e)
-            #     library_list.append(library_dict)
-            # return agent
+        #     library_dict["library_name"] = node.attrib["name"]
+        #     try:
+        #         library_dict["library_id"] = int(node.attrib["id"])
+        #     except TypeError as e:
+        #         print("get_library_list", e)
+        #     library_list.append(library_dict)
+        # return agent
 
+    def custom_schedule_policy_index(self):
+        # whole_list = []
+        # client_list = self.get_client_list()
+        # for client in client_list:
+        #
+        #     # {'clientId': 2, 'clientName': 'cv-server'}
+        #     sub_client_list = self.get_sub_client_list(client["clientId"])
+        #
+        #     # [{'clientId': '24', 'subclientId': '140', 'backupsetId': '75', 'instanceId': '43', 'appName': 'Virtual Server', 'backupsetName': 'defaultBackupSet',
+        #     #   'subclientName': 'default', 'instanceName': 'VMware', 'clientName': '192.168.100.60', '_type_': '7', 'applicationId': '106'}]
+        #
+        #     # app_count = 1
+        #     # backupset_count = 1
+        #     # appName = None
+        #     # backupsetName = None
+        #     #
+        #     # # app_count/backupset_count
+        #     # for sub_client in sub_client_list:
+        #     #     if appName == sub_client["appName"]:
+        #     #         app_count += 1
+        #     #     if appName == sub_client["appName"] and backupsetName == sub_client["backupsetName"]:
+        #     #         backupset_count += 1
+        #
+        #     for sub_client in sub_client_list:
+        #
+        #         subclientId = sub_client["subclientId"]
+        #         appName = sub_client["appName"]
+        #         backupsetName = sub_client["backupsetName"]
+        #         subclientName = sub_client["subclientName"]
+        #         instanceName = sub_client["instanceName"]
+        #
+        #         # schedules
+        #         schedules = self.get_schedule_list(subclientId)
+        #         # [{'taskId': '10', 'incLevels': 'BEFORE_SYNTH', 'description': '', 'appName': 'Windows File System', 'subclientName': 'DDBBackup', 'backupsetName': 'defaultBackupSet',
+        #         # 'backupLevel': 'FULL', 'taskName': 'System Created for DDB subclients'}]
+        #         # print(schedules)
+        #
+        #         for schedule in schedules:
+        #
+        #
+        #             whole_list.append({
+        #                 # client
+        #                 "client_area": app_count,
+        #
+        #                 # app
+        #                 "app_area": app_count,
+        #
+        #                 # backupset/instance
+        #
+        #
+        #                 # subclient
+        #
+        #                 # schedule
+        #             })
+
+        return None
 
 
 if __name__ == "__main__":
@@ -1383,6 +1510,8 @@ if __name__ == "__main__":
     print("-----成功登陆")
     c = time.time()
     cv_api = CVApiOperate(cv_token)
+    sp = cv_api.get_backup_content(118)
+    # sp = cv_api.custom_schedule_policy_index()
     # sp = cv_api.get_CS()
     # get_cs
     # print(sp)
@@ -1392,8 +1521,8 @@ if __name__ == "__main__":
     # sp = cv_api.custom_backup_tree_by_client(3)
     # sp = cv_api.get_sub_client_info(34)
     # sp = cv_api.get_simple_sub_client_info(34)
-    # sp = cv_api.get_schedule_list(4)
-    sp = cv_api.get_schedule_policy_info(30)
+    # sp = cv_api.get_schedule_list(118)
+    # sp = cv_api.get_schedule_policy_info(30)
     # sp = cv_api.get_schedule_policy_list()
 
     # sp = cv_api.get_backup_set_list(3)
@@ -1409,7 +1538,6 @@ if __name__ == "__main__":
     # sp = cv_api.get_sp_info("26")
     # sp = cv_api.get_agent_list(3)
     # 通过数据库过滤辅助拷贝状态destcopyid
-
 
     # sp = cv_api.get_copy_from_sp("26", "25")
     # sp = cv_api.get_client_agent_list("3")

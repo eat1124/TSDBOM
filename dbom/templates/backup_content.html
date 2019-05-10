@@ -11,29 +11,25 @@
                                 <th></th>
                                 <th> 客户端</th>
                                 <th> 类型</th>
-                                <th> 最近备份时间</th>
-                                <th> 备份状态</th>
-                                <th> 辅助拷贝状态</th>
+                                <th> 备份集</th>
+                                <th> 子客户端</th>
+                                <th> 备份内容</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for client in whole_list %}
-                            {% for agent in client.agent_job_list %}
-                            <tr>
-                                {% if forloop.counter == 1 %}
-                                <td rowspan="{{ client.agent_length }}" style="vertical-align:middle"> {{ forloop.parentloop.counter }}</td>
-                                <td rowspan="{{ client.agent_length }}" style="vertical-align:middle"> {{ agent.client_name }}</td>
-                                {% endif %}
-                                <td> {{ agent.agent_type_name }}</td>
-                                <td> {{ agent.job_start_time }}</td>
-                                <td>
-                                    <span class="label label-sm {{ agent.status_label }}"> {{ agent.job_backup_status }} </span>
-                                </td>
-                                <td>
-                                    <span class="label label-sm {% if agent.aux_copy_info %}label-success{% endif %}"> {{ agent.aux_copy_info }} </span>
-                                </td>
-                            </tr>
-                            {% endfor %}
+                                {% for backup_content in client.backup_content_list %}
+                                <tr>
+                                    {% if forloop.counter == 1 %}
+                                    <td rowspan="{{ client.agent_length }}" style="vertical-align:middle"> {{ forloop.parentloop.counter }}</td>
+                                    <td rowspan="{{ client.agent_length }}" style="vertical-align:middle"> {{ backup_content.client_name }}</td>
+                                    {% endif %}
+                                    <td> {{ backup_content.agent_type_name }}</td>
+                                    <td> {{ backup_content.backupsetName }}</td>
+                                    <td> {{ backup_content.subclientName }}</td>
+                                    <td> {{ backup_content.content }}</td>
+                                </tr>
+                                {% endfor %}
                             {% endfor %}
                         </tbody>
                     </table>
