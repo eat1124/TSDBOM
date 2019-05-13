@@ -650,7 +650,6 @@ def backup_content(request, funid):
                 "backup_content_list": future.result(),
                 "agent_length": len(future.result())
             })
-    print(whole_list)
     return render(request, "backup_content.html", {
             'username': request.user.userinfo.fullname,
             "pagefuns": getpagefuns(funid, request),
@@ -782,7 +781,6 @@ def get_schedule_policy(cv_api, client_id, client_name):
                             "agent_type_name": schedule["appName"],
                             "subclientName": schedule["subclientName"],
                         })
-    print(schedule_policy_list)
     return schedule_policy_list
 
 
