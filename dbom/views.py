@@ -46,6 +46,7 @@ from .remote import ServerByPara
 from TSDBOM import settings
 from .funcs import *
 from .CVApi_bak import CVRestApiToken, CVApiOperate
+from .api import SQLApi
 
 funlist = []
 
@@ -412,9 +413,9 @@ def custom_concrete_job_list(cv_api, client_id, client_name):
     :return:
     """
     status_list = {"Running": "运行", "Waiting": "等待", "Pending": "阻塞", "Suspend": "终止", "Completed": "正常",
-               "Failed": "失败", "Failed to Start": "启动失败", "Killed": "杀掉",
-               "Completed w/ one or more errors": "已完成，但有一个或多个错误",
-               "Completed w/ one or more warnings": "已完成，但有一个或多个警告", "Success": "成功"}
+                   "Failed": "失败", "Failed to Start": "启动失败", "Killed": "杀掉",
+                   "Completed w/ one or more errors": "已完成，但有一个或多个错误",
+                   "Completed w/ one or more warnings": "已完成，但有一个或多个警告", "Success": "成功"}
     # client_id >> sub_client_id >> storage_id >> copy_id >> job_info
     conn = pymssql.connect(host='192.168.100.149\COMMVAULT', user='sa_cloud', password='1qaz@WSX', database='CommServ')
     cur = conn.cursor()
@@ -454,7 +455,7 @@ def custom_concrete_job_list(cv_api, client_id, client_name):
                                     break
                             except:
                                 pass
-                
+
                         sql = """SELECT jobstatus FROM [commserv].[dbo].[CommCellAuxCopyInfo] WHERE storagepolicy LIKE '{0}' and sourcecopyid='{1}' and destcopyid='{2}' ORDER BY startdate DESC""".format(
                             storage_policy_name, source_copy_id, dest_copy_id)
                         cur.execute(sql)
@@ -593,10 +594,10 @@ def backup_status(request, funid):
             })
 
     return render(request, "backup_status.html", {
-            'username': request.user.userinfo.fullname,
-            "pagefuns": getpagefuns(funid, request),
-            "whole_list": whole_list,
-        })
+        'username': request.user.userinfo.fullname,
+        "pagefuns": getpagefuns(funid, request),
+        "whole_list": whole_list,
+    })
 
 
 def get_backup_content(cv_api, client_id, client_name):
@@ -651,10 +652,10 @@ def backup_content(request, funid):
                 "agent_length": len(future.result())
             })
     return render(request, "backup_content.html", {
-            'username': request.user.userinfo.fullname,
-            "pagefuns": getpagefuns(funid, request),
-            "whole_list": whole_list,
-        })
+        'username': request.user.userinfo.fullname,
+        "pagefuns": getpagefuns(funid, request),
+        "whole_list": whole_list,
+    })
 
 
 def get_storage_policy(cv_api, client_id, client_name):
@@ -703,22 +704,22 @@ def get_storage_policy(cv_api, client_id, client_name):
                     app_name = sub_client_info["appName"]
                     backup_set_name = sub_client_info["backupsetName"]
                     storage_policy_list.append({
-                            "client_id": client_id,
-                            "client_name": client_name,
-                            "agent_type_name": app_name,
-                            "backupsetName": backup_set_name,
-                            "subclientName": sub_client_info["subclientName"],
-                            "storagePolicyId": sub_client_info["storagePolicyId"],
-                            "storagePolicyName": sub_client_info["storagePolicyName"],
-                            # "first_app": first_app,
-                            # "first_backup_set": first_backup_set,
-                        })
+                        "client_id": client_id,
+                        "client_name": client_name,
+                        "agent_type_name": app_name,
+                        "backupsetName": backup_set_name,
+                        "subclientName": sub_client_info["subclientName"],
+                        "storagePolicyId": sub_client_info["storagePolicyId"],
+                        "storagePolicyName": sub_client_info["storagePolicyName"],
+                        # "first_app": first_app,
+                        # "first_backup_set": first_backup_set,
+                    })
                     # # add
                     # app_name_count += 1
                     # backup_set_name_count += 1
                 except KeyError as e:
                     print(e)
-       
+
         # app_name_count_list.reverse() 
         # backup_set_name_count_list.reverse() 
 
@@ -755,10 +756,10 @@ def storage_policy(request, funid):
             })
 
     return render(request, "storage_policy.html", {
-            'username': request.user.userinfo.fullname,
-            "pagefuns": getpagefuns(funid, request),
-            "whole_list": whole_list,
-        })
+        'username': request.user.userinfo.fullname,
+        "pagefuns": getpagefuns(funid, request),
+        "whole_list": whole_list,
+    })
 
 
 def get_schedule_policy(cv_api, client_id, client_name):
@@ -772,15 +773,15 @@ def get_schedule_policy(cv_api, client_id, client_name):
             if schedule_list:
                 for schedule in schedule_list:
                     schedule_policy_list.append({
-                            "client_id": client_id,
-                            "client_name": client_name,
-                            "taskName": schedule["taskName"],
-                            "backupLevel": schedule["backupLevel"],
-                            "description": schedule["description"],
-                            "backupsetName": schedule["backupsetName"] if schedule["appName"] in ["File System", "Virtual Server"] else schedule["instanceName"],
-                            "agent_type_name": schedule["appName"],
-                            "subclientName": schedule["subclientName"],
-                        })
+                        "client_id": client_id,
+                        "client_name": client_name,
+                        "taskName": schedule["taskName"],
+                        "backupLevel": schedule["backupLevel"],
+                        "description": schedule["description"],
+                        "backupsetName": schedule["backupsetName"] if schedule["appName"] in ["File System", "Virtual Server"] else schedule["instanceName"],
+                        "agent_type_name": schedule["appName"],
+                        "subclientName": schedule["subclientName"],
+                    })
     return schedule_policy_list
 
 
@@ -788,17 +789,17 @@ def get_schedule_policy(cv_api, client_id, client_name):
 def schedule_policy(request, funid):
     whole_list = []
     # 1
-    cv_token = CVRestApiToken()
-    cv_token.login(info)
-    cv_api = CVApiOperate(cv_token)
-
-    # 计划策略
-    schedule_policy_list = cv_api.get_schedule_policy_list()
-    c_schedule_policy_info_list = []
-    for schedule_policy in schedule_policy_list:
-        taskId = schedule_policy["taskId"]
-        schedule_policy_info_list = cv_api.get_schedule_policy_info(taskId)
-        c_schedule_policy_info_list += schedule_policy_info_list
+    # cv_token = CVRestApiToken()
+    # cv_token.login(info)
+    # cv_api = CVApiOperate(cv_token)
+    #
+    # # 计划策略
+    # schedule_policy_list = cv_api.get_schedule_policy_list()
+    # c_schedule_policy_info_list = []
+    # for schedule_policy in schedule_policy_list:
+    #     taskId = schedule_policy["taskId"]
+    #     schedule_policy_info_list = cv_api.get_schedule_policy_info(taskId)
+    #     c_schedule_policy_info_list += schedule_policy_info_list
 
     # 2
     # client_list = cv_api.get_client_list()
@@ -837,13 +838,24 @@ def schedule_policy(request, funid):
     #             "taskName": schedule[3],
     #         })
 
-    # print(schedule_list)
-    return render(request, "schedule_policy.html", {
-            'username': request.user.userinfo.fullname,
-            "pagefuns": getpagefuns(funid, request),
-            "whole_list": c_schedule_policy_info_list,
+    # 4.sql api
+    dm = SQLApi.CustomFilter(r'192.168.100.149\COMMVAULT', 'sa_cloud', '1qaz@WSX', 'CommServ')
+    ret = dm.custom_all_schedules()
+    for schedule in ret:
+        whole_list.append({
+            "clientName": schedule["clientName"],
+            "appName": schedule["idaagent"],
+            "backupsetName": schedule["backupset"],
+            "subclientName": schedule["subclient"],
+            "scheduePolicy": schedule["scheduePolicy"],
+            "schedbackuptype": schedule["schedbackuptype"],
+            "description": schedule["schedpattern"] + "&" + schedule["schedbackupday"],
         })
-
+    return render(request, "schedule_policy.html", {
+        'username': request.user.userinfo.fullname,
+        "pagefuns": getpagefuns(funid, request),
+        "whole_list": whole_list,
+    })
 
 
 def client_data_index(request, funid):

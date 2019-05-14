@@ -36,7 +36,7 @@ class DataMonitor(object):
             with self.conn.cursor() as cursor:
                 cursor.execute(temp_sql)
                 result = cursor.fetchall()
-                self.conn.close()
+                # self.conn.close()
         return result
 
 
@@ -148,80 +148,83 @@ class CVApi(DataMonitor):
         content = self.fetch_all(schedule_sql)
         for i in content:
             schedules.append({
-                "CommCellId": i[0],
-                "CommCellName": i[1],
+                # "CommCellId": i[0],
+                # "CommCellName": i[1],
                 "scheduleId": i[2],
                 "scheduePolicy": i[3],
-                "scheduletask": i[4],
-                "schedbackuptype": i[5],
-                "schedpattern": i[6],
-                "schedinterval": i[7],
-                "schedbackupday": i[8],
-                "schedbackupTime": i[9],
-                "schednextbackuptime": i[10],
-                "clientName": i[11],
-                "idaagent": i[12],
-                "instance": i[13],
-                "backupset": i[14],
-                "subclient": i[15],
+                "scheduleName": i[4],
+                "scheduletask": i[5],
+                "schedbackuptype": i[6],
+                "schedpattern": i[7],
+                "schedinterval": i[8],
+                "schedbackupday": i[9],
+                # "schedbackupTime": i[10],
+                # "schednextbackuptime": i[11],
+                "clientName": i[13],
+                "idaagent": i[14],
+                "instance": i[15],
+                "backupset": i[16],
+                "subclient": i[17],
             })
         return schedules
 
-    def get_schedules(self, client=None, agent=None, backup_set=None, instance=None, sub_client=None, schedule=None):
-        schedules = []
-        if all([client, agent, backup_set, instance, sub_client, schedule]):
+    def get_schedules(self, client=None, agent=None, backup_set=None, sub_client=None, schedule=None, schedule_type=None):
+        if all([client, agent, backup_set, sub_client, schedule, schedule_type]):
             schedule_sql = """SELECT [CommCellId],[CommCellName],[scheduleId],[scheduePolicy],[scheduleName],[scheduletask],[schedbackuptype],[schedpattern],[schedinterval]
             ,[schedbackupday],[schedbackupTime],[schednextbackuptime],[appid],[clientName],[idaagent],[instance],[backupset],[subclient]
-            FROM [commserv].[dbo].[CommCellBkScheduleForSubclients] WHERE [clientName]='{0}' AND [idaagent]='{1}' AND [backupset]='{2}' AND [instance]='{3}' AND [sub_client]='{4}' AND [schedule]='{5}'""". \
-                format(client, agent, backup_set, instance, sub_client, schedule)
-        elif all([client, agent, backup_set, instance, sub_client]) and not schedule:
+            FROM [commserv].[dbo].[CommCellBkScheduleForSubclients] WHERE [clientName]='{0}' AND [idaagent]='{1}' AND [backupset]='{2}'AND [subclient]='{3}' AND [scheduePolicy]='{4}' AND [schedbackuptype]='{5}'""". \
+                format(client, agent, backup_set, sub_client, schedule, schedule_type)
+        elif all([client, agent, backup_set, sub_client, schedule]) and not schedule_type:
             schedule_sql = """SELECT [CommCellId],[CommCellName],[scheduleId],[scheduePolicy],[scheduleName],[scheduletask],[schedbackuptype],[schedpattern],[schedinterval]
             ,[schedbackupday],[schedbackupTime],[schednextbackuptime],[appid],[clientName],[idaagent],[instance],[backupset],[subclient]
-            FROM [commserv].[dbo].[CommCellBkScheduleForSubclients] WHERE [clientName]='{0}' AND [idaagent]='{1}' AND [backupset]='{2}' AND [instance]='{3}' AND [sub_client]='{4}'""". \
-                format(client, agent, backup_set, instance, sub_client)
-        elif all([client, agent, backup_set, instance]) and not any([sub_client, schedule]):
+            FROM [commserv].[dbo].[CommCellBkScheduleForSubclients] WHERE [clientName]='{0}' AND [idaagent]='{1}' AND [backupset]='{2}' AND [subclient]='{3}' AND [scheduePolicy]='{4}'""". \
+                format(client, agent, backup_set, sub_client, schedule)
+        elif all([client, agent, backup_set, sub_client]) and not any([schedule, schedule_type]):
             schedule_sql = """SELECT [CommCellId],[CommCellName],[scheduleId],[scheduePolicy],[scheduleName],[scheduletask],[schedbackuptype],[schedpattern],[schedinterval]
             ,[schedbackupday],[schedbackupTime],[schednextbackuptime],[appid],[clientName],[idaagent],[instance],[backupset],[subclient]
-            FROM [commserv].[dbo].[CommCellBkScheduleForSubclients] WHERE [clientName]='{0}' AND [idaagent]='{1}' AND [backupset]='{2}' AND [instance]='{3}'""". \
-                format(client, agent, backup_set, instance)
-        elif all([client, agent, backup_set]) and not any([instance, sub_client, schedule]):
+            FROM [commserv].[dbo].[CommCellBkScheduleForSubclients] WHERE [clientName]='{0}' AND [idaagent]='{1}' AND [backupset]='{2}' AND [subclient]='{3}'""". \
+                format(client, agent, backup_set, sub_client)
+        elif all([client, agent, backup_set]) and not any([sub_client, schedule, schedule_type]):
             schedule_sql = """SELECT [CommCellId],[CommCellName],[scheduleId],[scheduePolicy],[scheduleName],[scheduletask],[schedbackuptype],[schedpattern],[schedinterval]
             ,[schedbackupday],[schedbackupTime],[schednextbackuptime],[appid],[clientName],[idaagent],[instance],[backupset],[subclient]
             FROM [commserv].[dbo].[CommCellBkScheduleForSubclients] WHERE [clientName]='{0}' AND [idaagent]='{1}' AND [backupset]='{2}'""". \
                 format(client, agent, backup_set)
-        elif all([client, agent]) and not any([backup_set, instance, sub_client, schedule]):
+        elif all([client, agent]) and not any([backup_set, sub_client, schedule, schedule_type]):
             schedule_sql = """SELECT [CommCellId],[CommCellName],[scheduleId],[scheduePolicy],[scheduleName],[scheduletask],[schedbackuptype],[schedpattern],[schedinterval]
             ,[schedbackupday],[schedbackupTime],[schednextbackuptime],[appid],[clientName],[idaagent],[instance],[backupset],[subclient]
             FROM [commserv].[dbo].[CommCellBkScheduleForSubclients] WHERE [clientName]='{0}' AND [idaagent]='{1}'""". \
                 format(client, agent)
-        elif all([client]) and not any([agent, backup_set, instance, sub_client, schedule]):
+        elif all([client]) and not any([agent, backup_set, sub_client, schedule, schedule_type]):
             schedule_sql = """SELECT [CommCellId],[CommCellName],[scheduleId],[scheduePolicy],[scheduleName],[scheduletask],[schedbackuptype],[schedpattern],[schedinterval]
             ,[schedbackupday],[schedbackupTime],[schednextbackuptime],[appid],[clientName],[idaagent],[instance],[backupset],[subclient]
             FROM [commserv].[dbo].[CommCellBkScheduleForSubclients] WHERE [clientName]='{0}'""". \
                 format(client)
         else:
             self.msg = "至少传入一个参数。"
-            return None
+            return []
         schedules = []
+
         content = self.fetch_all(schedule_sql)
         for i in content:
             schedules.append({
-                "CommCellId": i[0],
-                "CommCellName": i[1],
+                # "CommCellId": i[0],
+                # "CommCellName": i[1],
                 "scheduleId": i[2],
                 "scheduePolicy": i[3],
-                "scheduletask": i[4],
-                "schedbackuptype": i[5],
-                "schedpattern": i[6],
-                "schedinterval": i[7],
-                "schedbackupday": i[8],
-                "schedbackupTime": i[9],
-                "schednextbackuptime": i[10],
-                "clientName": i[11],
-                "idaagent": i[12],
-                "instance": i[13],
-                "backupset": i[14],
-                "subclient": i[15],
+                "scheduleName": i[4],
+                "scheduletask": i[5],
+                "schedbackuptype": i[6],
+                "schedpattern": i[7],
+                "schedinterval": i[8],
+                "schedbackupday": i[9],
+                # "schedbackupTime": i[10],
+                # "schednextbackuptime": i[11],
+                "appid": i[12],
+                "clientName": i[13],
+                "idaagent": i[14],
+                "instance": i[15],
+                "backupset": i[16],
+                "subclient": i[17],
             })
         return schedules
 
@@ -229,25 +232,45 @@ class CVApi(DataMonitor):
 class CustomFilter(CVApi):
     def custom_all_schedules(self):
         whole_schedule_list = []
-        all_schedules = self.get_all_schedules()
-        if all_schedules:
-            c_schedule = all_schedules[0]
-            specific_schedule_one = self.get_schedules(client=c_schedule["clientName"], agent=c_schedule["idaagent"], backup_set=c_schedule["backupset"], sub_client=c_schedule["subclient"], schedule=c_schedule["scheduePolicy"])
-            specific_schedule_two = self.get_schedules(client=c_schedule["clientName"], agent=c_schedule["idaagent"], backup_set=c_schedule["backupset"], sub_client=c_schedule["subclient"])
-            specific_schedule_three = self.get_schedules(client=c_schedule["clientName"], agent=c_schedule["idaagent"], backup_set=c_schedule["backupset"])
-            specific_schedule_four = self.get_schedules(client=c_schedule["clientName"], agent=c_schedule["idaagent"])
-            specific_schedule_five = self.get_schedules(client=c_schedule["clientName"])
-            # 区分备份集和实例
-            if c_schedule["idaagent"] in ["Windows File System", "Virtual Server", "Linux File System"]:
-                if specific_schedule_one:
-                    first_length = len(specific_schedule_one)
-                    specific_schedule_one[0]["first_length"] = first_length
-                    whole_schedule_list.append(specific_schedule_one)
+        # 1.排序
+        all_clients = self.get_all_install_clients()
+        for client in all_clients:
+            specific_schedule_one = self.get_schedules(client=client["client_name"])
+            agent_list = []
+            for one in specific_schedule_one:
+                if one["idaagent"] not in agent_list:
+                    agent_list.append(one["idaagent"])
+            for agent in agent_list:
+                specific_schedule_two = self.get_schedules(client=client["client_name"], agent=agent)
+                backup_set_list = []
+                for two in specific_schedule_two:
+                    if two["backupset"] not in backup_set_list:
+                        backup_set_list.append(two["backupset"])
+                for backup_set in backup_set_list:
+                    specific_schedule_three = self.get_schedules(client=client["client_name"], agent=agent, backup_set=backup_set)
+                    sub_client_list = []
+                    for three in specific_schedule_three:
+                        if three["subclient"] not in sub_client_list:
+                            sub_client_list.append(three["subclient"])
+                    for sub_client in sub_client_list:
+                        specific_schedule_four = self.get_schedules(client=client["client_name"], agent=agent, backup_set=backup_set, sub_client=sub_client)
+                        schedule_list = []
+                        for four in specific_schedule_four:
+                            if four["scheduePolicy"] not in schedule_list:
+                                schedule_list.append(four["scheduePolicy"])
+                        for schedule in schedule_list:
+                            specific_schedule_five = self.get_schedules(client=client["client_name"], agent=agent, backup_set=backup_set, sub_client=sub_client, schedule=schedule)
+                            schedules = []
+                            for five in specific_schedule_five:
+                                if five["schedbackuptype"] not in schedules:
+                                    schedules.append(five["schedbackuptype"])
+                            for c_schedule in schedules:
+                                specific_schedule_six = self.get_schedules(client=client["client_name"], agent=agent, backup_set=backup_set, sub_client=sub_client, schedule=schedule, schedule_type=c_schedule)
+                                if specific_schedule_six:
+                                    whole_schedule_list.extend(specific_schedule_six)
 
-
-
-            if c_schedule["idaagent"] in ["SQL Server", "Oracle Database", "Mysql"]:
-                specific_schedule = self.get_schedules(client=c_schedule["clientName"], agent=c_schedule["idaagent"], instance=c_schedule["instance"], sub_client=c_schedule["subclient"])
+        # 2.处理
+        return whole_schedule_list
 
 
 if __name__ == '__main__':
@@ -255,5 +278,11 @@ if __name__ == '__main__':
     # print(dm.connection)
     # ret = dm.get_all_install_clients()
     # ret = dm.get_single_installed_client(2)
-    ret = dm.get_installed_sub_clients(2)
-    # print(ret)
+    # ret = dm.get_installed_sub_clients(2)
+    # ret = dm.get_schedules(client="cv-server")
+    ret = dm.custom_all_schedules()
+    for i in ret:
+        print(i["clientName"], i["idaagent"], i["backupset"], i["subclient"], i["scheduePolicy"], i["schedbackuptype"], i["schedbackupday"])
+    # import json
+    # with open("1.json", "w") as f:
+    #     f.write(json.dumps(ret))
