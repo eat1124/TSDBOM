@@ -43,6 +43,7 @@ urlpatterns = [
 
     # 计划策略
     url(r'^schedule_policy/$', schedule_policy, {'funid': '33'}),
+    url(r'^get_schedule_policy/$', get_schedule_policy),
 
     # 存储策略
     url(r'^storage_policy/$', storage_policy, {'funid': '34'}),

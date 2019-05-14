@@ -20,6 +20,7 @@ import threading
 from operator import itemgetter
 import operator
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from collections import OrderedDict
 
 from django.utils.timezone import utc
 from django.utils.timezone import localtime
@@ -769,7 +770,6 @@ def get_schedule_policy(cv_api, client_id, client_name):
     if sub_client_list:
         for num, sub_client in enumerate(sub_client_list):
             schedule_list = cv_api.get_schedule_list(sub_client["subclientId"])
-
             if schedule_list:
                 for schedule in schedule_list:
                     schedule_policy_list.append({
@@ -787,7 +787,7 @@ def get_schedule_policy(cv_api, client_id, client_name):
 
 @login_required
 def schedule_policy(request, funid):
-    whole_list = []
+    # whole_list = []
     # 1
     # cv_token = CVRestApiToken()
     # cv_token.login(info)
@@ -839,23 +839,60 @@ def schedule_policy(request, funid):
     #         })
 
     # 4.sql api
-    dm = SQLApi.CustomFilter(r'192.168.100.149\COMMVAULT', 'sa_cloud', '1qaz@WSX', 'CommServ')
-    ret = dm.custom_all_schedules()
-    for schedule in ret:
-        whole_list.append({
-            "clientName": schedule["clientName"],
-            "appName": schedule["idaagent"],
-            "backupsetName": schedule["backupset"],
-            "subclientName": schedule["subclient"],
-            "scheduePolicy": schedule["scheduePolicy"],
-            "schedbackuptype": schedule["schedbackuptype"],
-            "description": schedule["schedpattern"] + "&" + schedule["schedbackupday"],
-        })
+    # dm = SQLApi.CustomFilter(r'192.168.100.149\COMMVAULT', 'sa_cloud', '1qaz@WSX', 'CommServ')
+    # ret = dm.custom_all_schedules()
+    # for schedule in ret:
+    #     whole_list.append({
+    #         "clientName": schedule["clientName"],
+    #         "appName": schedule["idaagent"],
+    #         "backupsetName": schedule["backupset"],
+    #         "subclientName": schedule["subclient"],
+    #         "scheduePolicy": schedule["scheduePolicy"],
+    #         "schedbackuptype": schedule["schedbackuptype"],
+    #         "description": schedule["schedpattern"] + "&" + schedule["schedbackupday"],
+    #     })
     return render(request, "schedule_policy.html", {
         'username': request.user.userinfo.fullname,
         "pagefuns": getpagefuns(funid, request),
-        "whole_list": whole_list,
+        # "whole_list": whole_list,
     })
+
+
+@login_required
+def get_schedule_policy(self):
+    whole_list = []
+    try:
+        dm = SQLApi.CustomFilter(r'192.168.100.149\COMMVAULT', 'sa_cloud', '1qaz@WSX', 'CommServ')
+        ret = dm.custom_all_schedules()
+        for schedule in ret:
+            schedule_dict = OrderedDict()
+            schedule_dict["clientName"] = schedule["clientName"]
+            schedule_dict["appName"] = schedule["idaagent"]
+            schedule_dict["backupsetName"] = schedule["backupset"]
+            schedule_dict["subclientName"] = schedule["subclient"]
+            schedule_dict["scheduePolicy"] = schedule["scheduePolicy"]
+            schedule_dict["schedbackuptype"] = schedule["schedbackuptype"]
+            schedule_dict["description"] = schedule["schedpattern"] + "&" + schedule["schedbackupday"]
+            whole_list.append({
+                "clientName": schedule["clientName"],
+                "appName": schedule["idaagent"],
+                "backupsetName": schedule["backupset"],
+                "subclientName": schedule["subclient"],
+                "scheduePolicy": schedule["scheduePolicy"],
+                "schedbackuptype": schedule["schedbackuptype"],
+                "description": schedule["schedpattern"] + "&" + schedule["schedbackupday"],
+            })
+    except Exception as e:
+        print(e)
+        return JsonResponse({
+            "ret": 0,
+            "data": "获取计划策略信息失败。",
+        })
+    else:
+        return JsonResponse({
+            "ret": 1,
+            "data": whole_list,
+        })
 
 
 def client_data_index(request, funid):
