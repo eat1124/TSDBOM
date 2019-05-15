@@ -403,6 +403,7 @@ class CustomFilter(CVApi):
 
                                 if specific_schedule_six:
                                     whole_schedule_list.extend(specific_schedule_six)
+                                    
         row_dict = {
             "client_row_list": client_row_list,
             "agent_row_list": agent_row_list,
