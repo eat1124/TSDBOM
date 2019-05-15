@@ -229,11 +229,87 @@ class CVApi(DataMonitor):
         return schedules
 
 
+#
+# class CustomFilter(CVApi):
+#     def custom_all_schedules(self):
+#         whole_schedule_list = []
+#         # 1.排序
+#         all_clients = self.get_all_install_clients()
+#
+#         client_row_list = []
+#         agent_row_list = []
+#         backupset_row_list = []
+#         subclient_row_list = []
+#         schedule_row_list = []
+#         schedule_type_row_list = []
+#
+#         for client in all_clients:
+#             specific_schedule_one = self.get_schedules(client=client["client_name"])
+#             if len(specific_schedule_one) != 0:
+#                 client_row_list.append(len(specific_schedule_one))
+#
+#             agent_list = []
+#             for one in specific_schedule_one:
+#                 if one["idaagent"] not in agent_list:
+#                     agent_list.append(one["idaagent"])
+#             for agent in agent_list:
+#                 specific_schedule_two = self.get_schedules(client=client["client_name"], agent=agent)
+#                 agent_row_list.append(len(specific_schedule_two))
+#
+#                 backup_set_list = []
+#                 for two in specific_schedule_two:
+#                     if two["backupset"] not in backup_set_list:
+#                         backup_set_list.append(two["backupset"])
+#                 for backup_set in backup_set_list:
+#                     specific_schedule_three = self.get_schedules(client=client["client_name"], agent=agent, backup_set=backup_set)
+#                     backupset_row_list.append(len(specific_schedule_three))
+#
+#                     sub_client_list = []
+#                     for three in specific_schedule_three:
+#                         if three["subclient"] not in sub_client_list:
+#                             sub_client_list.append(three["subclient"])
+#                     for sub_client in sub_client_list:
+#                         specific_schedule_four = self.get_schedules(client=client["client_name"], agent=agent, backup_set=backup_set, sub_client=sub_client)
+#                         subclient_row_list.append(len(specific_schedule_four))
+#
+#                         schedule_list = []
+#                         for four in specific_schedule_four:
+#                             if four["scheduePolicy"] not in schedule_list:
+#                                 schedule_list.append(four["scheduePolicy"])
+#                         for schedule in schedule_list:
+#                             specific_schedule_five = self.get_schedules(client=client["client_name"], agent=agent, backup_set=backup_set, sub_client=sub_client, schedule=schedule)
+#                             schedule_row_list.append(len(specific_schedule_five))
+#
+#                             schedules = []
+#                             for five in specific_schedule_five:
+#                                 if five["schedbackuptype"] not in schedules:
+#                                     schedules.append(five["schedbackuptype"])
+#                             for c_schedule in schedules:
+#                                 specific_schedule_six = self.get_schedules(client=client["client_name"], agent=agent, backup_set=backup_set, sub_client=sub_client, schedule=schedule, schedule_type=c_schedule)
+#                                 schedule_type_row_list.append(len(specific_schedule_six))
+#
+#                                 if specific_schedule_six:
+#                                     whole_schedule_list.extend(specific_schedule_six)
+#
+#         row_dict = {
+#             "client_row_list": client_row_list,
+#             "agent_row_list": agent_row_list,
+#             "backupset_row_list": backupset_row_list,
+#             "subclient_row_list": subclient_row_list,
+#             "schedule_row_list": schedule_row_list,
+#             "schedule_type_row_list": schedule_type_row_list,
+#         }
+#         return whole_schedule_list, row_dict
+
+
 class CustomFilter(CVApi):
     def custom_all_schedules(self):
         whole_schedule_list = []
         # 1.排序
         all_clients = self.get_all_install_clients()
+
+        # 2.所有schedule的列表
+        all_schedule_list = self.get_all_schedules()
 
         client_row_list = []
         agent_row_list = []
@@ -243,7 +319,14 @@ class CustomFilter(CVApi):
         schedule_type_row_list = []
 
         for client in all_clients:
-            specific_schedule_one = self.get_schedules(client=client["client_name"])
+            # specific_schedule_one = self.get_schedules(client=client["client_name"])  # 请求的方式
+
+            # 遍历的方式
+            specific_schedule_one = []
+            for schedule_one in all_schedule_list:
+                if schedule_one["clientName"] == client["client_name"]:
+                    specific_schedule_one.append(schedule_one)
+
             if len(specific_schedule_one) != 0:
                 client_row_list.append(len(specific_schedule_one))
 
@@ -252,7 +335,13 @@ class CustomFilter(CVApi):
                 if one["idaagent"] not in agent_list:
                     agent_list.append(one["idaagent"])
             for agent in agent_list:
-                specific_schedule_two = self.get_schedules(client=client["client_name"], agent=agent)
+                # specific_schedule_two = self.get_schedules(client=client["client_name"], agent=agent)
+
+                specific_schedule_two = []
+                for schedule_two in all_schedule_list:
+                    if schedule_two["clientName"] == client["client_name"] and schedule_two["idaagent"] == agent:
+                        specific_schedule_two.append(schedule_two)
+
                 agent_row_list.append(len(specific_schedule_two))
 
                 backup_set_list = []
@@ -260,7 +349,13 @@ class CustomFilter(CVApi):
                     if two["backupset"] not in backup_set_list:
                         backup_set_list.append(two["backupset"])
                 for backup_set in backup_set_list:
-                    specific_schedule_three = self.get_schedules(client=client["client_name"], agent=agent, backup_set=backup_set)
+                    # specific_schedule_three = self.get_schedules(client=client["client_name"], agent=agent, backup_set=backup_set)
+
+                    specific_schedule_three = []
+                    for schedule_three in all_schedule_list:
+                        if schedule_three["clientName"] == client["client_name"] and schedule_three["idaagent"] == agent and schedule_three["backupset"] == backup_set:
+                            specific_schedule_three.append(schedule_three)
+
                     backupset_row_list.append(len(specific_schedule_three))
 
                     sub_client_list = []
@@ -268,7 +363,13 @@ class CustomFilter(CVApi):
                         if three["subclient"] not in sub_client_list:
                             sub_client_list.append(three["subclient"])
                     for sub_client in sub_client_list:
-                        specific_schedule_four = self.get_schedules(client=client["client_name"], agent=agent, backup_set=backup_set, sub_client=sub_client)
+                        # specific_schedule_four = self.get_schedules(client=client["client_name"], agent=agent, backup_set=backup_set, sub_client=sub_client)
+
+                        specific_schedule_four = []
+                        for schedule_four in all_schedule_list:
+                            if schedule_four["clientName"] == client["client_name"] and schedule_four["idaagent"] == agent and schedule_four["backupset"] == backup_set and schedule_four["subclient"] == sub_client:
+                                specific_schedule_four.append(schedule_four)
+
                         subclient_row_list.append(len(specific_schedule_four))
 
                         schedule_list = []
@@ -276,7 +377,13 @@ class CustomFilter(CVApi):
                             if four["scheduePolicy"] not in schedule_list:
                                 schedule_list.append(four["scheduePolicy"])
                         for schedule in schedule_list:
-                            specific_schedule_five = self.get_schedules(client=client["client_name"], agent=agent, backup_set=backup_set, sub_client=sub_client, schedule=schedule)
+                            # specific_schedule_five = self.get_schedules(client=client["client_name"], agent=agent, backup_set=backup_set, sub_client=sub_client, schedule=schedule)
+
+                            specific_schedule_five = []
+                            for schedule_five in all_schedule_list:
+                                if schedule_five["clientName"] == client["client_name"] and schedule_five["idaagent"] == agent and schedule_five["backupset"] == backup_set and schedule_five["subclient"] == sub_client and schedule_five["scheduePolicy"] == schedule:
+                                    specific_schedule_five.append(schedule_five)
+
                             schedule_row_list.append(len(specific_schedule_five))
 
                             schedules = []
@@ -284,7 +391,14 @@ class CustomFilter(CVApi):
                                 if five["schedbackuptype"] not in schedules:
                                     schedules.append(five["schedbackuptype"])
                             for c_schedule in schedules:
-                                specific_schedule_six = self.get_schedules(client=client["client_name"], agent=agent, backup_set=backup_set, sub_client=sub_client, schedule=schedule, schedule_type=c_schedule)
+                                # specific_schedule_six = self.get_schedules(client=client["client_name"], agent=agent, backup_set=backup_set, sub_client=sub_client, schedule=schedule, schedule_type=c_schedule)
+
+                                specific_schedule_six = []
+                                for schedule_six in all_schedule_list:
+                                    if schedule_six["clientName"] == client["client_name"] and schedule_six["idaagent"] == agent and schedule_six["backupset"] == backup_set and schedule_six["subclient"] == sub_client and schedule_six["scheduePolicy"] == schedule and schedule_six[
+                                        "schedbackuptype"] == c_schedule:
+                                        specific_schedule_six.append(schedule_six)
+
                                 schedule_type_row_list.append(len(specific_schedule_six))
 
                                 if specific_schedule_six:
