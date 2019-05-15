@@ -881,7 +881,6 @@ def get_schedule_policy(self):
             "data": "获取计划策略信息失败。",
         })
     else:
-        print(row_dict)
         return JsonResponse({
             "ret": 1,
             "data": {
@@ -1179,7 +1178,6 @@ def get_clients_info(request):
             os_platform = cv_server_client_info["os_info"]
         except:
             return JsonResponse({"ret": 0, "data": "获取客户端信息失败。"})
-        print(os_platform)
         # 客户端列表
         client_list = cv_api.get_client_list()
 
@@ -1562,7 +1560,6 @@ def save_inspection(request):
 def inspection_del(request):
     if request.user.is_authenticated() and request.session['isadmin']:
         inspection_id = request.POST.get('inspection_id', '')
-        print(inspection_id)
         try:
             inspection_id = int(inspection_id)
         except Exception as e:
