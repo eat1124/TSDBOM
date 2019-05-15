@@ -863,7 +863,7 @@ def get_schedule_policy(self):
     whole_list = []
     try:
         dm = SQLApi.CustomFilter(r'192.168.100.149\COMMVAULT', 'sa_cloud', '1qaz@WSX', 'CommServ')
-        ret = dm.custom_all_schedules()
+        ret, row_dict = dm.custom_all_schedules()
         for schedule in ret:
             schedule_dict = OrderedDict()
             schedule_dict["clientName"] = schedule["clientName"]
@@ -873,15 +873,7 @@ def get_schedule_policy(self):
             schedule_dict["scheduePolicy"] = schedule["scheduePolicy"]
             schedule_dict["schedbackuptype"] = schedule["schedbackuptype"]
             schedule_dict["description"] = schedule["schedpattern"] + "&" + schedule["schedbackupday"]
-            whole_list.append({
-                "clientName": schedule["clientName"],
-                "appName": schedule["idaagent"],
-                "backupsetName": schedule["backupset"],
-                "subclientName": schedule["subclient"],
-                "scheduePolicy": schedule["scheduePolicy"],
-                "schedbackuptype": schedule["schedbackuptype"],
-                "description": schedule["schedpattern"] + "&" + schedule["schedbackupday"],
-            })
+            whole_list.append(schedule_dict)
     except Exception as e:
         print(e)
         return JsonResponse({
@@ -889,9 +881,13 @@ def get_schedule_policy(self):
             "data": "获取计划策略信息失败。",
         })
     else:
+        print(row_dict)
         return JsonResponse({
             "ret": 1,
-            "data": whole_list,
+            "data": {
+                "whole_list": whole_list,
+                "row_dict": row_dict,
+            },
         })
 
 

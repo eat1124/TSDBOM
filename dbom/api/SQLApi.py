@@ -234,43 +234,71 @@ class CustomFilter(CVApi):
         whole_schedule_list = []
         # 1.排序
         all_clients = self.get_all_install_clients()
+
+        client_row_list = []
+        agent_row_list = []
+        backupset_row_list = []
+        subclient_row_list = []
+        schedule_row_list = []
+        schedule_type_row_list = []
+
         for client in all_clients:
             specific_schedule_one = self.get_schedules(client=client["client_name"])
+            if len(specific_schedule_one) != 0:
+                client_row_list.append(len(specific_schedule_one))
+
             agent_list = []
             for one in specific_schedule_one:
                 if one["idaagent"] not in agent_list:
                     agent_list.append(one["idaagent"])
             for agent in agent_list:
                 specific_schedule_two = self.get_schedules(client=client["client_name"], agent=agent)
+                agent_row_list.append(len(specific_schedule_two))
+
                 backup_set_list = []
                 for two in specific_schedule_two:
                     if two["backupset"] not in backup_set_list:
                         backup_set_list.append(two["backupset"])
                 for backup_set in backup_set_list:
                     specific_schedule_three = self.get_schedules(client=client["client_name"], agent=agent, backup_set=backup_set)
+                    backupset_row_list.append(len(specific_schedule_three))
+
                     sub_client_list = []
                     for three in specific_schedule_three:
                         if three["subclient"] not in sub_client_list:
                             sub_client_list.append(three["subclient"])
                     for sub_client in sub_client_list:
                         specific_schedule_four = self.get_schedules(client=client["client_name"], agent=agent, backup_set=backup_set, sub_client=sub_client)
+                        subclient_row_list.append(len(specific_schedule_four))
+
                         schedule_list = []
                         for four in specific_schedule_four:
                             if four["scheduePolicy"] not in schedule_list:
                                 schedule_list.append(four["scheduePolicy"])
                         for schedule in schedule_list:
                             specific_schedule_five = self.get_schedules(client=client["client_name"], agent=agent, backup_set=backup_set, sub_client=sub_client, schedule=schedule)
+                            schedule_row_list.append(len(specific_schedule_five))
+
                             schedules = []
                             for five in specific_schedule_five:
                                 if five["schedbackuptype"] not in schedules:
                                     schedules.append(five["schedbackuptype"])
                             for c_schedule in schedules:
                                 specific_schedule_six = self.get_schedules(client=client["client_name"], agent=agent, backup_set=backup_set, sub_client=sub_client, schedule=schedule, schedule_type=c_schedule)
+                                schedule_type_row_list.append(len(specific_schedule_six))
+
                                 if specific_schedule_six:
                                     whole_schedule_list.extend(specific_schedule_six)
 
-        # 2.处理
-        return whole_schedule_list
+        row_dict = {
+            "client_row_list": client_row_list,
+            "agent_row_list": agent_row_list,
+            "backupset_row_list": backupset_row_list,
+            "subclient_row_list": subclient_row_list,
+            "schedule_row_list": schedule_row_list,
+            "schedule_type_row_list": schedule_type_row_list,
+        }
+        return whole_schedule_list, row_dict
 
 
 if __name__ == '__main__':
@@ -280,7 +308,7 @@ if __name__ == '__main__':
     # ret = dm.get_single_installed_client(2)
     # ret = dm.get_installed_sub_clients(2)
     # ret = dm.get_schedules(client="cv-server")
-    ret = dm.custom_all_schedules()
+    ret, row_dict = dm.custom_all_schedules()
     for i in ret:
         print(i["clientName"], i["idaagent"], i["backupset"], i["subclient"], i["scheduePolicy"], i["schedbackuptype"], i["schedbackupday"])
     # import json
