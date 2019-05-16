@@ -571,29 +571,16 @@ def index(request, funid):
 
 @login_required
 def get_backup_status(request):
-    # client>>agent>>last_job_time>> last_job_status>>last_aux_job_status
     whole_list = []
-    cv_token = CVRestApiToken()
-    cv_token.login(info)
-    cv_api = CVApiOperate(cv_token)
-    client_list = cv_api.get_client_list()
-    pool = ThreadPoolExecutor(max_workers=5)
-    # 并发
     try:
-        all_tasks = [pool.submit(custom_concrete_job_list, cv_api, client["clientId"], client["clientName"]) for
-                     client in client_list]
+        dm = SQLApi.CustomFilter(r'192.168.100.149\COMMVAULT', 'sa_cloud', '1qaz@WSX', 'CommServ')
+
+        whole_list = dm.custom_concrete_job_list()
     except Exception as e:
         return JsonResponse({
             "ret": 0,
             "data": "获取备份状态信息失败。",
         })
-
-    for future in as_completed(all_tasks):
-        if future.result():
-            whole_list.append({
-                "agent_job_list": future.result(),
-                "agent_length": len(future.result())
-            })
 
     return JsonResponse({
         "ret": 1,

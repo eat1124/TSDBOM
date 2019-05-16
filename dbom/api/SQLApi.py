@@ -1,5 +1,5 @@
 import pymssql
-import copy
+import datetime
 
 
 class DataMonitor(object):
@@ -320,7 +320,12 @@ class CVApi(DataMonitor):
         return backup_jobs
 
     def get_auxcopy_info(self, storage_policy, source_copy_id, dest_copy_id):
-        pass
+        # 存储策略>> source_copy_id, dest_copy_id
+        auxcopy_sql = """SELECT jobstatus 
+                        FROM [commserv].[dbo].[CommCellAuxCopyInfo] 
+                        WHERE storagepolicy 
+                        LIKE '{0}' and sourcecopyid='{1}' and destcopyid='{2}'
+                        ORDER BY startdate DESC""".format(storage_policy_name, source_copy_id, dest_copy_id)
 
 
 class CustomFilter(CVApi):
@@ -607,6 +612,57 @@ class CustomFilter(CVApi):
         }
         return whole_schedule_list, row_dict
 
+    def custom_concrete_job_list(self):
+        """
+        并发请求所有agent下的job
+        :param cv_api:
+        :param client_id:
+        :param client_name:
+        :return:
+        """
+        status_list = {"Running": "运行", "Waiting": "等待", "Pending": "阻塞", "Suspend": "终止", "Completed": "正常",
+                       "Failed": "失败", "Failed to Start": "启动失败", "Killed": "杀掉",
+                       "Completed w/ one or more errors": "已完成，但有一个或多个错误",
+                       "Completed w/ one or more warnings": "已完成，但有一个或多个警告", "Success": "成功"}
+        whole_list = []
+        job_list = self.get_all_backup_jobs()
+        all_clients = self.get_all_install_clients()
+        for client in all_clients:
+            agent_job_list = []
+            pre_agent_list = []
+
+            for job in job_list:
+                if job["idataagent"] not in pre_agent_list and job["clientname"] == client["client_name"]:
+                    pre_agent_list.append(job["idataagent"])
+
+                    job_status = job["jobstatus"]
+                    try:
+                        job_status_str = status_list[job_status]
+                    except:
+                        job_status_str = job_status
+
+                    if job_status_str in ["运行", "正常", "等待", "QueuedCompleted", "Queued", "PartialSuccess", "成功"]:
+                        status_label = "label-success"
+                    elif job_status_str in ["阻塞", "已完成，但有一个或多个错误", "已完成，但有一个或多个警告"]:
+                        status_label = "label-warning"
+                    else:
+                        status_label = "label-danger"
+
+                    agent_job_list.append({
+                        "client_name": client["client_name"],
+                        "agent_type_name": job["idataagent"],
+                        "job_start_time": job["startdate"].strftime("%Y-%m-%d %H:%M:%S"),
+                        "job_backup_status": job_status_str,
+                        "status_label": status_label,
+                        "aux_copy_info": "占个位置",
+                    })
+            if agent_job_list:
+                whole_list.append({
+                    "agent_job_list": agent_job_list,
+                    "agent_length": len(agent_job_list)
+                })
+        return whole_list
+
 
 if __name__ == '__main__':
     dm = CustomFilter(r'192.168.100.149\COMMVAULT', 'sa_cloud', '1qaz@WSX', 'CommServ')
@@ -619,7 +675,7 @@ if __name__ == '__main__':
     # ret, row_dict = dm.custom_all_storages()
     # ret, row_dict = dm.custom_all_backup_content()
     # ret = dm.get_all_backup_content()
-    ret = dm.get_all_backup_jobs()
+    ret = dm.custom_concrete_job_list()
     print(len(ret))
     for i in ret:
         print(i)
