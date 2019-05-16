@@ -3,7 +3,15 @@
 {% block title %}上海特速灾备运维管理软件{% endblock %}
 
 {% block contenthome %}
-
+    <style>
+        #loading {
+            height: 300px;
+            width: 100%;
+            background-image: url(../static/new/images/loading.gif);
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+    </style>
     {% csrf_token %}
     <section class="scrollable wrapper">
         <!-- BEGIN CONTENT BODY -->
@@ -94,26 +102,9 @@
                                     </thead>
                                     <tbody>
 
-                                    {% for client in whole_list %}
-                                        {% for agent in client.agent_job_list %}
-                                            <tr>
-                                                {% if forloop.counter == 1 %}
-                                                <td rowspan="{{ client.agent_length }}" style="vertical-align:middle"> {{ forloop.parentloop.counter }}</td>
-                                                <td rowspan="{{ client.agent_length }}" style="vertical-align:middle"> {{ agent.client_name }}</td>
-                                                {% endif %}
-                                                <td> {{ agent.agent_type_name }}</td>
-                                                <td> {{ agent.job_start_time }}</td>
-                                                <td>
-                                                    <span class="label label-sm {{ agent.status_label }}"> {{ agent.job_backup_status }} </span>
-                                                </td>
-                                                <td>
-                                                    <span class="label label-sm {% if agent.aux_copy_info %}label-success{% endif %}"> {{ agent.aux_copy_info }} </span>
-                                                </td>
-                                            </tr>
-                                        {% endfor %}
-                                    {% endfor %}
                                     </tbody>
                                 </table>
+                                <div id="loading" hidden></div>
                             </div>
                         </div>
                     </div>

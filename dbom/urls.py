@@ -38,6 +38,8 @@ urlpatterns = [
 
     # 备份状态
     url(r'^backup_status/$', backup_status, {'funid': '31'}),
+    url(r'^get_backup_status/$', get_backup_status),
+
     # 备份内容
     url(r'^backup_content/$', backup_content, {'funid': '32'}),
     url(r'^get_backup_content/$', get_backup_content),

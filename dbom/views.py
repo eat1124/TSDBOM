@@ -421,6 +421,9 @@ def custom_concrete_job_list(cv_api, client_id, client_name):
     conn = pymssql.connect(host='192.168.100.149\COMMVAULT', user='sa_cloud', password='1qaz@WSX', database='CommServ')
     cur = conn.cursor()
 
+    # dm = SQLApi.CustomFilter(r'192.168.100.149\COMMVAULT', 'sa_cloud', '1qaz@WSX', 'CommServ')
+    # job_list = dm.get_all_backup_jobs()
+
     job_list = cv_api.get_job_list(client_id, time_sorted=True)
     sub_client_list = cv_api.get_sub_client_list(client_id)
 
@@ -432,11 +435,6 @@ def custom_concrete_job_list(cv_api, client_id, client_name):
             if job["agentType"] in job_pre_agent_list:
                 pass
             else:
-                # client,agent
-                # > sub_client_list
-                # >> storage_list
-                # >>> storage_info (copy)
-                # >>>> sql查询
                 aux_copy_info = ""
                 for sub_client in sub_client_list:
                     if job["agentType"] in sub_client["appName"]:
@@ -536,32 +534,32 @@ def index(request, funid):
         warning_client_num = 0
 
         # client>>agent>>last_job_time>> last_job_status>>last_aux_job_status
-        whole_list = []
-
-        pool = ThreadPoolExecutor(max_workers=5)
-
-        # 并发
-        try:
-            all_tasks = [pool.submit(custom_concrete_job_list, cv_api, client["clientId"], client["clientName"]) for
-                         client in client_list]
-        except:
-            all_tasks = []
-        for future in as_completed(all_tasks):
-            if future.result():
-                whole_list.append({
-                    "agent_job_list": future.result(),
-                    "agent_length": len(future.result())
-                })
-                for job in future.result():
-                    if "失败" in job["job_backup_status"]:
-                        warning_client_num += 1
-                        break
+        # whole_list = []
+        #
+        # pool = ThreadPoolExecutor(max_workers=5)
+        #
+        # # 并发
+        # try:
+        #     all_tasks = [pool.submit(custom_concrete_job_list, cv_api, client["clientId"], client["clientName"]) for
+        #                  client in client_list]
+        # except:
+        #     all_tasks = []
+        # for future in as_completed(all_tasks):
+        #     if future.result():
+        #         whole_list.append({
+        #             "agent_job_list": future.result(),
+        #             "agent_length": len(future.result())
+        #         })
+        #         for job in future.result():
+        #             if "失败" in job["job_backup_status"]:
+        #                 warning_client_num += 1
+        #                 break
 
         return render(request, "index.html", {
             'username': request.user.userinfo.fullname,
             "homepage": True,
             "pagefuns": getpagefuns(funid, request),
-            "whole_list": whole_list,
+            # "whole_list": whole_list,
             "service_status": service_status,
             "net_status": net_status,
             "warning_client_num": warning_client_num,
@@ -572,7 +570,7 @@ def index(request, funid):
 
 
 @login_required
-def backup_status(request, funid):
+def get_backup_status(request):
     # client>>agent>>last_job_time>> last_job_status>>last_aux_job_status
     whole_list = []
     cv_token = CVRestApiToken()
@@ -585,8 +583,11 @@ def backup_status(request, funid):
         all_tasks = [pool.submit(custom_concrete_job_list, cv_api, client["clientId"], client["clientName"]) for
                      client in client_list]
     except Exception as e:
-        print(e)
-        all_tasks = []
+        return JsonResponse({
+            "ret": 0,
+            "data": "获取备份状态信息失败。",
+        })
+
     for future in as_completed(all_tasks):
         if future.result():
             whole_list.append({
@@ -594,15 +595,22 @@ def backup_status(request, funid):
                 "agent_length": len(future.result())
             })
 
-    return render(request, "backup_status.html", {
-        'username': request.user.userinfo.fullname,
-        "pagefuns": getpagefuns(funid, request),
-        "whole_list": whole_list,
+    return JsonResponse({
+        "ret": 1,
+        "data": whole_list,
     })
 
 
 @login_required
-def get_backup_content(self):
+def backup_status(request, funid):
+    return render(request, "backup_status.html", {
+        'username': request.user.userinfo.fullname,
+        "pagefuns": getpagefuns(funid, request),
+    })
+
+
+@login_required
+def get_backup_content(request):
     whole_list = []
     try:
         dm = SQLApi.CustomFilter(r'192.168.100.149\COMMVAULT', 'sa_cloud', '1qaz@WSX', 'CommServ')

@@ -285,6 +285,43 @@ class CVApi(DataMonitor):
             })
         return schedules
 
+    def get_all_backup_jobs(self):
+        """
+        前1000个
+        :return:
+        """
+        status_list = {"Running": "运行", "Waiting": "等待", "Pending": "阻塞", "Suspend": "终止", "Completed": "正常",
+                       "Failed": "失败", "Failed to Start": "启动失败", "Killed": "杀掉",
+                       "Completed w/ one or more errors": "已完成，但有一个或多个错误",
+                       "Completed w/ one or more warnings": "已完成，但有一个或多个警告"}
+
+        job_sql = """SELECT TOP 1000 [jobid],[clientname],[idataagent],[instance],[backupset],[subclient],[data_sp],[backuplevel],[incrlevel],[jobstatus],[jobfailedreason],[startdate],[enddate],[totalBackupSize]
+                    FROM [commserv].[dbo].[CommCellBackupInfo]
+                    ORDER BY [jobid] DESC"""
+        content = self.fetch_all(job_sql)
+        backup_jobs = []
+        for i in content:
+            backup_jobs.append({
+                "jobid": i[0],
+                "clientname": i[1],
+                "idataagent": i[2],
+                "instance": i[3],
+                "backupset": i[4],
+                "subclient": i[5],
+                "data_sp": i[6],
+                "backuplevel": i[7],
+                "incrlevel": i[8],
+                "jobstatus": i[9],
+                "jobfailedreason": i[10],
+                "startdate": i[11],
+                "enddate": i[12],
+                "totalBackupSize": i[13],
+            })
+        return backup_jobs
+
+    def get_auxcopy_info(self, storage_policy, source_copy_id, dest_copy_id):
+        pass
+
 
 class CustomFilter(CVApi):
     def custom_all_backup_content(self):
@@ -580,8 +617,9 @@ if __name__ == '__main__':
     # ret = dm.get_schedules(client="cv-server")
     # ret, row_dict = dm.custom_all_schedules()
     # ret, row_dict = dm.custom_all_storages()
-    ret, row_dict = dm.custom_all_backup_content()
+    # ret, row_dict = dm.custom_all_backup_content()
     # ret = dm.get_all_backup_content()
+    ret = dm.get_all_backup_jobs()
     print(len(ret))
     for i in ret:
         print(i)
