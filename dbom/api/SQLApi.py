@@ -139,6 +139,29 @@ class CVApi(DataMonitor):
             })
         return sub_clients
 
+    def get_all_storage(self):
+        storage_sql = """SELECT [storagepolicy],[defaultcopy],[hardwarecompress],[maxstreams],[drivepool],[library],[appid],[clientname],[idataagent],[instance],[backupset],[subclient]
+                          FROM [commserv].[dbo].[CommCellStoragePolicy]"""
+
+        storages = []
+        content = self.fetch_all(storage_sql)
+        for i in content:
+            storages.append({
+                "storagepolicy": i[0],
+                # "defaultcopy": i[1],
+                # "hardwarecompress": i[2],
+                # "maxstreams": i[3],
+                # "drivepool": i[4],
+                # "library": i[5],
+                # "appid": i[6],
+                "clientname": i[7],
+                "idataagent": i[8],
+                "instance": i[9],
+                "backupset": i[10],
+                "subclient": i[11],
+            })
+        return storages
+
     def get_all_schedules(self):
         schedule_sql = """SELECT [CommCellId],[CommCellName],[scheduleId],[scheduePolicy],[scheduleName],[scheduletask],[schedbackuptype],[schedpattern],[schedinterval]
         ,[schedbackupday],[schedbackupTime],[schednextbackuptime],[appid],[clientName],[idaagent],[instance],[backupset],[subclient]
@@ -230,6 +253,93 @@ class CVApi(DataMonitor):
 
 
 class CustomFilter(CVApi):
+    def custom_all_storages(self):
+        whole_storage_list = []
+        # 1.排序
+        all_clients = self.get_all_install_clients()
+
+        # 2.所有storage的列表
+        all_storage_list = self.get_all_storage()
+
+        client_row_list = []
+        agent_row_list = []
+        backupset_row_list = []
+        subclient_row_list = []
+        storage_row_list = []
+
+        for client in all_clients:
+            specific_storage_one = []
+            for storage_one in all_storage_list:
+                if storage_one["clientname"] == client["client_name"]:
+                    specific_storage_one.append(storage_one)
+
+            if len(specific_storage_one) != 0:
+                client_row_list.append(len(specific_storage_one))
+
+            agent_list = []
+            for one in specific_storage_one:
+                if one["idataagent"] not in agent_list:
+                    agent_list.append(one["idataagent"])
+            for agent in agent_list:
+
+                specific_storage_two = []
+                for storage_two in all_storage_list:
+                    if storage_two["clientname"] == client["client_name"] and storage_two["idataagent"] == agent:
+                        specific_storage_two.append(storage_two)
+
+                agent_row_list.append(len(specific_storage_two))
+
+                backup_set_list = []
+                for two in specific_storage_two:
+                    if two["backupset"] not in backup_set_list:
+                        backup_set_list.append(two["backupset"])
+                for backup_set in backup_set_list:
+
+                    specific_storage_three = []
+                    for storage_three in all_storage_list:
+                        if storage_three["clientname"] == client["client_name"] and storage_three["idataagent"] == agent and storage_three["backupset"] == backup_set:
+                            specific_storage_three.append(storage_three)
+
+                    backupset_row_list.append(len(specific_storage_three))
+
+                    sub_client_list = []
+                    for three in specific_storage_three:
+                        if three["subclient"] not in sub_client_list:
+                            sub_client_list.append(three["subclient"])
+                    for sub_client in sub_client_list:
+
+                        specific_storage_four = []
+                        for storage_four in all_storage_list:
+                            if storage_four["clientname"] == client["client_name"] and storage_four["idataagent"] == agent and storage_four["backupset"] == backup_set and storage_four["subclient"] == sub_client:
+                                specific_storage_four.append(storage_four)
+
+                        subclient_row_list.append(len(specific_storage_four))
+
+                        storage_list = []
+                        for four in specific_storage_four:
+                            if four["storagepolicy"] not in storage_list:
+                                storage_list.append(four["storagepolicy"])
+                        for storage in storage_list:
+
+                            specific_storage_five = []
+                            for storage_five in all_storage_list:
+                                if storage_five["clientname"] == client["client_name"] and storage_five["idataagent"] == agent and storage_five["backupset"] == backup_set and storage_five["subclient"] == sub_client and storage_five["storagepolicy"] == storage:
+                                    specific_storage_five.append(storage_five)
+
+                            storage_row_list.append(len(specific_storage_five))
+
+                            if specific_storage_five:
+                                whole_storage_list.extend(specific_storage_five)
+
+        row_dict = {
+            "client_row_list": client_row_list,
+            "agent_row_list": agent_row_list,
+            "backupset_row_list": backupset_row_list,
+            "subclient_row_list": subclient_row_list,
+            "storage_row_list": storage_row_list,
+        }
+        return whole_storage_list, row_dict
+
     def custom_all_schedules(self):
         whole_schedule_list = []
         # 1.排序
@@ -349,9 +459,10 @@ if __name__ == '__main__':
     # ret = dm.get_single_installed_client(2)
     # ret = dm.get_installed_sub_clients(2)
     # ret = dm.get_schedules(client="cv-server")
-    ret, row_dict = dm.custom_all_schedules()
+    # ret, row_dict = dm.custom_all_schedules()
+    ret, row_dict = dm.custom_all_storages()
     for i in ret:
-        print(i["clientName"], i["idaagent"], i["backupset"], i["subclient"], i["scheduePolicy"], i["schedbackuptype"], i["schedbackupday"])
+        print(i)
     # import json
     # with open("1.json", "w") as f:
     #     f.write(json.dumps(ret))

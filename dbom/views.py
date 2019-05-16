@@ -659,130 +659,42 @@ def backup_content(request, funid):
     })
 
 
-def get_storage_policy(cv_api, client_id, client_name):
-    sub_client_list = cv_api.get_sub_client_list(client_id)
-    storage_policy_list = []
-    # app_name = None
-    # app_name_count = 1
-    # backup_set_name = None
-    # backup_set_name_count = 1
-    # first_app = False
-    # first_backup_set = False
-    # app_name_count_list = []
-    # backup_set_name_count_list = []
-
-    if sub_client_list:
-        for num, sub_client in enumerate(sub_client_list):
-            sub_client_info = cv_api.get_simple_sub_client_info(sub_client["subclientId"])
-
-            if sub_client_info:
-                try:
-                    # # if first app
-                    # if app_name is None or app_name != sub_client_info["appName"]:
-                    #     if num+1 < len(sub_client_list):
-                    #         app_name_count_list.append(app_name_count)
-
-                    #     app_name_count = 1
-                    #     first_app = True
-                    #     backup_set_name = None
-                    # else:
-                    #     first_app = False
-
-                    # # if first backup_set
-                    # if backup_set_name is None or backup_set_name != sub_client_info["backupsetName"] and first_app is False:
-                    #     if num+1 < len(sub_client_list):
-                    #         backup_set_name_count_list.append(backup_set_name_count)
-
-                    #     first_backup_set = True
-                    #     backup_set_name_count = 1
-                    # else:
-                    #     first_backup_set = False
-
-                    # if num+1 == len(sub_client_list):
-                    #     app_name_count_list.append(app_name_count)
-                    #     backup_set_name_count_list.append(backup_set_name_count)
-
-                    app_name = sub_client_info["appName"]
-                    backup_set_name = sub_client_info["backupsetName"]
-                    storage_policy_list.append({
-                        "client_id": client_id,
-                        "client_name": client_name,
-                        "agent_type_name": app_name,
-                        "backupsetName": backup_set_name,
-                        "subclientName": sub_client_info["subclientName"],
-                        "storagePolicyId": sub_client_info["storagePolicyId"],
-                        "storagePolicyName": sub_client_info["storagePolicyName"],
-                        # "first_app": first_app,
-                        # "first_backup_set": first_backup_set,
-                    })
-                    # # add
-                    # app_name_count += 1
-                    # backup_set_name_count += 1
-                except KeyError as e:
-                    print(e)
-
-        # app_name_count_list.reverse() 
-        # backup_set_name_count_list.reverse() 
-
-        # for storage_policy in storage_policy_list:
-        #     if storage_policy["first_app"] is True and app_name_count_list:
-        #         index = app_name_count_list.pop()
-        #         storage_policy["app_sum"] = index
-
-        #     if storage_policy["first_backup_set"] is True and backup_set_name_count_list:
-        #         index = backup_set_name_count_list.pop()
-        #         storage_policy["backup_set_sum"] = index
-    return storage_policy_list
+@login_required
+def get_storage_policy(self):
+    whole_list = []
+    try:
+        dm = SQLApi.CustomFilter(r'192.168.100.149\COMMVAULT', 'sa_cloud', '1qaz@WSX', 'CommServ')
+        ret, row_dict = dm.custom_all_storages()
+        for storage in ret:
+            storage_dict = OrderedDict()
+            storage_dict["clientName"] = storage["clientname"]
+            storage_dict["appName"] = storage["idataagent"]
+            storage_dict["backupsetName"] = storage["backupset"]
+            storage_dict["subclientName"] = storage["subclient"]
+            storage_dict["storagePolicy"] = storage["storagepolicy"]
+            whole_list.append(storage_dict)
+    except Exception as e:
+        print(e)
+        return JsonResponse({
+            "ret": 0,
+            "data": "获取存储策略信息失败。",
+        })
+    else:
+        return JsonResponse({
+            "ret": 1,
+            "data": {
+                "whole_list": whole_list,
+                "row_dict": row_dict,
+            },
+        })
 
 
 @login_required
 def storage_policy(request, funid):
-    whole_list = []
-    cv_token = CVRestApiToken()
-    cv_token.login(info)
-    cv_api = CVApiOperate(cv_token)
-    client_list = cv_api.get_client_list()
-    pool = ThreadPoolExecutor(max_workers=5)
-
-    try:
-        all_tasks = [pool.submit(get_storage_policy, cv_api, client["clientId"], client["clientName"]) for client in client_list]
-    except Exception as e:
-        print(e)
-        all_tasks = []
-    for future in as_completed(all_tasks):
-        if future.result():
-            whole_list.append({
-                "storage_policy_list": future.result(),
-                "agent_length": len(future.result())
-            })
-
     return render(request, "storage_policy.html", {
         'username': request.user.userinfo.fullname,
         "pagefuns": getpagefuns(funid, request),
-        "whole_list": whole_list,
     })
-
-
-def get_schedule_policy(cv_api, client_id, client_name):
-    sub_client_list = cv_api.get_sub_client_list(client_id)
-    schedule_policy_list = []
-
-    if sub_client_list:
-        for num, sub_client in enumerate(sub_client_list):
-            schedule_list = cv_api.get_schedule_list(sub_client["subclientId"])
-            if schedule_list:
-                for schedule in schedule_list:
-                    schedule_policy_list.append({
-                        "client_id": client_id,
-                        "client_name": client_name,
-                        "taskName": schedule["taskName"],
-                        "backupLevel": schedule["backupLevel"],
-                        "description": schedule["description"],
-                        "backupsetName": schedule["backupsetName"] if schedule["appName"] in ["File System", "Virtual Server"] else schedule["instanceName"],
-                        "agent_type_name": schedule["appName"],
-                        "subclientName": schedule["subclientName"],
-                    })
-    return schedule_policy_list
 
 
 @login_required
@@ -790,7 +702,6 @@ def schedule_policy(request, funid):
     return render(request, "schedule_policy.html", {
         'username': request.user.userinfo.fullname,
         "pagefuns": getpagefuns(funid, request),
-        # "whole_list": whole_list,
     })
 
 

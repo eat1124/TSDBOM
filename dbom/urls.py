@@ -47,8 +47,7 @@ urlpatterns = [
 
     # 存储策略
     url(r'^storage_policy/$', storage_policy, {'funid': '34'}),
-
-
+    url(r'^get_storage_policy/$', get_storage_policy),
 
     # 运维记录
     url(r'^inspection/$', inspection_report, {'funid': 62}),  # 巡检报告
