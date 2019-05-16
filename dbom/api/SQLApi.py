@@ -8,11 +8,11 @@ class DataMonitor(object):
         self.user = user
         self.password = password
         self.database = database
-        self.conn = self.connection
+        self._conn = self._connection
         self.msg = ""
 
     @property
-    def connection(self):
+    def _connection(self):
         try:
             connection = pymssql.connect(host=self.host, user=self.user, password=self.password, database=self.database)
         except pymssql.OperationalError as e:
@@ -23,20 +23,20 @@ class DataMonitor(object):
 
     def fetch_one(self, temp_sql):
         result = None
-        if self.conn:
-            with self.conn.cursor() as cursor:
+        if self._conn:
+            with self._conn.cursor() as cursor:
                 cursor.execute(temp_sql)
                 result = cursor.fetchone()
-                self.conn.close()
+                # self._conn.close()
         return result
 
     def fetch_all(self, temp_sql):
         result = []
-        if self.conn:
-            with self.conn.cursor() as cursor:
+        if self._conn:
+            with self._conn.cursor() as cursor:
                 cursor.execute(temp_sql)
                 result = cursor.fetchall()
-                # self.conn.close()
+                # self._conn.close()
         return result
 
 
@@ -191,6 +191,40 @@ class CVApi(DataMonitor):
             })
         return schedules
 
+    def get_all_backup_content(self):
+        backupset_content_sql = """SELECT [clientname],[idataagent],[backupset],[subclient],[content]
+                                   FROM [commserv].[dbo].[CommCellClientFSFilters]
+                                   WHERE [subclientstatus]='valid'"""
+
+        instance_content_sql = """SELECT [clientname],[idataagent],[instance],[backupset],[subclient]
+                                  FROM [commserv].[dbo].[CommCellSubClientConfig]
+                                  WHERE [idataagentstatus] = 'installed' AND [data_sp]!='not assigned'"""
+        backupset_content = self.fetch_all(backupset_content_sql)
+        instance_content = self.fetch_all(instance_content_sql)
+
+        backupset_content_list = []
+        for i in backupset_content:
+            if i[1] in ["Mysql", "Windows File System", "Linux File System", "Virtual Server"]:
+                # 虚机备份的是vmdk
+                backupset_content_list.append({
+                    "clientname": i[0],
+                    "idataagent": i[1],
+                    "backupset": i[2],
+                    "subclient": i[3],
+                    "content": i[4],
+                })
+        for i in instance_content:
+            if i[1] in ["Oracle Database", "SQL Server"]:
+                backupset_content_list.append({
+                    "clientname": i[0],
+                    "idataagent": i[1],
+                    "backupset": i[3],
+                    "subclient": i[4],
+                    "content": i[2],
+                })
+
+        return backupset_content_list
+
     def get_schedules(self, client=None, agent=None, backup_set=None, sub_client=None, schedule=None, schedule_type=None):
         if all([client, agent, backup_set, sub_client, schedule, schedule_type]):
             schedule_sql = """SELECT [CommCellId],[CommCellName],[scheduleId],[scheduePolicy],[scheduleName],[scheduletask],[schedbackuptype],[schedpattern],[schedinterval]
@@ -253,12 +287,97 @@ class CVApi(DataMonitor):
 
 
 class CustomFilter(CVApi):
-    def custom_all_storages(self):
-        whole_storage_list = []
-        # 1.排序
+    def custom_all_backup_content(self):
+        whole_content_list = []
+
         all_clients = self.get_all_install_clients()
 
-        # 2.所有storage的列表
+        all_content_list = self.get_all_backup_content()
+
+        client_row_list = []
+        agent_row_list = []
+        backupset_row_list = []
+        subclient_row_list = []
+        content_row_list = []
+
+        for client in all_clients:
+            specific_content_one = []
+            for content_one in all_content_list:
+                if content_one["clientname"] == client["client_name"]:
+                    specific_content_one.append(content_one)
+
+            if len(specific_content_one) != 0:
+                client_row_list.append(len(specific_content_one))
+
+            agent_list = []
+            for one in specific_content_one:
+                if one["idataagent"] not in agent_list:
+                    agent_list.append(one["idataagent"])
+            for agent in agent_list:
+
+                specific_content_two = []
+                for content_two in all_content_list:
+                    if content_two["clientname"] == client["client_name"] and content_two["idataagent"] == agent:
+                        specific_content_two.append(content_two)
+
+                agent_row_list.append(len(specific_content_two))
+
+                backup_set_list = []
+                for two in specific_content_two:
+                    if two["backupset"] not in backup_set_list:
+                        backup_set_list.append(two["backupset"])
+                for backup_set in backup_set_list:
+
+                    specific_content_three = []
+                    for content_three in all_content_list:
+                        if content_three["clientname"] == client["client_name"] and content_three["idataagent"] == agent and content_three["backupset"] == backup_set:
+                            specific_content_three.append(content_three)
+
+                    backupset_row_list.append(len(specific_content_three))
+
+                    sub_client_list = []
+                    for three in specific_content_three:
+                        if three["subclient"] not in sub_client_list:
+                            sub_client_list.append(three["subclient"])
+                    for sub_client in sub_client_list:
+
+                        specific_content_four = []
+                        for content_four in all_content_list:
+                            if content_four["clientname"] == client["client_name"] and content_four["idataagent"] == agent and content_four["backupset"] == backup_set and content_four["subclient"] == sub_client:
+                                specific_content_four.append(content_four)
+
+                        subclient_row_list.append(len(specific_content_four))
+
+                        content_list = []
+                        for four in specific_content_four:
+                            if four["content"] not in content_list:
+                                content_list.append(four["content"])
+                        for content in content_list:
+
+                            specific_content_five = []
+                            for content_five in all_content_list:
+                                if content_five["clientname"] == client["client_name"] and content_five["idataagent"] == agent and content_five["backupset"] == backup_set and content_five["subclient"] == sub_client and content_five["content"] == content:
+                                    specific_content_five.append(content_five)
+
+                            content_row_list.append(len(specific_content_five))
+
+                            if specific_content_five:
+                                whole_content_list.extend(specific_content_five)
+
+        row_dict = {
+            "client_row_list": client_row_list,
+            "agent_row_list": agent_row_list,
+            "backupset_row_list": backupset_row_list,
+            "subclient_row_list": subclient_row_list,
+            "content_row_list": content_row_list,
+        }
+        return whole_content_list, row_dict
+
+    def custom_all_storages(self):
+        whole_storage_list = []
+
+        all_clients = self.get_all_install_clients()
+
         all_storage_list = self.get_all_storage()
 
         client_row_list = []
@@ -460,7 +579,10 @@ if __name__ == '__main__':
     # ret = dm.get_installed_sub_clients(2)
     # ret = dm.get_schedules(client="cv-server")
     # ret, row_dict = dm.custom_all_schedules()
-    ret, row_dict = dm.custom_all_storages()
+    # ret, row_dict = dm.custom_all_storages()
+    ret, row_dict = dm.custom_all_backup_content()
+    # ret = dm.get_all_backup_content()
+    print(len(ret))
     for i in ret:
         print(i)
     # import json

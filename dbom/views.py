@@ -601,61 +601,41 @@ def backup_status(request, funid):
     })
 
 
-def get_backup_content(cv_api, client_id, client_name):
-    sub_client_list = cv_api.get_sub_client_list(client_id)
-    backup_content_list = []
-
-    if sub_client_list:
-        for num, sub_client in enumerate(sub_client_list):
-            backup_content = cv_api.get_backup_content(sub_client["subclientId"])
-
-            if backup_content:
-                try:
-                    if backup_content["appName"] in ["File System", "Virtual Server"]:
-                        backupsetName = backup_content["backupsetName"]
-                    else:
-                        backupsetName = backup_content["instanceName"]
-                    content = ""
-                    for i in backup_content["content"]:
-                        content += i + "|"
-
-                    backup_content_list.append({
-                        "client_name": client_name,
-                        "agent_type_name": backup_content["appName"],
-                        "backupsetName": backupsetName,
-                        "subclientName": backup_content["subclientName"],
-                        "content": content[:-1] if content else "",
-                    })
-                except KeyError as e:
-                    print(e)
-    return backup_content_list
+@login_required
+def get_backup_content(self):
+    whole_list = []
+    try:
+        dm = SQLApi.CustomFilter(r'192.168.100.149\COMMVAULT', 'sa_cloud', '1qaz@WSX', 'CommServ')
+        ret, row_dict = dm.custom_all_backup_content()
+        for content in ret:
+            content_dict = OrderedDict()
+            content_dict["clientName"] = content["clientname"]
+            content_dict["appName"] = content["idataagent"]
+            content_dict["backupsetName"] = content["backupset"]
+            content_dict["subclientName"] = content["subclient"]
+            content_dict["content"] = content["content"]
+            whole_list.append(content_dict)
+    except Exception as e:
+        print(e)
+        return JsonResponse({
+            "ret": 0,
+            "data": "获取存储策略信息失败。",
+        })
+    else:
+        return JsonResponse({
+            "ret": 1,
+            "data": {
+                "whole_list": whole_list,
+                "row_dict": row_dict,
+            },
+        })
 
 
 @login_required
 def backup_content(request, funid):
-    whole_list = []
-    cv_token = CVRestApiToken()
-    cv_token.login(info)
-    cv_api = CVApiOperate(cv_token)
-    client_list = cv_api.get_client_list()
-    pool = ThreadPoolExecutor(max_workers=5)
-    # 并发
-    try:
-        all_tasks = [pool.submit(get_backup_content, cv_api, client["clientId"], client["clientName"]) for
-                     client in client_list]
-    except Exception as e:
-        print(e)
-        all_tasks = []
-    for future in as_completed(all_tasks):
-        if future.result():
-            whole_list.append({
-                "backup_content_list": future.result(),
-                "agent_length": len(future.result())
-            })
     return render(request, "backup_content.html", {
         'username': request.user.userinfo.fullname,
         "pagefuns": getpagefuns(funid, request),
-        "whole_list": whole_list,
     })
 
 

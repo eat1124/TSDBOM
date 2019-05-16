@@ -40,6 +40,7 @@ urlpatterns = [
     url(r'^backup_status/$', backup_status, {'funid': '31'}),
     # 备份内容
     url(r'^backup_content/$', backup_content, {'funid': '32'}),
+    url(r'^get_backup_content/$', get_backup_content),
 
     # 计划策略
     url(r'^schedule_policy/$', schedule_policy, {'funid': '33'}),
