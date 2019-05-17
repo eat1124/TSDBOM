@@ -54,9 +54,12 @@
                                 <i class="fa fa-shopping-cart"></i>
                             </div>
                             <div class="details">
+{#                                <div class="number">#}
+{#                                    <span {% if warning_client_num != 0 %}style="color: red"{% endif %}#}
+{#                                          data-counter="counterup" data-value="0">{{ warning_client_num }}</span>#}
+{#                                </div>#}
                                 <div class="number">
-                                    <span {% if warning_client_num != 0 %}style="color: red"{% endif %}
-                                          data-counter="counterup" data-value="0">{{ warning_client_num }}</span>
+                                    <span data-counter="counterup" data-value="0" id="warning_client_num">{{ warning_client_num }}</span>
                                 </div>
                                 <div class="desc"> 报警客户端</div>
                             </div>

@@ -513,14 +513,8 @@ def index(request, funid):
                 value.sort = 0
         funlist = sorted(funlist, key=lambda fun: fun.sort)
 
-        # 备份状态监控
-        cv_token = CVRestApiToken()
-        cv_token.login(info)
-        print("登录成功。。。")
-        cv_api = CVApiOperate(cv_token)
-
-        # 服务状态/网络状态
-        if cv_api.msg.startswith("连接失败") or cv_api.msg.startswith("登录失败"):
+        dm = SQLApi.CustomFilter(r'192.168.100.149\COMMVAULT', 'sa_cloud', '1qaz@WSX', 'CommServ')
+        if dm.msg == "链接数据库失败。":
             service_status = "中断"
             net_status = "中断"
         else:
@@ -528,38 +522,15 @@ def index(request, funid):
             net_status = "正常"
 
         # 客户端列表
-        client_list = cv_api.get_client_list()
+        client_list = dm.get_all_install_clients()
 
         # 报警客户端
-        warning_client_num = 0
-
-        # client>>agent>>last_job_time>> last_job_status>>last_aux_job_status
-        # whole_list = []
-        #
-        # pool = ThreadPoolExecutor(max_workers=5)
-        #
-        # # 并发
-        # try:
-        #     all_tasks = [pool.submit(custom_concrete_job_list, cv_api, client["clientId"], client["clientName"]) for
-        #                  client in client_list]
-        # except:
-        #     all_tasks = []
-        # for future in as_completed(all_tasks):
-        #     if future.result():
-        #         whole_list.append({
-        #             "agent_job_list": future.result(),
-        #             "agent_length": len(future.result())
-        #         })
-        #         for job in future.result():
-        #             if "失败" in job["job_backup_status"]:
-        #                 warning_client_num += 1
-        #                 break
+        warning_client_num = "loading..."
 
         return render(request, "index.html", {
             'username': request.user.userinfo.fullname,
             "homepage": True,
             "pagefuns": getpagefuns(funid, request),
-            # "whole_list": whole_list,
             "service_status": service_status,
             "net_status": net_status,
             "warning_client_num": warning_client_num,

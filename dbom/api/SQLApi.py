@@ -16,7 +16,7 @@ class DataMonitor(object):
         try:
             connection = pymssql.connect(host=self.host, user=self.user, password=self.password, database=self.database)
         except pymssql.OperationalError as e:
-            print(e)
+            self.msg = "链接数据库失败。"
             return None
         else:
             return connection
@@ -297,7 +297,7 @@ class CVApi(DataMonitor):
 
         job_sql = """SELECT TOP 1000 [jobid],[clientname],[idataagent],[instance],[backupset],[subclient],[data_sp],[backuplevel],[incrlevel],[jobstatus],[jobfailedreason],[startdate],[enddate],[totalBackupSize]
                     FROM [commserv].[dbo].[CommCellBackupInfo]
-                    ORDER BY [jobid] DESC"""
+                    ORDER BY [startdate] DESC"""
         content = self.fetch_all(job_sql)
         backup_jobs = []
         for i in content:
@@ -319,13 +319,19 @@ class CVApi(DataMonitor):
             })
         return backup_jobs
 
-    def get_auxcopy_info(self, storage_policy, source_copy_id, dest_copy_id):
-        # 存储策略>> source_copy_id, dest_copy_id
-        auxcopy_sql = """SELECT jobstatus 
-                        FROM [commserv].[dbo].[CommCellAuxCopyInfo] 
-                        WHERE storagepolicy 
-                        LIKE '{0}' and sourcecopyid='{1}' and destcopyid='{2}'
-                        ORDER BY startdate DESC""".format(storage_policy_name, source_copy_id, dest_copy_id)
+    def get_all_auxcopys(self):
+        auxcopy_sql = """SELECT [storagepolicy], [jobstatus], [sourcecopyid], [destcopyid] FROM [commserv].[dbo].[CommCellAuxCopyInfo] 
+                        WHERE [destcopyid] != '' ORDER BY [startdate] DESC"""
+        content = self.fetch_all(auxcopy_sql)
+        auxcopys = []
+        for i in content:
+            auxcopys.append({
+                "storagepolicy": i[0],
+                "jobstatus": i[1],
+                "sourcecopyid": i[2],
+                "destcopyid": i[3],
+            })
+        return auxcopys
 
 
 class CustomFilter(CVApi):
@@ -627,6 +633,7 @@ class CustomFilter(CVApi):
         whole_list = []
         job_list = self.get_all_backup_jobs()
         all_clients = self.get_all_install_clients()
+        all_auxcopys = self.get_all_auxcopys()
         for client in all_clients:
             agent_job_list = []
             pre_agent_list = []
@@ -648,13 +655,32 @@ class CustomFilter(CVApi):
                     else:
                         status_label = "label-danger"
 
+                    aux_copy_status = ""
+                    for auxcopy in all_auxcopys:
+                        if auxcopy["storagepolicy"] == job["data_sp"]:
+                            aux_copy_status = auxcopy["jobstatus"]
+
+                    try:
+                        aux_copy_status_str = status_list[aux_copy_status]
+                    except:
+                        aux_copy_status_str = aux_copy_status
+
+                    if aux_copy_status_str in ["运行", "正常", "等待", "QueuedCompleted", "Queued", "PartialSuccess", "成功"]:
+                        aux_status_label = "label-success"
+                    elif aux_copy_status_str in ["阻塞", "已完成，但有一个或多个错误", "已完成，但有一个或多个警告"]:
+                        aux_status_label = "label-warning"
+                    else:
+                        aux_status_label = "label-danger"
+
+
                     agent_job_list.append({
                         "client_name": client["client_name"],
                         "agent_type_name": job["idataagent"],
                         "job_start_time": job["startdate"].strftime("%Y-%m-%d %H:%M:%S"),
                         "job_backup_status": job_status_str,
                         "status_label": status_label,
-                        "aux_copy_info": "占个位置",
+                        "aux_copy_status": aux_copy_status_str,
+                        "aux_status_label": aux_status_label,
                     })
             if agent_job_list:
                 whole_list.append({
@@ -675,7 +701,9 @@ if __name__ == '__main__':
     # ret, row_dict = dm.custom_all_storages()
     # ret, row_dict = dm.custom_all_backup_content()
     # ret = dm.get_all_backup_content()
-    ret = dm.custom_concrete_job_list()
+    # ret = dm.get_all_backup_jobs()
+    ret = dm.get_all_auxcopys()
+    # ret = dm.custom_concrete_job_list()
     print(len(ret))
     for i in ret:
         print(i)

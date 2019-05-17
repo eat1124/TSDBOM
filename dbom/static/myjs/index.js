@@ -11,6 +11,9 @@ $(document).ready(function () {
             if (data.ret == 0) {
                 alert(data.data)
             } else {
+                // 报警客户端
+                var warning_client_num = 0;
+
                 var whole_list = data.data;
 
                 // 加载数据
@@ -26,13 +29,24 @@ $(document).ready(function () {
                             tr_el += '<td rowspan="' + whole_list[i].agent_length + '" style="vertical-align:middle">' + (i + 1) + '</td><td rowspan="' + whole_list[i].agent_length + '" style="vertical-align:middle">' + agent_job_list[j].client_name + '</td>';
                         }
                         tr_el += '<td>' + agent_job_list[j].agent_type_name + '</td><td>' + agent_job_list[j].job_start_time + '</td><td><span class="label label-sm ' + agent_job_list[j].status_label + '">' + agent_job_list[j].job_backup_status + '</span></td>'
-                        var label_status = ''
-                        if (agent_job_list[j].aux_copy_info) {
-                            label_status = 'label-success'
-                        }
-                        tr_el += '<td><span class="label label-sm ' + label_status + '">' + agent_job_list[j].aux_copy_info + '</span></td></tr>'
+                        tr_el += '<td><span class="label label-sm ' + agent_job_list[j].aux_status_label + '">' + agent_job_list[j].aux_copy_status + '</span></td></tr>'
                         content_el += tr_el;
                     }
+
+                    // 报警客户端
+                    for (var j = 0; j < agent_job_list.length; j++) {
+                        console.log(agent_job_list[j].job_backup_status)
+                        console.log(agent_job_list[j].job_backup_status.indexOf("失败"))
+                        if (agent_job_list[j].job_backup_status.indexOf("失败") != -1) {
+                            warning_client_num += 1;
+                            break
+                        }
+                    }
+                }
+
+                $("#warning_client_num").text(warning_client_num)
+                if (warning_client_num > 0) {
+                    $("#warning_client_num").css("color", "red");
                 }
 
                 $("tbody").append(content_el);
