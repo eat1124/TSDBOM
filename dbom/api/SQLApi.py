@@ -169,7 +169,105 @@ class CVApi(DataMonitor):
 
         schedules = []
         content = self.fetch_all(schedule_sql)
+        period_chz = {
+            "One time": "次",
+            "Daily": "日",
+            "Weekly": "周",
+            "Monthly": "月",
+            "Monthly relative": "月",
+            "Yearly": "年",
+            "Yearly relative": "年",
+            "Automatic schedule": "自动",
+        }
+
+        schedbackupday_chz = {
+            "Sunday": "周日",
+            "Monday": "周一",
+            "Tuesday": "周二",
+            "Wednesday": "周三",
+            "Thursday": "周四",
+            "Friday": "周五",
+            "Saturday": "周六",
+        }
+
+        type_chz = {
+            "Full": "全备",
+            "Incremental": "增量",
+            "Synthetic Full": "综合完全",
+            "NONE": "无",
+            "Differential": "差量",
+            "Unknown": "预选备份类型"
+        }
+
+        month_chz = {
+            "January": "1月",
+            "February": "2月",
+            "March": "3月",
+            "April": "4月",
+            "May": "5月",
+            "June": "6月",
+            "July": "7月",
+            "August": "8月",
+            "September": "9月",
+            "October": "10月",
+            "November": "11月",
+            "December": "12月",
+        }
+
+
         for i in content:
+            # 处理schedbackupday
+            schedbackupday = ""
+            schedinterval = ""
+            if i[7] == "Weekly":
+                for day in i[9].split(" "):
+                    if day:
+                        schedbackupday += "/" + schedbackupday_chz[day]
+                schedbackupday = schedbackupday[1:]
+
+                # 重复schedinterval
+                if i[8] == "Every 0":
+                    schedinterval = "不重复"
+                else:
+                    schedinterval = i[8].replace("Every", "每") + "周"
+
+            if i[7] == "One time":
+                schedbackupday = "仅一次"  # 具体时间
+
+                if i[8] == "Every 0":
+                    schedinterval = "不重复"
+                else:
+                    schedinterval = i[8].replace("Every", "每") + "次"
+
+            if i[7] == "Daily":
+                schedbackupday = "每天"
+
+                if i[8] == "Every 0":
+                    schedinterval = "不重复"
+                else:
+                    schedinterval = i[8].replace("Every", "每") + "天"
+
+            if i[7] in ["Monthly", "Monthly relative"]:
+                schedbackupday = "每月第{0}天".format(i[9])
+
+                if i[8] == "Every 0":
+                    schedinterval = "不重复"
+                else:
+                    schedinterval = i[8].replace("Every", "每") + "个月"
+
+            if i[7] in ["Yearly", "Yearly relative"]:
+                year_list = i[9].split(" of ")
+                schedbackupday = "每年{0}{1}日".format(month_chz[year_list[1]], year_list[0])
+
+                if i[8] == "Every 0":
+                    schedinterval = "不重复"
+                else:
+                    schedinterval = i[8].replace("Every", "每") + "年"
+            # 缺少自动/连续
+
+
+            schedpattern = period_chz[i[7]]
+            schedbackuptype = type_chz[i[6]]
             schedules.append({
                 # "CommCellId": i[0],
                 # "CommCellName": i[1],
@@ -177,12 +275,12 @@ class CVApi(DataMonitor):
                 "scheduePolicy": i[3],
                 "scheduleName": i[4],
                 "scheduletask": i[5],
-                "schedbackuptype": i[6],
-                "schedpattern": i[7],
-                "schedinterval": i[8],
-                "schedbackupday": i[9],
-                # "schedbackupTime": i[10],
-                # "schednextbackuptime": i[11],
+                "schedbackuptype": schedbackuptype,
+                "schedpattern": schedpattern,
+                "schedinterval": schedinterval,
+                "schedbackupday": schedbackupday,
+                # "schedbackupTime": i[10] if i[7] != "One time" else i[11].strftime("%Y-%m-%d %H:%M:%S"),
+                "schednextbackuptime": i[11].strftime("%Y-%m-%d %H:%M:%S"),
                 "clientName": i[13],
                 "idaagent": i[14],
                 "instance": i[15],
@@ -553,7 +651,6 @@ class CustomFilter(CVApi):
                     if two["backupset"] not in backup_set_list:
                         backup_set_list.append(two["backupset"])
                 for backup_set in backup_set_list:
-                    # specific_schedule_three = self.get_schedules(client=client["client_name"], agent=agent, backup_set=backup_set)
 
                     specific_schedule_three = []
                     for schedule_three in all_schedule_list:
@@ -567,7 +664,6 @@ class CustomFilter(CVApi):
                         if three["subclient"] not in sub_client_list:
                             sub_client_list.append(three["subclient"])
                     for sub_client in sub_client_list:
-                        # specific_schedule_four = self.get_schedules(client=client["client_name"], agent=agent, backup_set=backup_set, sub_client=sub_client)
 
                         specific_schedule_four = []
                         for schedule_four in all_schedule_list:
@@ -581,7 +677,6 @@ class CustomFilter(CVApi):
                             if four["scheduePolicy"] not in schedule_list:
                                 schedule_list.append(four["scheduePolicy"])
                         for schedule in schedule_list:
-                            # specific_schedule_five = self.get_schedules(client=client["client_name"], agent=agent, backup_set=backup_set, sub_client=sub_client, schedule=schedule)
 
                             specific_schedule_five = []
                             for schedule_five in all_schedule_list:
@@ -595,7 +690,6 @@ class CustomFilter(CVApi):
                                 if five["schedbackuptype"] not in schedules:
                                     schedules.append(five["schedbackuptype"])
                             for c_schedule in schedules:
-                                # specific_schedule_six = self.get_schedules(client=client["client_name"], agent=agent, backup_set=backup_set, sub_client=sub_client, schedule=schedule, schedule_type=c_schedule)
 
                                 specific_schedule_six = []
                                 for schedule_six in all_schedule_list:
@@ -707,11 +801,12 @@ if __name__ == '__main__':
     # ret, row_dict = dm.custom_all_backup_content()
     # ret = dm.get_all_backup_content()
     # ret = dm.get_all_backup_jobs()
-    ret = dm.get_all_auxcopys()
+    # ret = dm.get_all_auxcopys()
     # ret = dm.custom_concrete_job_list()
-    print(len(ret))
-    for i in ret:
-        print(i)
+    ret = dm.get_all_schedules()
+    print(ret)
+    # for i in ret:
+    #     print(i)
     # import json
     # with open("1.json", "w") as f:
     #     f.write(json.dumps(ret))

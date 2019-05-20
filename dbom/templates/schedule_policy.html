@@ -1,7 +1,7 @@
 {% extends "base1.html" %}
 {% block content %}
     <style>
-        #loading{
+        #loading {
             height: 300px;
             width: 100%;
             background-image: url(../static/new/images/loading.gif);
@@ -24,7 +24,8 @@
                             <th> 子客户端</th>
                             <th> 计划策略</th>
                             <th> 备份类型</th>
-                            <th> 计划描述</th>
+                            <th> 周期</th>
+                            <th> 详情</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -32,6 +33,68 @@
                         </tbody>
                     </table>
                     <div id="loading" hidden></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="static" class="modal fade" tabindex="-1" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true"></button>
+                    <h4 class="modal-title">计划详情</h4>
+                </div>
+                <div class="panel-body">
+                    <form class="bs-example form-horizontal activate-form" id="formactivate">{% csrf_token %}
+                        <div class="form-body">
+                            <div class="form-group">
+                                <label class="col-md-3 control-label">计划名称</label>
+                                <div class="col-md-9">
+                                    <input id="scheduleName" type="text" name="scheduleName" class="form-control" placeholder="" value="" readonly>
+                                    <div class="form-control-focus"></div>
+
+                                </div>
+                            </div>
+                            <div class="form-group ">
+                                <label class="col-md-3 control-label" for="form_control_1">周期</label>
+                                <div class="col-md-9">
+                                    <input id="schedpattern" type="text" name="schedpattern" class="form-control" placeholder="" value="" readonly>
+                                    <div class="form-control-focus"></div>
+
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-md-3 control-label">模式</label>
+                                <div class="col-md-9">
+                                    <input id="schedbackupday" type="text" name="schedbackupday" class="form-control" placeholder="" value="" readonly>
+                                    <div class="form-control-focus"></div>
+
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-md-3 control-label">开始时间</label>
+                                <div class="col-md-9">
+                                    <input id="schednextbackuptime" type="text" name="schednextbackuptime" class="form-control" placeholder="" value="" readonly>
+                                    <div class="form-control-focus"></div>
+
+                                </div>
+                            </div>
+                            <div class="form-group ">
+                                <label class="col-md-3 control-label" for="form_control_1">重复</label>
+                                <div class="col-md-9">
+                                    <input id="schedinterval" type="text" name="schedinterval" class="form-control" placeholder="" value="" readonly>
+                                    <div class="form-control-focus"></div>
+
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-actions ">
+                            <div class="modal-footer">
+                                <button type="button" data-dismiss="modal" class="btn dark btn-outline">关闭</button>
+                                <button type="button" id="savepassword" name="savepassword" class="btn green">保存</button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

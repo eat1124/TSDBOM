@@ -588,7 +588,16 @@ def get_schedule_policy(self):
             schedule_dict["subclientName"] = schedule["subclient"]
             schedule_dict["scheduePolicy"] = schedule["scheduePolicy"]
             schedule_dict["schedbackuptype"] = schedule["schedbackuptype"]
-            schedule_dict["description"] = schedule["schedpattern"] + "&" + schedule["schedbackupday"]
+            schedule_dict["schedpattern"] = schedule["schedpattern"]
+
+            schedule_dict["option"] = {
+                "schedpattern": schedule["schedpattern"],
+                "schednextbackuptime": schedule["schednextbackuptime"],
+                "scheduleName": schedule["scheduleName"],
+                "schedinterval": schedule["schedinterval"],
+                "schedbackupday": schedule["schedbackupday"],
+            }
+
             whole_list.append(schedule_dict)
     except Exception as e:
         print(e)

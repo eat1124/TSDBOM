@@ -55,12 +55,12 @@ $(document).ready(function () {
                             schedule_el += '<td ' + client_row_span + '>' + client_num + '</td>';
                             schedule_el += '<td ' + client_row_span + '>' + schedule_data[i][key] + '</td>';
 
-                            pre_agent = ""
-                            pre_backup_set = ""
-                            pre_sub_client = ""
-                            pre_schedule_policy = ""
-                            pre_schedule_type = ""
-                            pre_description = ""
+                            pre_agent = "";
+                            pre_backup_set = "";
+                            pre_sub_client = "";
+                            pre_schedule_policy = "";
+                            pre_schedule_type = "";
+                            pre_description = "";
                         }
 
                         // 首个app
@@ -69,11 +69,11 @@ $(document).ready(function () {
                             agent_row_span = 'rowspan="' + agent_row + '" style="vertical-align:middle"';
                             schedule_el += '<td ' + agent_row_span + '>' + schedule_data[i][key] + '</td>';
 
-                            pre_backup_set = ""
-                            pre_sub_client = ""
-                            pre_schedule_policy = ""
-                            pre_schedule_type = ""
-                            pre_description = ""
+                            pre_backup_set = "";
+                            pre_sub_client = "";
+                            pre_schedule_policy = "";
+                            pre_schedule_type = "";
+                            pre_description = "";
                         }
 
                         // 首个backupset
@@ -82,10 +82,10 @@ $(document).ready(function () {
                             backupset_row_span = 'rowspan="' + backupset_row + '" style="vertical-align:middle"';
                             schedule_el += '<td ' + backupset_row_span + '>' + schedule_data[i][key] + '</td>';
 
-                            pre_sub_client = ""
-                            pre_schedule_policy = ""
-                            pre_schedule_type = ""
-                            pre_description = ""
+                            pre_sub_client = "";
+                            pre_schedule_policy = "";
+                            pre_schedule_type = "";
+                            pre_description = "";
                         }
 
                         // 首个subclient
@@ -94,9 +94,9 @@ $(document).ready(function () {
                             subclient_row_span = 'rowspan="' + subclient_row + '" style="vertical-align:middle"';
                             schedule_el += '<td ' + subclient_row_span + '>' + schedule_data[i][key] + '</td>';
 
-                            pre_schedule_policy = ""
-                            pre_schedule_type = ""
-                            pre_description = ""
+                            pre_schedule_policy = "";
+                            pre_schedule_type = "";
+                            pre_description = "";
                         }
 
                         // 首个schedulepolicy
@@ -105,8 +105,8 @@ $(document).ready(function () {
                             schedule_row_span = 'rowspan="' + schedule_row + '" style="vertical-align:middle"';
                             schedule_el += '<td ' + schedule_row_span + '>' + schedule_data[i][key] + '</td>';
 
-                            pre_schedule_type = ""
-                            pre_description = ""
+                            pre_schedule_type = "";
+                            pre_description = "";
                         }
 
                         // 首个schedule_type
@@ -115,14 +115,22 @@ $(document).ready(function () {
                             scheduletype_row_span = 'rowspan="' + schedule_type_row + '" style="vertical-align:middle"';
                             schedule_el += '<td ' + scheduletype_row_span + '>' + schedule_data[i][key] + '</td>';
 
-                            pre_description = ""
+                            pre_description = "";
                         }
 
-                        if (key == "description") {
-                            schedule_el += '<td>' + schedule_data[i][key] + '</td>';
+                        if (key == "schedpattern") {
+                            schedule_el += '<td ' + scheduletype_row_span + '>' + schedule_data[i][key] + '</td>';
                         }
 
-
+                        if (key == "option") {
+                            schedule_el += '<td><button name="schedule_type" title="编辑" data-toggle="modal" data-target="#static" class="btn btn-xs btn-primary" type="button"><i class="fa fa-cogs"></i></button>' +
+                                '<input value="' + schedule_data[i][key]["scheduleName"] + '" hidden>' +
+                                '<input value="' + schedule_data[i][key]["schedpattern"] + '" hidden>' +
+                                '<input value="' + schedule_data[i][key]["schednextbackuptime"] + '" hidden>' +
+                                '<input value="' + schedule_data[i][key]["schedinterval"] + '" hidden>' +
+                                '<input value="' + schedule_data[i][key]["schedbackupday"] + '" hidden>' +
+                                '<td>';
+                        }
                     }
 
                     pre_client_name = schedule_data[i]["clientName"]
@@ -132,13 +140,24 @@ $(document).ready(function () {
                     pre_schedule_policy = schedule_data[i]["scheduePolicy"]
                     pre_schedule_type = schedule_data[i]["schedbackuptype"]
 
-                    schedule_el += "</tr>"
-
+                    schedule_el += "</tr>";
                 }
 
                 $("tbody").append(schedule_el);
                 $("#loading").hide();
             }
         }
-    })
+    });
+
+    // 点击事件
+    $('#schedule tbody').on('click', 'button[name="schedule_type"]', function () {
+        var siblingInput = $(this).siblings();
+        $("#scheduleName").val(siblingInput[0].value);
+        $("#schedpattern").val(siblingInput[1].value);
+        $("#schednextbackuptime").val(siblingInput[2].value);
+        $("#schedinterval").val(siblingInput[3].value);
+        $("#schedbackupday").val(siblingInput[4].value);
+    });
+
+
 });
