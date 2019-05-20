@@ -214,7 +214,6 @@ class CVApi(DataMonitor):
             "December": "12月",
         }
 
-
         for i in content:
             # 处理schedbackupday
             schedbackupday = ""
