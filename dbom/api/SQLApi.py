@@ -222,7 +222,7 @@ class CVApi(DataMonitor):
             if i[7] == "Weekly":
                 for day in i[9].split(" "):
                     if day:
-                        schedbackupday += "/" + schedbackupday_chz[day]
+                        schedbackupday += "/" + schedbackupday_chz[day] if day in schedbackupday_chz.keys() else day
                 schedbackupday = schedbackupday[1:]
 
                 # 重复schedinterval
@@ -257,7 +257,7 @@ class CVApi(DataMonitor):
 
             if i[7] in ["Yearly", "Yearly relative"]:
                 year_list = i[9].split(" of ")
-                schedbackupday = "每年{0}{1}日".format(month_chz[year_list[1]], year_list[0])
+                schedbackupday = "每年{0}{1}日".format(month_chz[year_list[1]] if year_list[1] in month_chz.keys() else year_list[1], year_list[0])
 
                 if i[8] == "Every 0":
                     schedinterval = "不重复"
@@ -266,8 +266,8 @@ class CVApi(DataMonitor):
             # 缺少自动/连续
 
 
-            schedpattern = period_chz[i[7]]
-            schedbackuptype = type_chz[i[6]]
+            schedpattern = period_chz[i[7]] if i[7] in period_chz.keys() else i[7]
+            schedbackuptype = type_chz[i[6]] if i[6] in type_chz.keys() else i[6]
             schedules.append({
                 # "CommCellId": i[0],
                 # "CommCellName": i[1],
