@@ -3,11 +3,11 @@ import datetime
 
 
 class DataMonitor(object):
-    def __init__(self, host, user, password, database):
-        self.host = host
-        self.user = user
-        self.password = password
-        self.database = database
+    def __init__(self, credit):
+        self.host = credit["host"]
+        self.user = credit["user"]
+        self.password = credit["password"]
+        self.database = credit["database"]
         self._conn = self._connection
         self.msg = ""
 
@@ -672,7 +672,6 @@ class CustomFilter(CVApi):
                     else:
                         aux_status_label = "label-danger"
 
-
                     agent_job_list.append({
                         "client_name": client["client_name"],
                         "agent_type_name": job["idataagent"],
@@ -691,7 +690,13 @@ class CustomFilter(CVApi):
 
 
 if __name__ == '__main__':
-    dm = CustomFilter(r'192.168.100.149\COMMVAULT', 'sa_cloud', '1qaz@WSX', 'CommServ')
+    credit = {
+        "host": "192.168.100.149\COMMVAULT",
+        "user": "sa_cloud",
+        "password": "1qaz@WSX",
+        "database": "CommServ",
+    }
+    dm = CustomFilter(credit)
     # print(dm.connection)
     # ret = dm.get_all_install_clients()
     # ret = dm.get_single_installed_client(2)

@@ -40,6 +40,7 @@ from django.core.mail import send_mail
 from django.forms.models import model_to_dict
 from django.template.response import TemplateResponse
 from django.contrib.auth.decorators import login_required
+from django.conf import settings
 
 from dbom.tasks import *
 from dbom.models import *
@@ -405,84 +406,6 @@ def get_server_time_very_second(request):
         return JsonResponse({"current_time": current_time.strftime('%Y-%m-%d %H:%M:%S')})
 
 
-def custom_concrete_job_list(cv_api, client_id, client_name):
-    """
-    并发请求所有agent下的job
-    :param cv_api:
-    :param client_id:
-    :param client_name:
-    :return:
-    """
-    status_list = {"Running": "运行", "Waiting": "等待", "Pending": "阻塞", "Suspend": "终止", "Completed": "正常",
-                   "Failed": "失败", "Failed to Start": "启动失败", "Killed": "杀掉",
-                   "Completed w/ one or more errors": "已完成，但有一个或多个错误",
-                   "Completed w/ one or more warnings": "已完成，但有一个或多个警告", "Success": "成功"}
-    # client_id >> sub_client_id >> storage_id >> copy_id >> job_info
-    conn = pymssql.connect(host='192.168.100.149\COMMVAULT', user='sa_cloud', password='1qaz@WSX', database='CommServ')
-    cur = conn.cursor()
-
-    # dm = SQLApi.CustomFilter(r'192.168.100.149\COMMVAULT', 'sa_cloud', '1qaz@WSX', 'CommServ')
-    # job_list = dm.get_all_backup_jobs()
-
-    job_list = cv_api.get_job_list(client_id, time_sorted=True)
-    sub_client_list = cv_api.get_sub_client_list(client_id)
-
-    agent_job_list = []
-    job_pre_agent_list = []
-
-    if job_list:
-        for job in job_list:
-            if job["agentType"] in job_pre_agent_list:
-                pass
-            else:
-                aux_copy_info = ""
-                for sub_client in sub_client_list:
-                    if job["agentType"] in sub_client["appName"]:
-                        storage_policy_name = ""
-                        source_copy_id = ""
-                        dest_copy_id = ""
-                        # 存储策略列表
-                        storage_policy_list = cv_api.get_sp_from_sub_client(sub_client["subclientId"])
-                        for storage_policy in storage_policy_list:
-                            try:
-                                storage_policy_name = storage_policy["storagePolicyName"]
-                                # 存储策略信息
-                                sp_info_list = cv_api.get_sp_info(storage_policy["storagePolicyId"])
-                                if len(sp_info_list) > 1:
-                                    source_copy_id = sp_info_list[0]["copyId"]
-                                    dest_copy_id = sp_info_list[1]["copyId"]
-                                    break
-                            except:
-                                pass
-
-                        sql = """SELECT jobstatus FROM [commserv].[dbo].[CommCellAuxCopyInfo] WHERE storagepolicy LIKE '{0}' and sourcecopyid='{1}' and destcopyid='{2}' ORDER BY startdate DESC""".format(
-                            storage_policy_name, source_copy_id, dest_copy_id)
-                        cur.execute(sql)
-                        aux_copy_info = cur.fetchall()
-                        if aux_copy_info:
-                            aux_copy_info = aux_copy_info[0][0]
-                        break
-
-                if job["status"] in ["运行", "正常", "等待", "QueuedCompleted", "Queued"]:
-                    status_label = "label-success"
-                elif job["status"] in ["阻塞", "已完成，但有一个或多个错误", "已完成，但有一个或多个警告"]:
-                    status_label = "label-warning"
-                else:
-                    status_label = "label-danger"
-
-                job_pre_agent_list.append(job["agentType"])
-                agent_job_list.append({
-                    "client_id": client_id,
-                    "client_name": client_name,
-                    "agent_type_name": job["agentType"],
-                    "job_start_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(job["StartTime"]))),
-                    "job_backup_status": job["status"],
-                    "status_label": status_label,
-                    "aux_copy_info": status_list[aux_copy_info] if aux_copy_info else "",
-                })
-        return agent_job_list
-
-
 def index(request, funid):
     if request.user.is_authenticated():
         # 左侧菜单栏
@@ -513,7 +436,7 @@ def index(request, funid):
                 value.sort = 0
         funlist = sorted(funlist, key=lambda fun: fun.sort)
 
-        dm = SQLApi.CustomFilter(r'192.168.100.149\COMMVAULT', 'sa_cloud', '1qaz@WSX', 'CommServ')
+        dm = SQLApi.CustomFilter(settings.credit)
         if dm.msg == "链接数据库失败。":
             service_status = "中断"
             net_status = "中断"
@@ -544,7 +467,7 @@ def index(request, funid):
 def get_backup_status(request):
     whole_list = []
     try:
-        dm = SQLApi.CustomFilter(r'192.168.100.149\COMMVAULT', 'sa_cloud', '1qaz@WSX', 'CommServ')
+        dm = SQLApi.CustomFilter(settings.credit)
 
         whole_list = dm.custom_concrete_job_list()
     except Exception as e:
@@ -571,7 +494,7 @@ def backup_status(request, funid):
 def get_backup_content(request):
     whole_list = []
     try:
-        dm = SQLApi.CustomFilter(r'192.168.100.149\COMMVAULT', 'sa_cloud', '1qaz@WSX', 'CommServ')
+        dm = SQLApi.CustomFilter(settings.credit)
         ret, row_dict = dm.custom_all_backup_content()
         for content in ret:
             content_dict = OrderedDict()
@@ -609,7 +532,7 @@ def backup_content(request, funid):
 def get_storage_policy(self):
     whole_list = []
     try:
-        dm = SQLApi.CustomFilter(r'192.168.100.149\COMMVAULT', 'sa_cloud', '1qaz@WSX', 'CommServ')
+        dm = SQLApi.CustomFilter(settings.credit)
         ret, row_dict = dm.custom_all_storages()
         for storage in ret:
             storage_dict = OrderedDict()
@@ -655,7 +578,7 @@ def schedule_policy(request, funid):
 def get_schedule_policy(self):
     whole_list = []
     try:
-        dm = SQLApi.CustomFilter(r'192.168.100.149\COMMVAULT', 'sa_cloud', '1qaz@WSX', 'CommServ')
+        dm = SQLApi.CustomFilter(settings.credit)
         ret, row_dict = dm.custom_all_schedules()
         for schedule in ret:
             schedule_dict = OrderedDict()

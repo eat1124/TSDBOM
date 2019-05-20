@@ -13,6 +13,14 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 import os
 import djcelery
 
+# SQLApi
+credit = {
+    "host": "192.168.100.149\COMMVAULT",
+    "user": "sa_cloud",
+    "password": "1qaz@WSX",
+    "database": "CommServ",
+}
+
 djcelery.setup_loader()
 # BROKER_URL = 'django://'
 # CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
