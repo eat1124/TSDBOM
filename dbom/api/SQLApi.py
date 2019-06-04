@@ -264,7 +264,6 @@ class CVApi(DataMonitor):
                     schedinterval = i[8].replace("Every", "每") + "年"
             # 缺少自动/连续
 
-
             schedpattern = period_chz[i[7]] if i[7] in period_chz.keys() else i[7]
             schedbackuptype = type_chz[i[6]] if i[6] in type_chz.keys() else i[6]
             schedules.append({
@@ -429,6 +428,21 @@ class CVApi(DataMonitor):
                 "destcopyid": i[3],
             })
         return auxcopys
+
+    def get_library_list(self):
+        """
+        获取库列表
+        :return:
+        """
+        pass
+
+    def get_library_info(self, library_name):
+        """
+        获取库信息
+        :param library_name:
+        :return:
+        """
+        pass
 
 
 class CustomFilter(CVApi):
@@ -791,7 +805,8 @@ if __name__ == '__main__':
     }
     dm = CustomFilter(credit)
     # print(dm.connection)
-    # ret = dm.get_all_install_clients()
+    ret = dm.get_all_install_clients()
+    print(len(ret), "\n", ret)
     # ret = dm.get_single_installed_client(2)
     # ret = dm.get_installed_sub_clients(2)
     # ret = dm.get_schedules(client="cv-server")
@@ -802,8 +817,8 @@ if __name__ == '__main__':
     # ret = dm.get_all_backup_jobs()
     # ret = dm.get_all_auxcopys()
     # ret = dm.custom_concrete_job_list()
-    ret = dm.get_all_schedules()
-    print(ret)
+    # ret = dm.get_all_schedules()
+    # print(ret)
     # for i in ret:
     #     print(i)
     # import json

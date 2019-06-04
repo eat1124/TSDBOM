@@ -991,11 +991,11 @@ if __name__ == "__main__":
 
     cvToken.login(info)
     cvAPI = CV_API(cvToken)
-    ret = cvAPI.getJobList(3)  # backup status
+    # ret = cvAPI.getJobList(3)  # backup status
     # ret = cvAPI.get_backup_info_by_client("2")  # 备份策略统计
-    # ret = cvAPI.getClientList()
+    ret = cvAPI.getClientList()
     # ret = cvAPI.getSubclientInfo("34")
-    print("***********************", "\n", ret)
+    print("***********************", "\n", len(ret))
     # import json
     #
     # with open(r"C:\Users\Administrator\Desktop\json\2.json", "w") as f:

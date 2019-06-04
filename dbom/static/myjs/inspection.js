@@ -204,6 +204,7 @@ $('#sample_1 tbody').on('click', 'button#edit', function () {
     $('#inspection_save').hide();
 });
 $("#new").click(function () {
+    $('#search_cv').html('查询<i class="fa fa-search"></i>').css("pointer-events", "auto");
     // search
     $('#search_cv').css("cursor", "pointer");
     $('#search_cv').click(function () {

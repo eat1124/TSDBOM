@@ -944,7 +944,7 @@ def get_clients_info(request):
         total_available_capacity = 0
         library_list = cv_api.get_library_list()
         for library in library_list:
-            library_info = cv_api.get_library_info(library["library_name"])
+            library_info = cv_api.get_library_info(library["library_id"])
             cur_total_capacity = library_info["total_capacity"]
             cur_total_available_capacity = library_info["total_available_capacity"]
             if "GB" in cur_total_capacity:

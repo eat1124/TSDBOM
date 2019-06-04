@@ -1327,17 +1327,16 @@ class CVApiOperate(CVRestApiCmd):
             library_list.append(library_dict)
         return library_list
 
-    def get_library_info(self, library_name):
+    def get_library_info(self, library_id):
         """
         获取库详细信息
-        :param library_name:
+        :param library_id:
         :return:
         """
-        if library_name is None:
+        if library_id is None:
             return None
-        command = "Library/{0}".format(library_name)
+        command = "Library/{0}".format(library_id)
         resp = self.get_cmd(command)
-
         library_info = dict()
         # 容量/状态
         mag_lib_summary = resp.findall(".//magLibSummary")
@@ -1510,7 +1509,7 @@ if __name__ == "__main__":
     print("-----成功登陆")
     c = time.time()
     cv_api = CVApiOperate(cv_token)
-    sp = cv_api.get_backup_content(118)
+    # sp = cv_api.get_backup_content(118)
     # sp = cv_api.custom_schedule_policy_index()
     # sp = cv_api.get_CS()
     # get_cs
@@ -1530,12 +1529,12 @@ if __name__ == "__main__":
     # sp = cv_api.get_client_instance(3)
     # sp = cv_api.get_client_list()
     # sp = cv_api.get_library_list()
-    # sp = cv_api.get_library_info("auxdisk")
+    sp = cv_api.get_library_info(13)
     # sp = cv_api.get_job_info("4440437")
     # sp = cv_api.get_job_list("2",app_type_name="File System")
     # sp = cv_api.get_job_list("1")
-    # sp = cv_api.get_sp_list()
-    # sp = cv_api.get_sp_info("26")
+    # sp = cv_api.get_sp_list()  # 26, 27, 28
+    # sp = cv_api.get_sp_info("26")  # 25, 30
     # sp = cv_api.get_agent_list(3)
     # 通过数据库过滤辅助拷贝状态destcopyid
 
