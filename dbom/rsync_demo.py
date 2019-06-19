@@ -145,18 +145,22 @@ class RsyncBackup(object):
             result, info = self.run_shell_cmd('pkill rsync')
         return result, info
 
-    def rsync_exec_avz(self, dest_dir, auth_user, dest_server, model_name):
+    def rsync_exec_avz(self, dest_dir, auth_user, dest_server, model_name, delete=False):
         """
         -avz 方式备份
         :param dest_dir: 服务器备份路径
         :param auth_user: 虚拟用户
         :param dest_server: 目标服务器地址
         :param model_name: rsync模块名称
+        :param delete: 表示无差异备份，默认是增量
         :return:
         """
         # 异常处理
 
-        result, info = self.run_shell_cmd('rsync -avz {0} {1}@{2}::{3}/ --password-file=/etc/rsync.password'.format(dest_dir, auth_user, dest_server, model_name))
+        if delete:
+            result, info = self.run_shell_cmd('rsync -avz {0} {1}@{2}::{3}/ --password-file=/etc/rsync.password --delete'.format(dest_dir, auth_user, dest_server, model_name))
+        else:
+            result, info = self.run_shell_cmd('rsync -avz {0} {1}@{2}::{3}/ --password-file=/etc/rsync.password'.format(dest_dir, auth_user, dest_server, model_name))
         return result, info
 
 
