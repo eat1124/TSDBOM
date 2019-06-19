@@ -444,6 +444,27 @@ class CVApi(DataMonitor):
         """
         pass
 
+    def get_DDB_info(self):
+        """
+        获取DDB空间容量等信息
+        :return:
+        """
+        ddb_sql = """SELECT [MAName],[Volume],[TotalCapacityMB],[FreeDiskSpaceMB],[TotalSpaceUsedMB],[totalActiveDedupPartitions],[totalSealedDedupPartitions]
+                     FROM [CommServ].[dbo].[DDBView]"""
+        content = self.fetch_all(ddb_sql)
+        ddb_info = []
+        for i in content:
+            ddb_info.append({
+                "MAName": i[0],
+                "Volume": i[1],
+                "TotalCapacityMB": i[2],
+                "FreeDiskSpaceMB": i[3],
+                "TotalSpaceUsedMB": i[4],
+                "totalActiveDedupPartitions": i[5],
+                "totalSealedDedupPartitions": i[6],
+            })
+        return ddb_info
+
 
 class CustomFilter(CVApi):
     def custom_all_backup_content(self):
@@ -805,7 +826,8 @@ if __name__ == '__main__':
     }
     dm = CustomFilter(credit)
     # print(dm.connection)
-    ret = dm.get_all_install_clients()
+    # ret = dm.get_all_install_clients()
+    ret = dm.get_DDB_info()
     print(len(ret), "\n", ret)
     # ret = dm.get_single_installed_client(2)
     # ret = dm.get_installed_sub_clients(2)
