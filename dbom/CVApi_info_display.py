@@ -990,12 +990,12 @@ if __name__ == "__main__":
     cvToken = CV_RestApi_Token()
 
     cvToken.login(info)
-    cvAPI = CV_API(cvToken)
+    cvAPI = CV_Client(cvToken)
     # ret = cvAPI.getJobList(3)  # backup status
     # ret = cvAPI.get_backup_info_by_client("2")  # 备份策略统计
-    ret = cvAPI.getClientList()
+    ret = cvAPI.getClientAgentList('2')
     # ret = cvAPI.getSubclientInfo("34")
-    print("***********************", "\n", len(ret))
+    print("***********************", "\n", ret, len(ret))
     # import json
     #
     # with open(r"C:\Users\Administrator\Desktop\json\2.json", "w") as f:

@@ -489,6 +489,7 @@ class CustomFilter(CVApi):
 
         all_clients = self.get_all_install_clients()
 
+        # 所有备份内容的列表
         all_content_list = self.get_all_backup_content()
 
         client_row_list = []
@@ -501,35 +502,41 @@ class CustomFilter(CVApi):
             specific_content_one = []
             for content_one in all_content_list:
                 if content_one["clientname"] == client["client_name"]:
+                    # 当前客户端所有备份列表
                     specific_content_one.append(content_one)
 
             if len(specific_content_one) != 0:
+                # 当前客户端的rowspan
                 client_row_list.append(len(specific_content_one))
 
             agent_list = []
             for one in specific_content_one:
                 if one["idataagent"] not in agent_list:
+                    # 当前客户端下，所有agent
                     agent_list.append(one["idataagent"])
             for agent in agent_list:
 
                 specific_content_two = []
                 for content_two in all_content_list:
                     if content_two["clientname"] == client["client_name"] and content_two["idataagent"] == agent:
+                        # 当前客户端/agent下所有备份列表
                         specific_content_two.append(content_two)
-
+                # 当前客户端/agent的rowspan
                 agent_row_list.append(len(specific_content_two))
 
                 backup_set_list = []
                 for two in specific_content_two:
                     if two["backupset"] not in backup_set_list:
+                        # 当前客户端/agent下所有backupset
                         backup_set_list.append(two["backupset"])
                 for backup_set in backup_set_list:
 
                     specific_content_three = []
                     for content_three in all_content_list:
                         if content_three["clientname"] == client["client_name"] and content_three["idataagent"] == agent and content_three["backupset"] == backup_set:
+                            # 当前客户端/agent/backupset下所有备份列表
                             specific_content_three.append(content_three)
-
+                    # 当前客户端/agent/backupset的rowspan
                     backupset_row_list.append(len(specific_content_three))
 
                     # sub_client_list = []
@@ -549,6 +556,7 @@ class CustomFilter(CVApi):
                     content_list = []
                     for three in specific_content_three:
                         if three["content"] not in content_list:
+                            # 当前客户端/agent/backupset下所有备份内容
                             content_list.append(three["content"])
 
                     for content in content_list:
@@ -556,6 +564,7 @@ class CustomFilter(CVApi):
                         specific_content_five = []
                         for content_five in all_content_list:
                             if content_five["clientname"] == client["client_name"] and content_five["idataagent"] == agent and content_five["backupset"] == backup_set and content_five["content"] == content:
+                                # 当前客户端/agent/backupset/备份内容的列表
                                 specific_content_five.append(content_five)
 
                         content_row_list.append(len(specific_content_five))

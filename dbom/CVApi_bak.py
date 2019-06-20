@@ -834,7 +834,7 @@ class CVApiOperate(CVRestApiCmd):
         if sub_client_id is None:
             return None
         command = "Subclient/{0}".format(sub_client_id)
-        resp = self.get_cmd(command)
+        resp = self.get_cmd(command, write_down=True)
         try:
             subClientEntity = resp.findall(".//subClientEntity")
             # 子客户端名称
@@ -1415,29 +1415,26 @@ class CVApiOperate(CVRestApiCmd):
             return None
 
     def get_agent_list(self, client_id):
-        pass
-        # try:
-        #     client_id = int(client_id)
-        # except Exception as e:
-        #     print(e)
-        #     return None
-        # else:
-        #     agent_list = []
-        #     cmd = 'Agent?clientId={0}'.format(client_id)
-        #     agent = self.get_cmd(cmd)
-        # if library is None:
-        #     return None
-        # active_physical_node = library.findall(".//entityInfo")
-        # for node in active_physical_node:
-        #     library_dict = dict()
-
-        #     library_dict["library_name"] = node.attrib["name"]
-        #     try:
-        #         library_dict["library_id"] = int(node.attrib["id"])
-        #     except TypeError as e:
-        #         print("get_library_list", e)
-        #     library_list.append(library_dict)
-        # return agent
+        try:
+            client_id = int(client_id)
+        except Exception as e:
+            print(e)
+            return None
+        else:
+            agent_list = []
+            cmd = 'Agent?clientId={0}'.format(client_id)
+            resp = self.get_cmd(cmd)
+            try:
+                activePhysicalNode = resp.findall(".//idaEntity")
+                for node in activePhysicalNode:
+                    agent = dict()
+                    agent["clientName"] = node.attrib["clientName"]
+                    agent["agentType"] = node.attrib["appName"]
+                    agent["appId"] = node.attrib["applicationId"]
+                    agent_list.append(agent)
+            except:
+                self.msg = "error get agent type"
+        return agent_list
 
     def custom_schedule_policy_index(self):
         # whole_list = []
@@ -1496,6 +1493,20 @@ class CVApiOperate(CVRestApiCmd):
 
         return None
 
+    def discover_VM(self, clientId):
+        vm_list = []
+        cmd = 'VMBrowse?PseudoClientId={0}'.format(clientId)
+        resp = self.get_cmd(cmd, write_down=True)
+        if resp == None:
+            return False
+        # activePhysicalNode = resp.findall(".//inventoryInfo")
+        #
+        # for node in activePhysicalNode:
+        #     attrib = node.attrib
+        #     if attrib["type"] == '4':
+        #         self.discoverVM(clientId, attrib["name"])
+        #     if attrib["type"] == '9':
+        #         self.vmList.append(attrib)
 
 if __name__ == "__main__":
     a = time.time()
@@ -1514,11 +1525,12 @@ if __name__ == "__main__":
     # sp = cv_api.get_CS()
     # get_cs
     # print(sp)
-    # sp = cv_api.get_client_list()  # 2357 11 12 13 14 22 24
+    # sp = cv_api.get_client_list()  # 2357 11 12 13 14 22 24 2 3 5 7
     # sp = cv_api.get_client_info_by_name("cv-server")  # 2357 11 12 13 14 22 24
     # sp = cv_api.get_client_info_by_id(12)
     # sp = cv_api.custom_backup_tree_by_client(3)
-    # sp = cv_api.get_sub_client_info(34)
+    # sp = cv_api.get_sub_client_info(22)
+    sp = cv_api.discover_VM(5)
     # sp = cv_api.get_simple_sub_client_info(34)
     # sp = cv_api.get_schedule_list(118)
     # sp = cv_api.get_schedule_policy_info(30)
@@ -1529,13 +1541,13 @@ if __name__ == "__main__":
     # sp = cv_api.get_client_instance(3)
     # sp = cv_api.get_client_list()
     # sp = cv_api.get_library_list()
-    sp = cv_api.get_library_info(13)
+    # sp = cv_api.get_library_info(13)
     # sp = cv_api.get_job_info("4440437")
     # sp = cv_api.get_job_list("2",app_type_name="File System")
     # sp = cv_api.get_job_list("1")
     # sp = cv_api.get_sp_list()  # 26, 27, 28
     # sp = cv_api.get_sp_info("26")  # 25, 30
-    # sp = cv_api.get_agent_list(3)
+    # sp = cv_api.get_agent_list(7)
     # 通过数据库过滤辅助拷贝状态destcopyid
 
     # sp = cv_api.get_copy_from_sp("26", "25")
@@ -1543,15 +1555,15 @@ if __name__ == "__main__":
     # sp = cv_api.get_console_alert_list()
     # sp = cv_api.get_storage_pool_list()
     # sp = cv_api.test()
-    # sp = cv_api.get_sub_client_list(3)  # mysql 89  filesystem 4 oracle 118 sqlserver34
+    # sp = cv_api.get_sub_client_list(5)  # mysql 89  filesystem 4 oracle 118 sqlserver34 virtual22
     # sp = cv_api.get_sp_from_sub_client(4)
-    if sp is not None:
-        print(len(sp), sp)
-    else:
-        print("没有数据")
+    # if sp is not None:
+    #     print(len(sp), sp)
+    # else:
+    #     print("没有数据")
     # with open(r"C:\Users\Administrator\Desktop\lookup.json", "w") as f:
     #     f.write(str(sp))
-
+    print(sp)
     b = time.time()
     print("登陆时间:", round(c - a, 3), "查询时间:", round(b - c, 3))
     # import pymssql
