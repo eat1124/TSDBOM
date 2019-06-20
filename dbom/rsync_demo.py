@@ -23,6 +23,7 @@ class RsyncBackup(object):
         self.client = paramiko.SSHClient()
         self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         self.msg = ''
+        self.server = server
         try:
             self.client.connect(hostname=server['hostname'], username=server['username'], password=server['password'])
         except:
@@ -35,11 +36,13 @@ class RsyncBackup(object):
                                 'else' + '\n' + \
                                 '   echo "cmd_failed"' + '\n' + \
                                 'fi'
+        self.sudo_permission = 'echo {0}|sudo -S'.format(server['password']) if server['username'] == 'root' else ''
 
     def run_shell_cmd(self, shell_cmd, get_pty=True):
         result = 1
         info = ''
-        stdin, stdout, stderr = self.client.exec_command(shell_cmd + ';' + self.verify_shell_cmd, get_pty=get_pty)
+        # root用户
+        stdin, stdout, stderr = self.client.exec_command(self.sudo_permission + shell_cmd + ';' + self.verify_shell_cmd, get_pty=get_pty)
         stdout_init = ''
         stderr_init = ''
         if not stderr.readlines():
@@ -61,10 +64,7 @@ class RsyncBackup(object):
         return result, info
 
     def install_rsync_by_yum(self):
-        if server['username'] == 'root':
-            result, info = self.run_shell_cmd('yum install rsync -y')
-        else:
-            result, info = self.run_shell_cmd('echo {0}|sudo -S yum install rsync -y'.format(server['password']))
+        result, info = self.run_shell_cmd('yum install rsync -y')
         return result, info
 
     def set_rsync_server_config(self, model_list):
@@ -119,7 +119,6 @@ class RsyncBackup(object):
         return result, info
 
     def tail_rsync_log(self):
-
         result, info = self.run_shell_cmd('tail /var/log/rsyncd.log')
         return result, info
 
@@ -156,6 +155,9 @@ class RsyncBackup(object):
         :return:
         """
         # 异常处理
+        # 1.dest_dir是否存在
+
+
 
         if delete:
             result, info = self.run_shell_cmd('rsync -avz {0} {1}@{2}::{3}/ --password-file=/etc/rsync.password --delete'.format(dest_dir, auth_user, dest_server, model_name))
@@ -165,17 +167,17 @@ class RsyncBackup(object):
 
 
 if __name__ == '__main__':
-    server = {
-        'hostname': '192.168.85.150',
+    client = {
+        'hostname': '192.168.85.152',
         'username': 'root',
         'password': '!zxcvbn123'
     }
-    rsync_backup = RsyncBackup(server)
+    rsync_backup = RsyncBackup(client)
     # result, info = rsync_backup.start_rsync()
     # result, info = rsync_backup.stop_rsync()
     # result, info = rsync_backup.run_shell_cmd('ls')
     # result, info = rsync_backup.install_rsync_by_yum()
-    # result, info = rsync_backup.rsync_exec_avz(r'/root/backup/', 'rsync_backup', '192.168.85.150', 'server01')
+    result, info = rsync_backup.rsync_exec_avz(r'/root/backup/', 'rsync_backup', '192.168.85.151', 'server01')
     # result, info = rsync_backup.tail_rsync_log()
     # result, info = rsync_backup.set_rsync_server_config([{"model_name": "server01", "host_allowd": "192.168.85.149", "backup_path": "/root/server01"}])
-    # print(result, info)
+    print(result, info)

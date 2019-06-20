@@ -18,17 +18,17 @@ $(document).ready(function () {
                 var pre_client_name = "",
                     pre_agent = "",
                     pre_backup_set = "",
-                    pre_sub_client = "",
+                    // pre_sub_client = "",
                     pre_storage_policy = "";
                 var client_row_list = row_dict.client_row_list,
                     agent_row_list = row_dict.agent_row_list,
                     backupset_row_list = row_dict.backupset_row_list,
-                    subclient_row_list = row_dict.subclient_row_list,
+                    // subclient_row_list = row_dict.subclient_row_list,
                     storage_row_list = row_dict.storage_row_list;
 
                 agent_row_list = JSON.parse(JSON.stringify(agent_row_list));
                 backupset_row_list = JSON.parse(JSON.stringify(backupset_row_list));
-                subclient_row_list = JSON.parse(JSON.stringify(subclient_row_list));
+                // subclient_row_list = JSON.parse(JSON.stringify(subclient_row_list));
                 storage_row_list = JSON.parse(JSON.stringify(storage_row_list));
 
                 var client_num = 0;
@@ -52,7 +52,7 @@ $(document).ready(function () {
 
                             pre_agent = ""
                             pre_backup_set = ""
-                            pre_sub_client = ""
+                            // pre_sub_client = ""
                             pre_storage_policy = ""
                         }
 
@@ -63,7 +63,7 @@ $(document).ready(function () {
                             storage_el += '<td ' + agent_row_span + '>' + storage_data[i][key] + '</td>';
 
                             pre_backup_set = ""
-                            pre_sub_client = ""
+                            // pre_sub_client = ""
                             pre_storage_policy = ""
                         }
 
@@ -73,20 +73,20 @@ $(document).ready(function () {
                             backupset_row_span = 'rowspan="' + backupset_row + '" style="vertical-align:middle"';
                             storage_el += '<td ' + backupset_row_span + '>' + storage_data[i][key] + '</td>';
 
-                            pre_sub_client = ""
+                            // pre_sub_client = ""
                             pre_storage_policy = ""
                         }
 
-                        // 首个subclient
-                        if (key == "subclientName" && storage_data[i]["subclientName"] != pre_sub_client) {
-                            var subclient_row = subclient_row_list.shift();
-                            subclient_row_span = 'rowspan="' + subclient_row + '" style="vertical-align:middle"';
-                            storage_el += '<td ' + subclient_row_span + '>' + storage_data[i][key] + '</td>';
+                        // // 首个subclient
+                        // if (key == "subclientName" && storage_data[i]["subclientName"] != pre_sub_client) {
+                        //     var subclient_row = subclient_row_list.shift();
+                        //     subclient_row_span = 'rowspan="' + subclient_row + '" style="vertical-align:middle"';
+                        //     storage_el += '<td ' + subclient_row_span + '>' + storage_data[i][key] + '</td>';
+                        //
+                        //     pre_storage_policy = "";
+                        // }
 
-                            pre_storage_policy = "";
-                        }
-
-                        if (key == "storagePolicy") {
+                        if (key == "storagePolicy"  && storage_data[i]["storagePolicy"] != pre_storage_policy) {
                             storage_el += '<td>' + storage_data[i][key] + '</td>';
                         }
                     }
@@ -94,7 +94,7 @@ $(document).ready(function () {
                     pre_client_name = storage_data[i]["clientName"]
                     pre_agent = storage_data[i]["appName"]
                     pre_backup_set = storage_data[i]["backupsetName"]
-                    pre_sub_client = storage_data[i]["subclientName"]
+                    // pre_sub_client = storage_data[i]["subclientName"]
                     pre_storage_policy = storage_data[i]["storagePolicy"]
 
                     storage_el += "</tr>"

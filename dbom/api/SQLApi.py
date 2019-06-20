@@ -48,17 +48,19 @@ class CVApi(DataMonitor):
         installed_clients = []
         content = self.fetch_all(clients_sql)
         for i in content:
-            installed_clients.append({
-                "client_id": i[0],
-                "client_name": i[1],
-                "network_interface": i[2],
-                "os": i[3],
-                "hardware": i[4],
-                "galaxy_release": i[5],
-                "install_time": i[6],
-                "client_bkp_enable": i[7],
-                "client_rst_enable": i[8],
-            })
+            automatic_clients = self.get_automatic_clients()
+            if i[1] not in automatic_clients:
+                installed_clients.append({
+                    "client_id": i[0],
+                    "client_name": i[1],
+                    "network_interface": i[2],
+                    "os": i[3],
+                    "hardware": i[4],
+                    "galaxy_release": i[5],
+                    "install_time": i[6],
+                    "client_bkp_enable": i[7],
+                    "client_rst_enable": i[8],
+                })
 
         return installed_clients
 
@@ -141,7 +143,8 @@ class CVApi(DataMonitor):
 
     def get_all_storage(self):
         storage_sql = """SELECT [storagepolicy],[defaultcopy],[hardwarecompress],[maxstreams],[drivepool],[library],[appid],[clientname],[idataagent],[instance],[backupset],[subclient]
-                          FROM [commserv].[dbo].[CommCellStoragePolicy]"""
+                          FROM [commserv].[dbo].[CommCellStoragePolicy]
+                          WHERE [hardwarecompress]!='Unknown'"""
 
         storages = []
         content = self.fetch_all(storage_sql)
@@ -158,7 +161,7 @@ class CVApi(DataMonitor):
                 "idataagent": i[8],
                 "instance": i[9],
                 "backupset": i[10],
-                "subclient": i[11],
+                # "subclient": i[11],
             })
         return storages
 
@@ -283,15 +286,18 @@ class CVApi(DataMonitor):
                 "idaagent": i[14],
                 "instance": i[15],
                 "backupset": i[16],
-                "subclient": i[17],
+                # "subclient": i[17],
             })
         return schedules
 
     def get_all_backup_content(self):
+        # 虚机备份内容+
+
+        # "Mysql", "Windows File System", "Linux File System"
         backupset_content_sql = """SELECT [clientname],[idataagent],[backupset],[subclient],[content]
                                    FROM [commserv].[dbo].[CommCellClientFSFilters]
                                    WHERE [subclientstatus]='valid'"""
-
+        # ["Oracle Database", "SQL Server"]
         instance_content_sql = """SELECT [clientname],[idataagent],[instance],[backupset],[subclient]
                                   FROM [commserv].[dbo].[CommCellSubClientConfig]
                                   WHERE [idataagentstatus] = 'installed' AND [data_sp]!='not assigned'"""
@@ -306,7 +312,7 @@ class CVApi(DataMonitor):
                     "clientname": i[0],
                     "idataagent": i[1],
                     "backupset": i[2],
-                    "subclient": i[3],
+                    # "subclient": i[3],
                     "content": i[4],
                 })
         for i in instance_content:
@@ -315,7 +321,7 @@ class CVApi(DataMonitor):
                     "clientname": i[0],
                     "idataagent": i[1],
                     "backupset": i[3],
-                    "subclient": i[4],
+                    # "subclient": i[4],
                     "content": i[2],
                 })
 
@@ -383,7 +389,6 @@ class CVApi(DataMonitor):
 
     def get_all_backup_jobs(self):
         """
-        前1000个
         :return:
         """
         status_list = {"Running": "运行", "Waiting": "等待", "Pending": "阻塞", "Suspend": "终止", "Completed": "正常",
@@ -391,7 +396,7 @@ class CVApi(DataMonitor):
                        "Completed w/ one or more errors": "已完成，但有一个或多个错误",
                        "Completed w/ one or more warnings": "已完成，但有一个或多个警告"}
 
-        job_sql = """SELECT TOP 1000 [jobid],[clientname],[idataagent],[instance],[backupset],[subclient],[data_sp],[backuplevel],[incrlevel],[jobstatus],[jobfailedreason],[startdate],[enddate],[totalBackupSize]
+        job_sql = """SELECT [jobid],[clientname],[idataagent],[instance],[backupset],[subclient],[data_sp],[backuplevel],[incrlevel],[jobstatus],[jobfailedreason],[startdate],[enddate],[totalBackupSize]
                     FROM [commserv].[dbo].[CommCellBackupInfo]
                     ORDER BY [startdate] DESC"""
         content = self.fetch_all(job_sql)
@@ -465,6 +470,18 @@ class CVApi(DataMonitor):
             })
         return ddb_info
 
+    def get_automatic_clients(self):
+        automatic_clients_sql = """SELECT [id],[name],[type],[ClientGroupBkpEnable],[ClientGroupRstEnable],[clientnames]
+                                    FROM [CommServ].[dbo].[CommCellClientGroupConfig]
+                                    WHERE [type]='automatic' AND [name]='Index Servers';"""
+        content = self.fetch_one(automatic_clients_sql)
+        automatic_clients = []
+
+        if content:
+            for i in content[5].split(','):
+                automatic_clients.append(i)
+        return automatic_clients
+
 
 class CustomFilter(CVApi):
     def custom_all_backup_content(self):
@@ -515,40 +532,42 @@ class CustomFilter(CVApi):
 
                     backupset_row_list.append(len(specific_content_three))
 
-                    sub_client_list = []
+                    # sub_client_list = []
+                    # for three in specific_content_three:
+                    #     if three["subclient"] not in sub_client_list:
+                    #         sub_client_list.append(three["subclient"])
+                    # # ...
+                    # for sub_client in sub_client_list:
+                    #
+                    #     specific_content_four = []
+                    #     for content_four in all_content_list:
+                    #         if content_four["clientname"] == client["client_name"] and content_four["idataagent"] == agent and content_four["backupset"] == backup_set and content_four["subclient"] == sub_client:
+                    #             specific_content_four.append(content_four)
+                    #
+                    #     subclient_row_list.append(len(specific_content_four))
+
+                    content_list = []
                     for three in specific_content_three:
-                        if three["subclient"] not in sub_client_list:
-                            sub_client_list.append(three["subclient"])
-                    for sub_client in sub_client_list:
+                        if three["content"] not in content_list:
+                            content_list.append(three["content"])
 
-                        specific_content_four = []
-                        for content_four in all_content_list:
-                            if content_four["clientname"] == client["client_name"] and content_four["idataagent"] == agent and content_four["backupset"] == backup_set and content_four["subclient"] == sub_client:
-                                specific_content_four.append(content_four)
+                    for content in content_list:
 
-                        subclient_row_list.append(len(specific_content_four))
+                        specific_content_five = []
+                        for content_five in all_content_list:
+                            if content_five["clientname"] == client["client_name"] and content_five["idataagent"] == agent and content_five["backupset"] == backup_set and content_five["content"] == content:
+                                specific_content_five.append(content_five)
 
-                        content_list = []
-                        for four in specific_content_four:
-                            if four["content"] not in content_list:
-                                content_list.append(four["content"])
-                        for content in content_list:
+                        content_row_list.append(len(specific_content_five))
 
-                            specific_content_five = []
-                            for content_five in all_content_list:
-                                if content_five["clientname"] == client["client_name"] and content_five["idataagent"] == agent and content_five["backupset"] == backup_set and content_five["subclient"] == sub_client and content_five["content"] == content:
-                                    specific_content_five.append(content_five)
-
-                            content_row_list.append(len(specific_content_five))
-
-                            if specific_content_five:
-                                whole_content_list.extend(specific_content_five)
+                        if specific_content_five:
+                            whole_content_list.extend(specific_content_five)
 
         row_dict = {
             "client_row_list": client_row_list,
             "agent_row_list": agent_row_list,
             "backupset_row_list": backupset_row_list,
-            "subclient_row_list": subclient_row_list,
+            # "subclient_row_list": subclient_row_list,
             "content_row_list": content_row_list,
         }
         return whole_content_list, row_dict
@@ -563,7 +582,7 @@ class CustomFilter(CVApi):
         client_row_list = []
         agent_row_list = []
         backupset_row_list = []
-        subclient_row_list = []
+        # subclient_row_list = []
         storage_row_list = []
 
         for client in all_clients:
@@ -601,40 +620,40 @@ class CustomFilter(CVApi):
 
                     backupset_row_list.append(len(specific_storage_three))
 
-                    sub_client_list = []
+                    # sub_client_list = []
+                    # for three in specific_storage_three:
+                    #     if three["subclient"] not in sub_client_list:
+                    #         sub_client_list.append(three["subclient"])
+                    # for sub_client in sub_client_list:
+                    #
+                    #     specific_storage_four = []
+                    #     for storage_four in all_storage_list:
+                    #         if storage_four["clientname"] == client["client_name"] and storage_four["idataagent"] == agent and storage_four["backupset"] == backup_set and storage_four["subclient"] == sub_client:
+                    #             specific_storage_four.append(storage_four)
+                    #
+                    #     subclient_row_list.append(len(specific_storage_four))
+
+                    storage_list = []
                     for three in specific_storage_three:
-                        if three["subclient"] not in sub_client_list:
-                            sub_client_list.append(three["subclient"])
-                    for sub_client in sub_client_list:
+                        if three["storagepolicy"] not in storage_list:
+                            storage_list.append(three["storagepolicy"])
+                    for storage in storage_list:
 
-                        specific_storage_four = []
-                        for storage_four in all_storage_list:
-                            if storage_four["clientname"] == client["client_name"] and storage_four["idataagent"] == agent and storage_four["backupset"] == backup_set and storage_four["subclient"] == sub_client:
-                                specific_storage_four.append(storage_four)
+                        specific_storage_five = []
+                        for storage_five in all_storage_list:
+                            if storage_five["clientname"] == client["client_name"] and storage_five["idataagent"] == agent and storage_five["backupset"] == backup_set and storage_five["storagepolicy"] == storage:
+                                specific_storage_five.append(storage_five)
 
-                        subclient_row_list.append(len(specific_storage_four))
+                        storage_row_list.append(len(specific_storage_five))
 
-                        storage_list = []
-                        for four in specific_storage_four:
-                            if four["storagepolicy"] not in storage_list:
-                                storage_list.append(four["storagepolicy"])
-                        for storage in storage_list:
-
-                            specific_storage_five = []
-                            for storage_five in all_storage_list:
-                                if storage_five["clientname"] == client["client_name"] and storage_five["idataagent"] == agent and storage_five["backupset"] == backup_set and storage_five["subclient"] == sub_client and storage_five["storagepolicy"] == storage:
-                                    specific_storage_five.append(storage_five)
-
-                            storage_row_list.append(len(specific_storage_five))
-
-                            if specific_storage_five:
-                                whole_storage_list.extend(specific_storage_five)
+                        if specific_storage_five:
+                            whole_storage_list.extend(specific_storage_five)
 
         row_dict = {
             "client_row_list": client_row_list,
             "agent_row_list": agent_row_list,
             "backupset_row_list": backupset_row_list,
-            "subclient_row_list": subclient_row_list,
+            # "subclient_row_list": subclient_row_list,
             "storage_row_list": storage_row_list,
         }
         return whole_storage_list, row_dict
@@ -693,48 +712,48 @@ class CustomFilter(CVApi):
 
                     backupset_row_list.append(len(specific_schedule_three))
 
-                    sub_client_list = []
+                    # sub_client_list = []
+                    # for three in specific_schedule_three:
+                    #     if three["subclient"] not in sub_client_list:
+                    #         sub_client_list.append(three["subclient"])
+                    # for sub_client in sub_client_list:
+                    #
+                    #     specific_schedule_four = []
+                    #     for schedule_four in all_schedule_list:
+                    #         if schedule_four["clientName"] == client["client_name"] and schedule_four["idaagent"] == agent and schedule_four["backupset"] == backup_set and schedule_four["subclient"] == sub_client:
+                    #             specific_schedule_four.append(schedule_four)
+                    #
+                    #     subclient_row_list.append(len(specific_schedule_four))
+
+                    schedule_list = []
                     for three in specific_schedule_three:
-                        if three["subclient"] not in sub_client_list:
-                            sub_client_list.append(three["subclient"])
-                    for sub_client in sub_client_list:
+                        if three["scheduePolicy"] not in schedule_list:
+                            schedule_list.append(three["scheduePolicy"])
+                    for schedule in schedule_list:
 
-                        specific_schedule_four = []
-                        for schedule_four in all_schedule_list:
-                            if schedule_four["clientName"] == client["client_name"] and schedule_four["idaagent"] == agent and schedule_four["backupset"] == backup_set and schedule_four["subclient"] == sub_client:
-                                specific_schedule_four.append(schedule_four)
+                        specific_schedule_five = []
+                        for schedule_five in all_schedule_list:
+                            if schedule_five["clientName"] == client["client_name"] and schedule_five["idaagent"] == agent and schedule_five["backupset"] == backup_set and schedule_five["scheduePolicy"] == schedule:
+                                specific_schedule_five.append(schedule_five)
 
-                        subclient_row_list.append(len(specific_schedule_four))
+                        schedule_row_list.append(len(specific_schedule_five))
 
-                        schedule_list = []
-                        for four in specific_schedule_four:
-                            if four["scheduePolicy"] not in schedule_list:
-                                schedule_list.append(four["scheduePolicy"])
-                        for schedule in schedule_list:
+                        schedules = []
+                        for five in specific_schedule_five:
+                            if five["schedbackuptype"] not in schedules:
+                                schedules.append(five["schedbackuptype"])
+                        for c_schedule in schedules:
 
-                            specific_schedule_five = []
-                            for schedule_five in all_schedule_list:
-                                if schedule_five["clientName"] == client["client_name"] and schedule_five["idaagent"] == agent and schedule_five["backupset"] == backup_set and schedule_five["subclient"] == sub_client and schedule_five["scheduePolicy"] == schedule:
-                                    specific_schedule_five.append(schedule_five)
+                            specific_schedule_six = []
+                            for schedule_six in all_schedule_list:
+                                if schedule_six["clientName"] == client["client_name"] and schedule_six["idaagent"] == agent and schedule_six["backupset"] == backup_set and schedule_six["scheduePolicy"] == schedule and schedule_six[
+                                    "schedbackuptype"] == c_schedule:
+                                    specific_schedule_six.append(schedule_six)
 
-                            schedule_row_list.append(len(specific_schedule_five))
+                            schedule_type_row_list.append(len(specific_schedule_six))
 
-                            schedules = []
-                            for five in specific_schedule_five:
-                                if five["schedbackuptype"] not in schedules:
-                                    schedules.append(five["schedbackuptype"])
-                            for c_schedule in schedules:
-
-                                specific_schedule_six = []
-                                for schedule_six in all_schedule_list:
-                                    if schedule_six["clientName"] == client["client_name"] and schedule_six["idaagent"] == agent and schedule_six["backupset"] == backup_set and schedule_six["subclient"] == sub_client and schedule_six["scheduePolicy"] == schedule and schedule_six[
-                                        "schedbackuptype"] == c_schedule:
-                                        specific_schedule_six.append(schedule_six)
-
-                                schedule_type_row_list.append(len(specific_schedule_six))
-
-                                if specific_schedule_six:
-                                    whole_schedule_list.extend(specific_schedule_six)
+                            if specific_schedule_six:
+                                whole_schedule_list.extend(specific_schedule_six)
 
         row_dict = {
             "client_row_list": client_row_list,

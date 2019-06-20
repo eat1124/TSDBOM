@@ -21,10 +21,10 @@
                             <th> 客户端</th>
                             <th> 类型</th>
                             <th> 备份集</th>
-                            <th> 子客户端</th>
+                            {#                            <th> 子客户端</th>#}
                             <th> 计划策略</th>
                             <th> 备份类型</th>
-                            <th> 周期</th>
+                            <th> 周期(模式)</th>
                             <th> 详情</th>
                         </tr>
                         </thead>
@@ -51,6 +51,14 @@
                                 <label class="col-md-3 control-label">计划名称</label>
                                 <div class="col-md-9">
                                     <input id="scheduleName" type="text" name="scheduleName" class="form-control" placeholder="" value="" readonly>
+                                    <div class="form-control-focus"></div>
+
+                                </div>
+                            </div>
+                            <div class="form-group ">
+                                <label class="col-md-3 control-label" for="form_control_1">备份类型</label>
+                                <div class="col-md-9">
+                                    <input id="schedbackuptype" type="text" name="schedbackuptype" class="form-control" placeholder="" value="" readonly>
                                     <div class="form-control-focus"></div>
 
                                 </div>

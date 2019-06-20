@@ -501,7 +501,7 @@ def get_backup_content(request):
             content_dict["clientName"] = content["clientname"]
             content_dict["appName"] = content["idataagent"]
             content_dict["backupsetName"] = content["backupset"]
-            content_dict["subclientName"] = content["subclient"]
+            # content_dict["subclientName"] = content["subclient"]
             content_dict["content"] = content["content"]
             whole_list.append(content_dict)
     except Exception as e:
@@ -539,7 +539,7 @@ def get_storage_policy(self):
             storage_dict["clientName"] = storage["clientname"]
             storage_dict["appName"] = storage["idataagent"]
             storage_dict["backupsetName"] = storage["backupset"]
-            storage_dict["subclientName"] = storage["subclient"]
+            # storage_dict["subclientName"] = storage["subclient"]
             storage_dict["storagePolicy"] = storage["storagepolicy"]
             whole_list.append(storage_dict)
     except Exception as e:
@@ -585,10 +585,11 @@ def get_schedule_policy(self):
             schedule_dict["clientName"] = schedule["clientName"]
             schedule_dict["appName"] = schedule["idaagent"]
             schedule_dict["backupsetName"] = schedule["backupset"]
-            schedule_dict["subclientName"] = schedule["subclient"]
+            # schedule_dict["subclientName"] = schedule["subclient"]
             schedule_dict["scheduePolicy"] = schedule["scheduePolicy"]
             schedule_dict["schedbackuptype"] = schedule["schedbackuptype"]
             schedule_dict["schedpattern"] = schedule["schedpattern"]
+            schedule_dict["schedbackupday"] = schedule["schedbackupday"]
 
             schedule_dict["option"] = {
                 "schedpattern": schedule["schedpattern"],
@@ -596,6 +597,7 @@ def get_schedule_policy(self):
                 "scheduleName": schedule["scheduleName"],
                 "schedinterval": schedule["schedinterval"],
                 "schedbackupday": schedule["schedbackupday"],
+                "schedbackuptype": schedule["schedbackuptype"],
             }
 
             whole_list.append(schedule_dict)

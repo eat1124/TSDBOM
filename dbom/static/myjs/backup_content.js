@@ -18,17 +18,17 @@ $(document).ready(function () {
                 var pre_client_name = "",
                     pre_agent = "",
                     pre_backup_set = "",
-                    pre_sub_client = "",
+                    // pre_sub_client = "",
                     pre_content = "";
                 var client_row_list = row_dict.client_row_list,
                     agent_row_list = row_dict.agent_row_list,
                     backupset_row_list = row_dict.backupset_row_list,
-                    subclient_row_list = row_dict.subclient_row_list,
+                    // subclient_row_list = row_dict.subclient_row_list,
                     content_row_list = row_dict.content_row_list;
 
                 agent_row_list = JSON.parse(JSON.stringify(agent_row_list));
                 backupset_row_list = JSON.parse(JSON.stringify(backupset_row_list));
-                subclient_row_list = JSON.parse(JSON.stringify(subclient_row_list));
+                // subclient_row_list = JSON.parse(JSON.stringify(subclient_row_list));
                 content_row_list = JSON.parse(JSON.stringify(content_row_list));
 
                 var client_num = 0;
@@ -52,7 +52,7 @@ $(document).ready(function () {
 
                             pre_agent = ""
                             pre_backup_set = ""
-                            pre_sub_client = ""
+                            // pre_sub_client = ""
                             pre_content = ""
                         }
 
@@ -63,7 +63,7 @@ $(document).ready(function () {
                             content_el += '<td ' + agent_row_span + '>' + content_data[i][key] + '</td>';
 
                             pre_backup_set = ""
-                            pre_sub_client = ""
+                            // pre_sub_client = ""
                             pre_content = ""
                         }
 
@@ -73,20 +73,20 @@ $(document).ready(function () {
                             backupset_row_span = 'rowspan="' + backupset_row + '" style="vertical-align:middle"';
                             content_el += '<td ' + backupset_row_span + '>' + content_data[i][key] + '</td>';
 
-                            pre_sub_client = ""
+                            // pre_sub_client = ""
                             pre_content = ""
                         }
 
                         // 首个subclient
-                        if (key == "subclientName" && content_data[i]["subclientName"] != pre_sub_client) {
-                            var subclient_row = subclient_row_list.shift();
-                            subclient_row_span = 'rowspan="' + subclient_row + '" style="vertical-align:middle"';
-                            content_el += '<td ' + subclient_row_span + '>' + content_data[i][key] + '</td>';
+                        // if (key == "subclientName" && content_data[i]["subclientName"] != pre_sub_client) {
+                        //     var subclient_row = subclient_row_list.shift();
+                        //     subclient_row_span = 'rowspan="' + subclient_row + '" style="vertical-align:middle"';
+                        //     content_el += '<td ' + subclient_row_span + '>' + content_data[i][key] + '</td>';
+                        //
+                        //     pre_content = "";
+                        // }
 
-                            pre_content = "";
-                        }
-
-                        if (key == "content") {
+                        if (key == "content" && content_data[i]["content"] != pre_content) {
                             content_el += '<td>' + content_data[i][key] + '</td>';
                         }
                     }
@@ -94,7 +94,7 @@ $(document).ready(function () {
                     pre_client_name = content_data[i]["clientName"]
                     pre_agent = content_data[i]["appName"]
                     pre_backup_set = content_data[i]["backupsetName"]
-                    pre_sub_client = content_data[i]["subclientName"]
+                    // pre_sub_client = content_data[i]["subclientName"]
                     pre_content = content_data[i]["content"]
 
                     content_el += "</tr>"
