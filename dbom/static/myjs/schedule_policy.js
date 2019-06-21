@@ -129,7 +129,12 @@ $(document).ready(function () {
                         }
 
                         if (key == "option" && schedule_data[i]["schedpattern"] != pre_schedpattern) {
-                            schedule_el += '<td><button name="schedule_type" title="编辑" data-toggle="modal" data-target="#static" class="btn btn-xs btn-primary" type="button"><i class="fa fa-cogs"></i></button>' +
+                            var disable_tag = ''
+                            if (schedule_data[i]["scheduePolicy"] == '无'){
+                                disable_tag = 'disabled'
+                            }
+
+                            schedule_el += '<td><button name="schedule_type" title="编辑" data-toggle="modal" data-target="#static" class="btn btn-xs btn-primary" type="button" '+ disable_tag +'><i class="fa fa-cogs"></i></button>' +
                                 '<input value="' + schedule_data[i][key]["scheduleName"] + '" hidden>' +
                                 '<input value="' + schedule_data[i][key]["schedpattern"] + '" hidden>' +
                                 '<input value="' + schedule_data[i][key]["schednextbackuptime"] + '" hidden>' +

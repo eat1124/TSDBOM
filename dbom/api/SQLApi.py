@@ -92,7 +92,63 @@ class CVApi(DataMonitor):
             client_info = None
         return client_info
 
-    def get_installed_sub_clients(self, client=None):
+    def get_installed_sub_clients_all(self, client=None):
+        if client:
+            if isinstance(client, int):
+                sub_client_sql = """SELECT [appid],[clientid],[clientname],[idataagent],[idataagentstatus],[idagentbkenable],[idagentrstenable],[instance],[backupset],[subclient],[subclientstatus],[schedjobpattern],
+                                     [schedbackupday],[schedbackuptime],[schednextbackuptime],[data_sp],[data_sp_copy],[data_sp_copy_retendays],[data_sp_copy_fullcycles],[data_sp_schedauxcopypattern],[data_sp_schedauxcopyday],[data_sp_schedauxcopytime],
+                                     [data_sp_schednextauxcopytime],[data_sp_scheddestcopy],[log_sp],[LastFullBkpSize(Bytes)],[LastIncBkpSize(Bytes)],[LastDiffBkpSize(Bytes)],[QDisplayName],[xmlDisplayName]
+                                     FROM [commserv].[dbo].[CommCellSubClientConfig] WHERE [clientid]='{0}' AND [idataagentstatus]='installed'""".format(client)
+            elif isinstance(client, str):
+                sub_client_sql = """SELECT [appid],[clientid],[clientname],[idataagent],[idataagentstatus],[idagentbkenable],[idagentrstenable],[instance],[backupset],[subclient],[subclientstatus],[schedjobpattern],
+                                     [schedbackupday],[schedbackuptime],[schednextbackuptime],[data_sp],[data_sp_copy],[data_sp_copy_retendays],[data_sp_copy_fullcycles],[data_sp_schedauxcopypattern],[data_sp_schedauxcopyday],[data_sp_schedauxcopytime],
+                                     [data_sp_schednextauxcopytime],[data_sp_scheddestcopy],[log_sp],[LastFullBkpSize(Bytes)],[LastIncBkpSize(Bytes)],[LastDiffBkpSize(Bytes)],[QDisplayName],[xmlDisplayName]
+                                     FROM [commserv].[dbo].[CommCellSubClientConfig] WHERE [clientname]='{0}' AND [idataagentstatus]='installed'""".format(client)
+            else:
+                self.msg = "请传入正确的客户端id或名称。"
+                return None
+        else:
+            sub_client_sql = """SELECT [appid],[clientid],[clientname],[idataagent],[idataagentstatus],[idagentbkenable],[idagentrstenable],[instance],[backupset],[subclient],[subclientstatus],[schedjobpattern],
+                                 [schedbackupday],[schedbackuptime],[schednextbackuptime],[data_sp],[data_sp_copy],[data_sp_copy_retendays],[data_sp_copy_fullcycles],[data_sp_schedauxcopypattern],[data_sp_schedauxcopyday],[data_sp_schedauxcopytime],
+                                 [data_sp_schednextauxcopytime],[data_sp_scheddestcopy],[log_sp],[LastFullBkpSize(Bytes)],[LastIncBkpSize(Bytes)],[LastDiffBkpSize(Bytes)],[QDisplayName],[xmlDisplayName]
+                                 FROM [commserv].[dbo].[CommCellSubClientConfig] WHERE [idataagentstatus]='installed'"""
+        sub_clients = []
+        content = self.fetch_all(sub_client_sql)
+        for i in content:
+            sub_clients.append({
+                "appid": i[0],
+                "clientid": i[1],
+                "clientname": i[2],
+                "idataagent": i[3],
+                "idataagentstatus": i[4],
+                "idagentbkenable": i[5],
+                "idagentrstenable": i[6],
+                "instance": i[7],
+                "backupset": i[8],
+                "subclient": i[9],
+                "subclientstatus": i[10],
+                "schedjobpattern": i[11],
+                "schedbackupday": i[12],
+                "schedbackuptime": i[13],
+                "schednextbackuptime": i[14].strftime("%Y-%m-%d %H:%M:%S") if i[14] else '',
+                "data_sp": i[15],
+                "data_sp_copy": i[16],
+                "data_sp_copy_retendays": i[17],
+                "data_sp_copy_fullcycles": i[18],
+                "data_sp_schedauxcopypattern": i[19],
+                "data_sp_schedauxcopytime": i[20],
+                "data_sp_schednextauxcopytime": i[21],
+                "data_sp_scheddestcopy": i[22],
+                "log_sp": i[23],
+                "LastFullBkpSize": i[24],
+                "LastIncBkpSize": i[25],
+                "LastDiffBkpSize": i[26],
+                "QDisplayName": i[27],
+                "xmlDisplayName": i[28],
+            })
+        return sub_clients
+
+    def get_installed_sub_clients_for_info(self, client=None):
         if client:
             if isinstance(client, int):
                 sub_client_sql = """SELECT [appid],[clientid],[clientname],[idataagent],[idataagentstatus],[idagentbkenable],[idagentrstenable],[instance],[backupset],[subclient],[subclientstatus],[schedjobpattern],
@@ -116,35 +172,38 @@ class CVApi(DataMonitor):
         content = self.fetch_all(sub_client_sql)
         for i in content:
             sub_clients.append({
-                # "appid": i[0],
-                # "clientid": i[1],
                 "clientname": i[2],
                 "idataagent": i[3],
-                # "idataagentstatus": i[4],
-                # "idagentbkenable": i[5],
-                # "idagentrstenable": i[6],
-                # "instance": i[7],
                 "backupset": i[8],
-                # "subclient": i[9],
-                # "subclientstatus": i[10],
-                # "schedjobpattern": i[11],
-                # "schedbackupday": i[12],
-                # "schedbackuptime": i[13],
-                # "schednextbackuptime": i[14].strftime("%Y-%m-%d %H:%M:%S") if i[14] else '',
-                # "data_sp": i[15],
-                # "data_sp_copy": i[16],
-                # "data_sp_copy_retendays": i[17],
-                # "data_sp_copy_fullcycles": i[18],
-                # "data_sp_schedauxcopypattern": i[19],
-                # "data_sp_schedauxcopytime": i[20],
-                # "data_sp_schednextauxcopytime": i[21],
-                # "data_sp_scheddestcopy": i[22],
-                # "log_sp": i[23],
-                # "LastFullBkpSize": i[24],
-                # "LastIncBkpSize": i[25],
-                # "LastDiffBkpSize": i[26],
-                # "QDisplayName": i[27],
-                # "xmlDisplayName": i[28],
+            })
+        return sub_clients
+
+    def get_installed_sub_clients_for_status(self, client=None):
+        if client:
+            if isinstance(client, int):
+                sub_client_sql = """SELECT [appid],[clientid],[clientname],[idataagent],[idataagentstatus],[idagentbkenable],[idagentrstenable],[instance],[backupset],[subclient],[subclientstatus],[schedjobpattern],
+                                     [schedbackupday],[schedbackuptime],[schednextbackuptime],[data_sp],[data_sp_copy],[data_sp_copy_retendays],[data_sp_copy_fullcycles],[data_sp_schedauxcopypattern],[data_sp_schedauxcopyday],[data_sp_schedauxcopytime],
+                                     [data_sp_schednextauxcopytime],[data_sp_scheddestcopy],[log_sp],[LastFullBkpSize(Bytes)],[LastIncBkpSize(Bytes)],[LastDiffBkpSize(Bytes)],[QDisplayName],[xmlDisplayName]
+                                     FROM [commserv].[dbo].[CommCellSubClientConfig] WHERE [clientid]='{0}' AND [idataagentstatus]='installed'""".format(client)
+            elif isinstance(client, str):
+                sub_client_sql = """SELECT [appid],[clientid],[clientname],[idataagent],[idataagentstatus],[idagentbkenable],[idagentrstenable],[instance],[backupset],[subclient],[subclientstatus],[schedjobpattern],
+                                     [schedbackupday],[schedbackuptime],[schednextbackuptime],[data_sp],[data_sp_copy],[data_sp_copy_retendays],[data_sp_copy_fullcycles],[data_sp_schedauxcopypattern],[data_sp_schedauxcopyday],[data_sp_schedauxcopytime],
+                                     [data_sp_schednextauxcopytime],[data_sp_scheddestcopy],[log_sp],[LastFullBkpSize(Bytes)],[LastIncBkpSize(Bytes)],[LastDiffBkpSize(Bytes)],[QDisplayName],[xmlDisplayName]
+                                     FROM [commserv].[dbo].[CommCellSubClientConfig] WHERE [clientname]='{0}' AND [idataagentstatus]='installed'""".format(client)
+            else:
+                self.msg = "请传入正确的客户端id或名称。"
+                return None
+        else:
+            sub_client_sql = """SELECT [appid],[clientid],[clientname],[idataagent],[idataagentstatus],[idagentbkenable],[idagentrstenable],[instance],[backupset],[subclient],[subclientstatus],[schedjobpattern],
+                                 [schedbackupday],[schedbackuptime],[schednextbackuptime],[data_sp],[data_sp_copy],[data_sp_copy_retendays],[data_sp_copy_fullcycles],[data_sp_schedauxcopypattern],[data_sp_schedauxcopyday],[data_sp_schedauxcopytime],
+                                 [data_sp_schednextauxcopytime],[data_sp_scheddestcopy],[log_sp],[LastFullBkpSize(Bytes)],[LastIncBkpSize(Bytes)],[LastDiffBkpSize(Bytes)],[QDisplayName],[xmlDisplayName]
+                                 FROM [commserv].[dbo].[CommCellSubClientConfig] WHERE [idataagentstatus]='installed'"""
+        sub_clients = []
+        content = self.fetch_all(sub_client_sql)
+        for i in content:
+            sub_clients.append({
+                "clientname": i[2],
+                "idataagent": i[3],
             })
         return sub_clients
 
@@ -171,10 +230,9 @@ class CVApi(DataMonitor):
                 # "subclient": i[11],
             })
 
-
-        extra_content = self.get_installed_sub_clients()
+        extra_content = self.get_installed_sub_clients_for_info()
         # 去重
-        extra_content = remove_duplicate(extra_content)
+        extra_content = remove_duplicate_for_info(extra_content)
         whole_list = []
 
         for storage in storages:
@@ -328,9 +386,9 @@ class CVApi(DataMonitor):
                 # "subclient": i[17],
             })
 
-        extra_content = self.get_installed_sub_clients()
+        extra_content = self.get_installed_sub_clients_for_info()
         # 去重
-        extra_content = remove_duplicate(extra_content)
+        extra_content = remove_duplicate_for_info(extra_content)
         whole_list = []
 
         for schedule in schedules:
@@ -407,9 +465,9 @@ class CVApi(DataMonitor):
                     "content": i[2],
                 })
 
-        extra_content = self.get_installed_sub_clients()
+        extra_content = self.get_installed_sub_clients_for_info()
         # 去重
-        extra_content = remove_duplicate(extra_content)
+        extra_content = remove_duplicate_for_info(extra_content)
         whole_list = []
 
         for b_content in backupset_content_list:
@@ -530,7 +588,38 @@ class CVApi(DataMonitor):
                 "enddate": i[12],
                 "totalBackupSize": i[13],
             })
-        return backup_jobs
+
+        extra_content = self.get_installed_sub_clients_for_status()
+        # 去重
+        extra_content = remove_duplicate_for_status(extra_content)
+        whole_list = []
+
+        for backup_job in backup_jobs:
+            for content in extra_content:
+                if content['clientname'] == backup_job['clientname'] and content['idataagent'] == backup_job['idataagent']:
+                    whole_list.append({
+                        "clientname": backup_job['clientname'],
+                        "idataagent": backup_job['idataagent'],
+                        "data_sp": backup_job['data_sp'],
+                        "jobstatus": backup_job['jobstatus'],
+                        "startdate": backup_job['startdate'],
+                    })
+                    # 剔除已经包含的
+                    extra_content.remove({
+                        "clientname": backup_job['clientname'],
+                        "idataagent": backup_job['idataagent'],
+                    })
+        # 未包含的置空
+        for e_content in extra_content:
+            whole_list.append({
+                "clientname": e_content['clientname'],
+                "idataagent": e_content['idataagent'],
+                "data_sp": '无',
+                "jobstatus": '无',
+                "startdate": '无',
+            })
+
+        return whole_list
 
     def get_all_auxcopys(self):
         auxcopy_sql = """SELECT [storagepolicy], [jobstatus], [sourcecopyid], [destcopyid] FROM [commserv].[dbo].[CommCellAuxCopyInfo] 
@@ -917,13 +1006,16 @@ class CustomFilter(CVApi):
                         job_status_str = job_status
 
                     if job_status_str in ["运行", "正常", "等待", "QueuedCompleted", "Queued", "PartialSuccess", "成功"]:
-                        status_label = "label-success"
+                        status_label = "label label-sm label-success"
                     elif job_status_str in ["阻塞", "已完成，但有一个或多个错误", "已完成，但有一个或多个警告"]:
-                        status_label = "label-warning"
+                        status_label = "label label-sm label-warning"
+                    elif job_status_str == '无':
+                        status_label = ''
                     else:
-                        status_label = "label-danger"
+                        status_label = "label label-sm label-danger"
 
-                    aux_copy_status = ""
+                    # 匹配辅助拷贝
+                    aux_copy_status = "无"
                     for auxcopy in all_auxcopys:
                         if auxcopy["storagepolicy"] == job["data_sp"]:
                             aux_copy_status = auxcopy["jobstatus"]
@@ -934,16 +1026,17 @@ class CustomFilter(CVApi):
                         aux_copy_status_str = aux_copy_status
 
                     if aux_copy_status_str in ["运行", "正常", "等待", "QueuedCompleted", "Queued", "PartialSuccess", "成功"]:
-                        aux_status_label = "label-success"
+                        aux_status_label = "label label-sm label-success"
                     elif aux_copy_status_str in ["阻塞", "已完成，但有一个或多个错误", "已完成，但有一个或多个警告"]:
-                        aux_status_label = "label-warning"
+                        aux_status_label = "label label-sm label-warning"
+                    elif aux_copy_status_str == '无':
+                        aux_status_label = ''
                     else:
-                        aux_status_label = "label-danger"
-
+                        aux_status_label = "label label-sm label-danger"
                     agent_job_list.append({
                         "client_name": client["client_name"],
                         "agent_type_name": job["idataagent"],
-                        "job_start_time": job["startdate"].strftime("%Y-%m-%d %H:%M:%S"),
+                        "job_start_time": job["startdate"].strftime("%Y-%m-%d %H:%M:%S") if job["startdate"] != '无' else job["startdate"],
                         "job_backup_status": job_status_str,
                         "status_label": status_label,
                         "aux_copy_status": aux_copy_status_str,
@@ -957,11 +1050,23 @@ class CustomFilter(CVApi):
         return whole_list
 
 
-def remove_duplicate(dict_list):
+def remove_duplicate_for_info(dict_list):
     seen = set()
     new_dict_list = []
     for dict in dict_list:
         t_dict = {'clientname': dict['clientname'], 'idataagent': dict['idataagent'], 'backupset': dict['backupset']}
+        t_tup = tuple(t_dict.items())
+        if t_tup not in seen:
+            seen.add(t_tup)
+            new_dict_list.append(dict)
+    return new_dict_list
+
+
+def remove_duplicate_for_status(dict_list):
+    seen = set()
+    new_dict_list = []
+    for dict in dict_list:
+        t_dict = {'clientname': dict['clientname'], 'idataagent': dict['idataagent']}
         t_tup = tuple(t_dict.items())
         if t_tup not in seen:
             seen.add(t_tup)
@@ -976,22 +1081,22 @@ if __name__ == '__main__':
         "password": "1qaz@WSX",
         "database": "CommServ",
     }
-    # data = [{'name': "mic", 'age':2}, {'name': 'm', 'age': 2}, {'name': 'mic', 'age': 2}]
-    # a = remove_duplicate(data)
+    # data = [{'name': "mic", 'age': 2, 'sex': 'male'}, {'name': 'm', 'age': 2, 'sex': 'male'}, {'name': 'mic', 'age': 2, 'sex': 'female'}]
+    # a = remove_duplicate_for_info(data, dup_model=['name', 'age'])
     # print(a)
-    dm = CustomFilter(credit)
+    # dm = CustomFilter(credit)
     # print(dm.connection)
     # ret = dm.get_all_install_clients()
     # ret = dm.get_DDB_info()
     # print(len(ret), "\n", ret)
     # ret = dm.get_single_installed_client(2)
-    # ret = dm.get_installed_sub_clients(client=2)
+    # ret = dm.get_installed_sub_clients_for_info(client=2)
     # ret = dm.custom_all_backup_content()
     # ret = dm.get_schedules(client="cv-server")
     # ret, row_dict = dm.custom_all_schedules()
     # ret, row_dict = dm.custom_all_storages()
     # ret, row_dict = dm.custom_all_backup_content()
-    ret = dm.get_all_backup_content()
+    # ret = dm.get_all_backup_content()
     # ret = dm.get_all_backup_jobs()
     # ret = dm.get_all_auxcopys()
     # ret = dm.custom_concrete_job_list()
