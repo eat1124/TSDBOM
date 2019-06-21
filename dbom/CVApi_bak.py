@@ -414,9 +414,9 @@ class CVApiOperate(CVRestApiCmd):
 
         return schedule_policy_list
 
-    def get_schedule_list(self, sub_client_id):
+    def get_schedule_list(self, client_id):
         schduleList = []
-        cmd = "Schedules?subclientId={0}".format(sub_client_id)
+        cmd = "Schedules?clientId={0}".format(client_id)
         schedules = self.get_cmd(cmd)
 
         taskDetails = schedules.xpath("//taskDetail")
@@ -834,7 +834,7 @@ class CVApiOperate(CVRestApiCmd):
         if sub_client_id is None:
             return None
         command = "Subclient/{0}".format(sub_client_id)
-        resp = self.get_cmd(command, write_down=True)
+        resp = self.get_cmd(command)
         try:
             subClientEntity = resp.findall(".//subClientEntity")
             # 子客户端名称
@@ -1495,10 +1495,12 @@ class CVApiOperate(CVRestApiCmd):
 
     def discover_VM(self, clientId):
         vm_list = []
-        cmd = 'VMBrowse?PseudoClientId={0}'.format(clientId)
-        resp = self.get_cmd(cmd, write_down=True)
+        cmd = 'v2/vsa/vmgroups?clientName={0}'.format(clientId)
+        resp = self.get_cmd(cmd)
         if resp == None:
             return False
+        else:
+            return resp
         # activePhysicalNode = resp.findall(".//inventoryInfo")
         #
         # for node in activePhysicalNode:
@@ -1530,9 +1532,9 @@ if __name__ == "__main__":
     # sp = cv_api.get_client_info_by_id(12)
     # sp = cv_api.custom_backup_tree_by_client(3)
     # sp = cv_api.get_sub_client_info(22)
-    sp = cv_api.discover_VM(5)
-    # sp = cv_api.get_simple_sub_client_info(34)
-    # sp = cv_api.get_schedule_list(118)
+    # sp = cv_api.discover_VM('vctest.hzx')
+    # sp = cv_api.get_simple_sub_client_info(22)
+    sp = cv_api.get_schedule_list(5)
     # sp = cv_api.get_schedule_policy_info(30)
     # sp = cv_api.get_schedule_policy_list()
 
