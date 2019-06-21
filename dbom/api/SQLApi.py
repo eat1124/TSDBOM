@@ -123,9 +123,9 @@ class CVApi(DataMonitor):
                 # "idataagentstatus": i[4],
                 # "idagentbkenable": i[5],
                 # "idagentrstenable": i[6],
-                "instance": i[7],
+                # "instance": i[7],
                 "backupset": i[8],
-                "subclient": i[9],
+                # "subclient": i[9],
                 # "subclientstatus": i[10],
                 # "schedjobpattern": i[11],
                 # "schedbackupday": i[12],
@@ -170,7 +170,39 @@ class CVApi(DataMonitor):
                 "backupset": i[10],
                 # "subclient": i[11],
             })
-        return storages
+
+
+        extra_content = self.get_installed_sub_clients()
+        # 去重
+        extra_content = remove_duplicate(extra_content)
+        whole_list = []
+
+        for storage in storages:
+
+            for content in extra_content:
+                if content['clientname'] == storage['clientname'] and content['idataagent'] == storage['idataagent'] and content['backupset'] == storage['backupset']:
+                    whole_list.append({
+                        "storagepolicy": storage['storagepolicy'],
+                        "clientname": storage['clientname'],
+                        "idataagent": storage['idataagent'],
+                        "backupset": storage['backupset'],
+                    })
+                    # 剔除已经包含的
+                    extra_content.remove({
+                        "clientname": storage['clientname'],
+                        "idataagent": storage['idataagent'],
+                        "backupset": storage['backupset'],
+                    })
+        # 未包含的置空
+        for e_content in extra_content:
+            whole_list.append({
+                "storagepolicy": '无',
+                "clientname": e_content['clientname'],
+                "idataagent": e_content['idataagent'],
+                "backupset": e_content['backupset'],
+            })
+
+        return whole_list
 
     def get_all_schedules(self):
         schedule_sql = """SELECT [CommCellId],[CommCellName],[scheduleId],[scheduePolicy],[scheduleName],[scheduletask],[schedbackuptype],[schedpattern],[schedinterval]
@@ -295,7 +327,50 @@ class CVApi(DataMonitor):
                 "backupset": i[16],
                 # "subclient": i[17],
             })
-        return schedules
+
+        extra_content = self.get_installed_sub_clients()
+        # 去重
+        extra_content = remove_duplicate(extra_content)
+        whole_list = []
+
+        for schedule in schedules:
+
+            for content in extra_content:
+                if content['clientname'] == schedule['clientName'] and content['idataagent'] == schedule['idaagent'] and content['backupset'] == schedule['backupset']:
+                    whole_list.append({
+                        "scheduePolicy": schedule['scheduePolicy'],
+                        "scheduleName": schedule['scheduleName'],
+                        "schedbackuptype": schedule['schedbackuptype'],
+                        "schedpattern": schedule['schedpattern'],
+                        "schedinterval": schedule['schedinterval'],
+                        "schedbackupday": schedule['schedbackupday'],
+                        "schednextbackuptime": schedule['schednextbackuptime'],
+                        "clientName": schedule['clientName'],
+                        "idaagent": schedule['idaagent'],
+                        "backupset": schedule['backupset'],
+                    })
+                    # 剔除已经包含的
+                    extra_content.remove({
+                        "clientname": schedule['clientName'],
+                        "idataagent": schedule['idaagent'],
+                        "backupset": schedule['backupset'],
+                    })
+        # 未包含的置空
+        for e_content in extra_content:
+            whole_list.append({
+                "scheduePolicy": '无',
+                "scheduleName": '无',
+                "schedbackuptype": '无',
+                "schedpattern": '无',
+                "schedinterval": '无',
+                "schedbackupday": '无',
+                "schednextbackuptime": '无',
+                "clientName": e_content['clientname'],
+                "idaagent": e_content['idataagent'],
+                "backupset": e_content['backupset'],
+            })
+
+        return whole_list
 
     def get_all_backup_content(self):
         # 虚机备份内容+
@@ -332,39 +407,37 @@ class CVApi(DataMonitor):
                     "content": i[2],
                 })
 
-        # temp_backupset_content_list = copy.deepcopy(backupset_content_list)
-        # extra_content = self.get_installed_sub_clients()
-        # # print(len(extra_content))
-        # for content in extra_content:
-        #
-        #     for b_content in temp_backupset_content_list:
-        #         #  只要有一个不同就添加
-        #         if content['clientname'] != b_content['clientname'] and content['idataagent'] != b_content['idataagent'] and content['backupset'] != b_content['backupset']:
-        #             backupset_content_list.append({
-        #                 "clientname": content['clientname'],
-        #                 "idataagent": content['idataagent'],
-        #                 "backupset": content['backupset'],
-        #                 # "subclient": content['subclient'],
-        #                 "content": '无',
-        #             })
-        #         if content['clientname'] == b_content['clientname'] and content['idataagent'] != b_content['idataagent'] and content['backupset'] != b_content['backupset']:
-        #             backupset_content_list.append({
-        #                 "clientname": content['clientname'],
-        #                 "idataagent": content['idataagent'],
-        #                 "backupset": content['backupset'],
-        #                 # "subclient": content['subclient'],
-        #                 "content": '无',
-        #             })
-        #         if content['clientname'] == b_content['clientname'] and content['idataagent'] == b_content['idataagent'] and content['backupset'] != b_content['backupset']:
-        #             backupset_content_list.append({
-        #                 "clientname": content['clientname'],
-        #                 "idataagent": content['idataagent'],
-        #                 "backupset": content['backupset'],
-        #                 # "subclient": content['subclient'],
-        #                 "content": '无',
-        #             })
+        extra_content = self.get_installed_sub_clients()
+        # 去重
+        extra_content = remove_duplicate(extra_content)
+        whole_list = []
 
-        return backupset_content_list
+        for b_content in backupset_content_list:
+
+            for content in extra_content:
+                if content['clientname'] == b_content['clientname'] and content['idataagent'] == b_content['idataagent'] and content['backupset'] == b_content['backupset']:
+                    whole_list.append({
+                        "clientname": b_content['clientname'],
+                        "idataagent": b_content['idataagent'],
+                        "backupset": b_content['backupset'],
+                        "content": b_content['content'],
+                    })
+                    # 剔除已经包含的
+                    extra_content.remove({
+                        "clientname": b_content['clientname'],
+                        "idataagent": b_content['idataagent'],
+                        "backupset": b_content['backupset'],
+                    })
+        # 未包含的置空
+        for e_content in extra_content:
+            whole_list.append({
+                "clientname": e_content['clientname'],
+                "idataagent": e_content['idataagent'],
+                "backupset": e_content['backupset'],
+                "content": '无',
+            })
+
+        return whole_list
 
     def get_schedules(self, client=None, agent=None, backup_set=None, sub_client=None, schedule=None, schedule_type=None):
         if all([client, agent, backup_set, sub_client, schedule, schedule_type]):
@@ -884,6 +957,18 @@ class CustomFilter(CVApi):
         return whole_list
 
 
+def remove_duplicate(dict_list):
+    seen = set()
+    new_dict_list = []
+    for dict in dict_list:
+        t_dict = {'clientname': dict['clientname'], 'idataagent': dict['idataagent'], 'backupset': dict['backupset']}
+        t_tup = tuple(t_dict.items())
+        if t_tup not in seen:
+            seen.add(t_tup)
+            new_dict_list.append(dict)
+    return new_dict_list
+
+
 if __name__ == '__main__':
     credit = {
         "host": "192.168.100.149\COMMVAULT",
@@ -891,6 +976,9 @@ if __name__ == '__main__':
         "password": "1qaz@WSX",
         "database": "CommServ",
     }
+    # data = [{'name': "mic", 'age':2}, {'name': 'm', 'age': 2}, {'name': 'mic', 'age': 2}]
+    # a = remove_duplicate(data)
+    # print(a)
     dm = CustomFilter(credit)
     # print(dm.connection)
     # ret = dm.get_all_install_clients()
@@ -898,21 +986,20 @@ if __name__ == '__main__':
     # print(len(ret), "\n", ret)
     # ret = dm.get_single_installed_client(2)
     # ret = dm.get_installed_sub_clients(client=2)
-    ret = dm.custom_all_backup_content()
-    # print(ret)
+    # ret = dm.custom_all_backup_content()
     # ret = dm.get_schedules(client="cv-server")
     # ret, row_dict = dm.custom_all_schedules()
     # ret, row_dict = dm.custom_all_storages()
     # ret, row_dict = dm.custom_all_backup_content()
-    # ret = dm.get_all_backup_content()
+    ret = dm.get_all_backup_content()
     # ret = dm.get_all_backup_jobs()
     # ret = dm.get_all_auxcopys()
     # ret = dm.custom_concrete_job_list()
     # ret = dm.get_all_schedules()
-    print(len(ret))
+    # print(len(ret))
     # for i in ret:
     #     print(i)
-    import json
-
-    with open("1.json", "w") as f:
-        f.write(json.dumps(ret))
+    # import json
+    #
+    # with open("1.json", "w") as f:
+    #     f.write(json.dumps(ret))
