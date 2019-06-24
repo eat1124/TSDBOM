@@ -40,7 +40,6 @@ from django.core.mail import send_mail
 from django.forms.models import model_to_dict
 from django.template.response import TemplateResponse
 from django.contrib.auth.decorators import login_required
-from django.conf import settings
 
 from dbom.tasks import *
 from dbom.models import *
@@ -436,7 +435,7 @@ def index(request, funid):
                 value.sort = 0
         funlist = sorted(funlist, key=lambda fun: fun.sort)
 
-        dm = SQLApi.CustomFilter(settings.credit)
+        dm = SQLApi.CustomFilter(settings.sql_credit)
         if dm.msg == "链接数据库失败。":
             service_status = "中断"
             net_status = "中断"
@@ -467,7 +466,7 @@ def index(request, funid):
 def get_backup_status(request):
     whole_list = []
     try:
-        dm = SQLApi.CustomFilter(settings.credit)
+        dm = SQLApi.CustomFilter(settings.sql_credit)
 
         whole_list = dm.custom_concrete_job_list()
     except Exception as e:
@@ -494,7 +493,7 @@ def backup_status(request, funid):
 def get_backup_content(request):
     whole_list = []
     try:
-        dm = SQLApi.CustomFilter(settings.credit)
+        dm = SQLApi.CustomFilter(settings.sql_credit)
         ret, row_dict = dm.custom_all_backup_content()
         for content in ret:
             content_dict = OrderedDict()
@@ -532,7 +531,7 @@ def backup_content(request, funid):
 def get_storage_policy(self):
     whole_list = []
     try:
-        dm = SQLApi.CustomFilter(settings.credit)
+        dm = SQLApi.CustomFilter(settings.sql_credit)
         ret, row_dict = dm.custom_all_storages()
         for storage in ret:
             storage_dict = OrderedDict()
@@ -578,7 +577,7 @@ def schedule_policy(request, funid):
 def get_schedule_policy(self):
     whole_list = []
     try:
-        dm = SQLApi.CustomFilter(settings.credit)
+        dm = SQLApi.CustomFilter(settings.sql_credit)
         ret, row_dict = dm.custom_all_schedules()
         for schedule in ret:
             schedule_dict = OrderedDict()

@@ -3534,17 +3534,17 @@ if __name__ == "__main__":
 
     # ret = cvAPI.getJobList(3)  # backup status
     # ret = cvAPI.getClientInfo(3)
-    ret = cvAPI.getClientList()
+    ret = cvAPI.getVMWareVMList()
 
     print(ret)
-    import json
+    # import json
 
     # with open(r"C:\Users\Administrator\Desktop\ret.json", "w") as f:
     #     f.write(json.dumps(ret))
 
     # print(cvAPI.getBackupset("cv-server", "File"))
 
-    backupInfo = cvAPI.getSubclientInfo("22")
+    # backupInfo = cvAPI.getSubclientInfo("22")
     # print(backupInfo)
     # print('it is main')
     # #info = {"webaddr":"172.16.110.55", "port":"81", "username":"cvadmin", "passwd":"1qaz@WSX", "token":"", "lastlogin":0}

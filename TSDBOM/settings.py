@@ -14,11 +14,20 @@ import os
 import djcelery
 
 # SQLApi
-credit = {
+sql_credit = {
     "host": "192.168.100.149\COMMVAULT",
     "user": "sa_cloud",
     "password": "1qaz@WSX",
     "database": "CommServ",
+}
+
+CVApi_credit = {
+    "web_addr": "192.168.100.149",
+    "port": "81",
+    "username": "admin",
+    "pass_wd": "Admin@2017",
+    "token": "",
+    "last_login": 0
 }
 
 djcelery.setup_loader()
@@ -77,7 +86,6 @@ MIDDLEWARE_CLASSES = [
     'django.middleware.locale.LocaleMiddleware',
     # 'django.middleware.cache.FetchFromCacheMiddleware',
 ]
-
 
 ROOT_URLCONF = 'TSDBOM.urls'
 

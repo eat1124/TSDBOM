@@ -971,6 +971,17 @@ class CVApiOperate(CVRestApiCmd):
             print(self.msg, e)
         return backup_info
 
+    def get_vm_backup_content(self, sub_client_id):
+        my_content = []
+        if sub_client_id is None:
+            return None
+        command = "Subclient/{0}".format(sub_client_id)
+        resp = self.get_cmd(command)
+        children = resp.findall(".//vmContent/children")
+        for child in children:
+            my_content.append(child.get("displayName", ""))
+        return my_content
+
     def get_backup_set_list(self, client_id):
         """
         备份集列表
@@ -1495,7 +1506,7 @@ class CVApiOperate(CVRestApiCmd):
 
     def discover_VM(self, clientId):
         vm_list = []
-        cmd = 'v2/vsa/vmgroups?clientName={0}'.format(clientId)
+        cmd = 'VMBrowse?PseudoClientId={0}&inventoryPath=%5CNONE%3AVMs'.format(clientId)
         resp = self.get_cmd(cmd)
         if resp == None:
             return False
@@ -1532,9 +1543,9 @@ if __name__ == "__main__":
     # sp = cv_api.get_client_info_by_id(12)
     # sp = cv_api.custom_backup_tree_by_client(3)
     # sp = cv_api.get_sub_client_info(22)
-    # sp = cv_api.discover_VM('vctest.hzx')
+    # sp = cv_api.discover_VM(5)
     # sp = cv_api.get_simple_sub_client_info(22)
-    sp = cv_api.get_schedule_list(5)
+    # sp = cv_api.get_schedule_list(5)
     # sp = cv_api.get_schedule_policy_info(30)
     # sp = cv_api.get_schedule_policy_list()
 
@@ -1557,8 +1568,8 @@ if __name__ == "__main__":
     # sp = cv_api.get_console_alert_list()
     # sp = cv_api.get_storage_pool_list()
     # sp = cv_api.test()
-    # sp = cv_api.get_sub_client_list(5)  # mysql 89  filesystem 4 oracle 118 sqlserver34 virtual22
-    # sp = cv_api.get_sp_from_sub_client(4)
+    sp = cv_api.get_sub_client_list(5)  # mysql 89  filesystem 4 oracle 118 sqlserver34 virtual22
+    # sp = cv_api.get_vm_backup_content(61)
     # if sp is not None:
     #     print(len(sp), sp)
     # else:
