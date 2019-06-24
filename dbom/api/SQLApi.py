@@ -481,12 +481,18 @@ class CVApi(DataMonitor):
                 for sub_client in sub_client_list:
                     if sub_client['appName'] == i[1] and sub_client['backupsetName'] == i[3] and sub_client['subclientName'] == i[4]:
                         content = cv_api.get_vm_backup_content(sub_client['subclientId'])
+
+                        if content:
+                            vm_content = ''
+                            for vm in content:
+                                vm_content += vm + ','
+                        
                         backupset_content_list.append({
                             "clientname": i[0],
                             "idataagent": i[1],
                             "backupset": i[3],
                             "subclient": i[4],
-                            "content": content[0] if content else '',
+                            "content": vm_content[:-1] if content else '',
                         })
                         break
         extra_content = self.get_installed_sub_clients_for_info()
