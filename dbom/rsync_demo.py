@@ -36,7 +36,7 @@ class RsyncBackup(object):
                                 'else' + '\n' + \
                                 '   echo "cmd_failed"' + '\n' + \
                                 'fi'
-        self.sudo_permission = 'echo {0}|sudo -S'.format(server['password']) if server['username'] == 'root' else ''
+        self.sudo_permission = 'echo {0}|sudo -S '.format(server['password']) if server['username'] == 'root' else ''
 
     def run_shell_cmd(self, shell_cmd, get_pty=True):
         result = 1
@@ -74,6 +74,10 @@ class RsyncBackup(object):
         :param model_list: [{"model_name": "", "host_allowd": "", "backup_path": ""}]
         :return:
         """
+        # 设置互通密码
+        self.set_server_password()
+        self.set_client_password()
+
         base_config = "uid = rsync" + '\n' + \
                       'gid = rsync' + '\n' + \
                       'use chroot = no' + '\n' + \
@@ -96,7 +100,7 @@ class RsyncBackup(object):
                            'list = false' + '\n' + \
                            'hosts allow = {0}/24'.format(temp_model['host_allowd']) + '\n' + \
                            'auth users = rsync_backup' + '\n' + \
-                           'secrets file = /etc/rsync.password'
+                           'secrets file = /etc/rsync_server.password'
         result, info = self.run_shell_cmd("echo '{0}' > /etc/rsyncd.conf".format(base_config))
 
         return result, info
@@ -109,8 +113,8 @@ class RsyncBackup(object):
         return result, info
 
     def set_server_password(self):
-        result, info = self.run_shell_cmd('echo "{0}" > /etc/rsync.password'.format('rsync_backup:password'))
-        result, info = self.run_shell_cmd('chmod 600 /etc/rsync.password')
+        result, info = self.run_shell_cmd('echo "{0}" > /etc/rsync_server.password'.format('rsync_backup:password'))
+        result, info = self.run_shell_cmd('chmod 600 /etc/rsync_server.password')
         return result, info
 
     def set_client_password(self):
@@ -167,17 +171,17 @@ class RsyncBackup(object):
 
 
 if __name__ == '__main__':
-    client = {
+    server = {
         'hostname': '192.168.85.152',
         'username': 'root',
         'password': '!zxcvbn123'
     }
-    rsync_backup = RsyncBackup(client)
+    rsync_backup = RsyncBackup(server)
     # result, info = rsync_backup.start_rsync()
     # result, info = rsync_backup.stop_rsync()
     # result, info = rsync_backup.run_shell_cmd('ls')
     # result, info = rsync_backup.install_rsync_by_yum()
-    result, info = rsync_backup.rsync_exec_avz(r'/root/backup/', 'rsync_backup', '192.168.85.151', 'server01')
+    result, info = rsync_backup.rsync_exec_avz(r'/root/backup/', 'rsync_backup', '192.168.85.151', 'server01', delete=True)
     # result, info = rsync_backup.tail_rsync_log()
-    # result, info = rsync_backup.set_rsync_server_config([{"model_name": "server01", "host_allowd": "192.168.85.149", "backup_path": "/root/server01"}])
+    # result, info = rsync_backup.set_rsync_server_config([{"model_name": "server01", "host_allowd": "192.168.85.151", "backup_path": "/root/backup"}])
     print(result, info)

@@ -13,6 +13,11 @@ import time
 from .CVApi_bak import CVRestApiToken, CVApiOperate
 
 
+@shared_task
+def test():
+    print('测试')
+
+
 def is_connection_usable():
     try:
         connection.connection.ping()

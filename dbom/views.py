@@ -528,7 +528,7 @@ def backup_content(request, funid):
 
 
 @login_required
-def get_storage_policy(self):
+def get_storage_policy(request):
     whole_list = []
     try:
         dm = SQLApi.CustomFilter(settings.sql_credit)
@@ -574,7 +574,7 @@ def schedule_policy(request, funid):
 
 
 @login_required
-def get_schedule_policy(self):
+def get_schedule_policy(request):
     whole_list = []
     try:
         dm = SQLApi.CustomFilter(settings.sql_credit)
@@ -614,6 +614,57 @@ def get_schedule_policy(self):
                 "row_dict": row_dict,
             },
         })
+
+
+@login_required
+def rsync_hosts(request, funid):
+    return render(request, 'rsync_hosts.html', {
+        'username': request.user.userinfo.fullname,
+        "pagefuns": getpagefuns(funid, request),
+    })
+
+
+@login_required
+def rsync_hosts_data(request):
+    result = []
+
+    result.append({
+        'id': 1,
+        'ip_addr': '192.168.85.151',
+        'username': 'root',
+        'password': '!zxcvbn123',
+        'status': '已安装',
+    })
+    result.append({
+        'id': 2,
+        'ip_addr': '192.168.85.152',
+        'username': 'root',
+        'password': '!zxcvbn123',
+        'status': '关机',
+    })
+    result.append({
+        'id': 3,
+        'ip_addr': '192.168.85.147',
+        'username': 'root',
+        'password': '!zxcvbn123',
+        'status': '失败',
+    })
+    result.append({
+        'id': 4,
+        'ip_addr': '192.168.85.148',
+        'username': 'root',
+        'password': '!zxcvbn123',
+        'status': '未安装',
+    })
+    return JsonResponse({"data": result})
+
+
+@login_required
+def rsync_config(request, funid):
+    return render(request, 'rsync_config.html', {
+        'username': request.user.userinfo.fullname,
+        "pagefuns": getpagefuns(funid, request),
+    })
 
 
 def client_data_index(request, funid):
