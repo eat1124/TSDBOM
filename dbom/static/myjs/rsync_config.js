@@ -95,6 +95,7 @@ $(document).ready(function () {
     $("#new").click(function () {
         $("#id").val("0");
 
+
     });
 
     $('#save').click(function () {
@@ -174,5 +175,10 @@ $(document).ready(function () {
     // select2
     $(".select2").select2({
         width: null,
+    });
+
+    $("#per_time").timepicker({
+        showMeridian: false,
+        minuteStep: 1,
     });
 });
