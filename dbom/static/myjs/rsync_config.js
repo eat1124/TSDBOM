@@ -179,6 +179,5 @@ $(document).ready(function () {
 
     $("#per_time").timepicker({
         showMeridian: false,
-        minuteStep: 1,
     });
 });
