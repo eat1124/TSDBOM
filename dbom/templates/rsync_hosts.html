@@ -1,7 +1,18 @@
 {% extends "base1.html" %}
 
 {% block content %}
-
+    <style>
+        #rsync_loading {
+            height: 300px;
+            width: 100%;
+            background-image: url(../static/new/images/loading.gif);
+            background-repeat: no-repeat;
+            background-position: center;
+            margin-top: -300px;
+            z-index: 9999999;
+            position: absolute
+        }
+    </style>
     <div style="height:10px"></div>
     <div class="table-toolbar">
         <div id="error">
@@ -51,13 +62,13 @@
                 <div class="panel-body">
 
                     <form class="bs-example form-horizontal activate-form">{% csrf_token %}
-
+                        <input type="text" id="id" hidden>
                         <div class="form-body">
                             <div class="form-group">
                                 <label class="col-md-2 control-label"><span
                                         style="color:red; ">*</span>主机IP</label>
                                 <div class="col-md-10">
-                                    <input id="ip_addr" type="text" name="code" class="form-control "
+                                    <input id="ip_addr" type="text" name="ip_addr" class="form-control "
                                            placeholder="">
                                     <div class="form-control-focus"></div>
 
@@ -67,7 +78,7 @@
                                 <label class="col-md-2 control-label"><span
                                         style="color:red; ">*</span>用户名</label>
                                 <div class="col-md-10">
-                                    <input id="username" type="text" name="name" class="form-control "
+                                    <input id="username" type="text" name="username" class="form-control "
                                            placeholder="">
                                     <div class="form-control-focus"></div>
 
@@ -77,7 +88,7 @@
                                 <label class="col-md-2 control-label"><span
                                         style="color:red; ">*</span>密码</label>
                                 <div class="col-md-10">
-                                    <input id="password" type="text" name="remark" class="form-control "
+                                    <input id="password" type="text" name="password" class="form-control "
                                            placeholder="">
                                     <div class="form-control-focus"></div>
                                 </div>
@@ -94,6 +105,7 @@
                 </div>
             </div>
         </div>
+        <div id="rsync_loading" hidden></div>
     </div>
 
 {% endblock %}

@@ -54,9 +54,11 @@ urlpatterns = [
 
     # rsync备份
     url(r'^rsync_hosts/$', rsync_hosts, {'funid': '97'}),
+    url(r'^rsync_hosts_save/$', rsync_hosts_save),
     url(r'^rsync_hosts_data/$', rsync_hosts_data),
     url(r'^rsync_config/$', rsync_config, {'funid': '98'}),
     url(r'^rsync_config_data/$', rsync_config_data),
+    url(r'^rsync_host_del/$', rsync_host_del),
 
     # 运维记录
     url(r'^inspection/$', inspection_report, {'funid': 62}),  # 巡检报告

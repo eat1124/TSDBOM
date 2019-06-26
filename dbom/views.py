@@ -48,6 +48,7 @@ from TSDBOM import settings
 from .funcs import *
 from .CVApi_bak import CVRestApiToken, CVApiOperate
 from .api import SQLApi
+from .rsync_demo import RsyncBackup
 
 funlist = []
 
@@ -625,38 +626,146 @@ def rsync_hosts(request, funid):
 
 
 @login_required
+def rsync_hosts_save(request):
+    if 'id' in request.POST:
+        result = {}
+        id = request.POST.get('id', '')
+        ip_addr = request.POST.get('ip_addr', '')
+        username = request.POST.get('username', '')
+        password = request.POST.get('password', '')
+        print(ip_addr)
+        try:
+            id = int(id)
+        except:
+            return JsonResponse({
+                "res": "网络异常。"
+            })
+
+        server = {
+            'hostname': ip_addr,
+            'username': username,
+            'password': password,
+        }
+
+        if ip_addr.strip() == '':
+            result["res"] = '主机IP不能为空。'
+        else:
+            if username.strip() == '':
+                result["res"] = '用户名不能为空。'
+            else:
+                if password.strip() == "":
+                    result["res"] = '密码不能为空。'
+                else:
+                    if id == 0:
+                        all_rsync_hosts = RsyncHost.objects.exclude(state="9").filter(ip_addr=ip_addr)
+                        if all_rsync_hosts.exists():
+                            result["res"] = '主机IP:' + ip_addr + '已存在。'
+                        else:
+                            try:
+                                new_rsync_host = RsyncHost()
+                                new_rsync_host.ip_addr = ip_addr
+                                new_rsync_host.username = username
+                                new_rsync_host.password = password
+                                # 远程安装Rsync
+                                rsync_backup = RsyncBackup(server)
+                                if rsync_backup.msg == "远程连接成功。":
+                                    # 查看是否安装
+                                    res, info = rsync_backup.check_ever_existed()
+                                    if res == 0:
+                                        # 未安装
+                                        res, info = rsync_backup.install_rsync_by_yum()
+                                        if res == 1:
+                                            # 安装成功
+                                            new_rsync_host.status = 1
+                                        else:
+                                            result["res"] = "安装失败。"
+                                            new_rsync_host.log = info
+                                            new_rsync_host.status = 3
+                                    else:
+                                        new_rsync_host.status = 1
+
+                                    new_rsync_host.save()
+                                    result["res"] = "保存成功。"
+                                    result["data"] = new_rsync_host.id
+                                else:
+                                    result["res"] = rsync_backup.msg
+                            except:
+                                result["res"] = "新增失败。"
+                    else:
+                        try:
+                            cur_rsync_host = RsyncHost.objects.exclude(state="9").get(id=id)
+                        except RsyncHost.DoesNotExist as e:
+                            result["res"] = "该主机不存在，无法修改。"
+                        else:
+                            try:
+                                cur_rsync_host.ip_addr = ip_addr
+                                cur_rsync_host.username = username
+                                cur_rsync_host.password = password
+
+                                # 远程安装Rsync
+                                rsync_backup = RsyncBackup(server)
+                                if rsync_backup.msg == "远程连接失败。":
+                                    cur_rsync_host.log = rsync_backup.msg
+                                    cur_rsync_host.status = 3
+                                else:
+                                    res, info = rsync_backup.check_ever_existed()
+                                    if res == 1:
+                                        # 未安装
+                                        res, info = rsync_backup.install_rsync_by_yum()
+                                        if res == 1:
+                                            # 安装成功
+                                            cur_rsync_host.status = 1
+                                        else:
+                                            result["res"] = "安装失败。"
+                                            cur_rsync_host.log = info
+                                            cur_rsync_host.status = 3
+                                    else:
+                                        cur_rsync_host.status = 1
+
+                                cur_rsync_host.save()
+                                result["res"] = "保存成功。"
+                                result["data"] = cur_rsync_host.id
+                            except:
+                                result["res"] = "修改失败。"
+    return JsonResponse(result)
+
+
+@login_required
 def rsync_hosts_data(request):
     result = []
 
-    result.append({
-        'id': 1,
-        'ip_addr': '192.168.85.151',
-        'username': 'root',
-        'password': '!zxcvbn123',
-        'status': '已安装',
-    })
-    result.append({
-        'id': 2,
-        'ip_addr': '192.168.85.152',
-        'username': 'root',
-        'password': '!zxcvbn123',
-        'status': '关机',
-    })
-    result.append({
-        'id': 3,
-        'ip_addr': '192.168.85.147',
-        'username': 'root',
-        'password': '!zxcvbn123',
-        'status': '失败',
-    })
-    result.append({
-        'id': 4,
-        'ip_addr': '192.168.85.148',
-        'username': 'root',
-        'password': '!zxcvbn123',
-        'status': '未安装',
-    })
+    all_rsync_hosts = RsyncHost.objects.exclude(state="9")
+
+    for rsync_host in all_rsync_hosts:
+        result.append({
+            'id': rsync_host.id,
+            'ip_addr': rsync_host.ip_addr,
+            'username': rsync_host.username,
+            'password': rsync_host.password,
+            'status': rsync_host.get_status_display(),
+        })
+
     return JsonResponse({"data": result})
+
+
+@login_required
+def rsync_host_del(request):
+    if 'id' in request.POST:
+        id = request.POST.get('id', '')
+        try:
+            id = int(id)
+        except:
+            return HttpResponse(0)
+        try:
+            cur_rsync_host = RsyncHost.objects.get(id=id)
+        except RsyncHost.DoesNotExist as e:
+            return HttpResponse(0)
+        else:
+            cur_rsync_host.state = "9"
+            cur_rsync_host.save()
+        return HttpResponse(1)
+    else:
+        return HttpResponse(0)
 
 
 @login_required
@@ -680,7 +789,7 @@ def rsync_config_data(request):
         'hours': 12,
         'per_week': 2,
         'per_month': 5,
-        'status': '已安装',
+        'status': '备份中',
     })
     result.append({
         'id': 2,
@@ -702,7 +811,7 @@ def rsync_config_data(request):
         'hours': 11,
         'per_week': 2,
         'per_month': 5,
-        'status': '失败',
+        'status': '开启',
     })
     return JsonResponse({"data": result})
 

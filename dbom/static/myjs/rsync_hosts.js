@@ -58,10 +58,10 @@ $(document).ready(function () {
             var data = table.row($(this).parents('tr')).data();
             $.ajax({
                 type: "POST",
-                url: "../process_del/",
+                url: "../rsync_host_del/",
                 data:
                     {
-                        id: data.process_id,
+                        id: data.id,
                     },
                 success: function (data) {
                     if (data == 1) {
@@ -81,48 +81,36 @@ $(document).ready(function () {
         var table = $('#sample_1').DataTable();
         var data = table.row($(this).parents('tr')).data();
         $("#id").val(data.process_id);
-        $("#code").val(data.process_code);
-        $("#name").val(data.process_name);
-        $("#remark").val(data.process_remark);
-        $("#sign").val(data.process_sign);
-        $("#rto").val(data.process_rto);
-        $("#rpo").val(data.process_rpo);
-        $("#sort").val(data.process_sort);
-        $("#process_color").val(data.process_color);
+        $("#ip_addr").val(data.ip_addr);
+        $("#username").val(data.username);
+        $("#password").val(data.password);
     });
 
     $("#new").click(function () {
         $("#id").val("0");
-        $("#code").val("");
-        $("#name").val("");
-        $("#remark").val("");
-        $("#sign").val("");
-        $("#rto").val("");
-        $("#rpo").val("");
-        $("#sort").val("");
-        $("#process_color").val("");
+        $("#ip_addr").val("");
+        $("#username").val("");
+        $("#password").val("");
+
     });
 
     $('#save').click(function () {
-        var table = $('#sample_1').DataTable();
+        $("#rsync_loading").show();
 
+        var table = $('#sample_1').DataTable();
         $.ajax({
             type: "POST",
             dataType: 'json',
-            url: "../process_save/",
+            url: "../rsync_hosts_save/",
             data:
                 {
                     id: $("#id").val(),
-                    code: $("#code").val(),
-                    name: $("#name").val(),
-                    remark: $("#remark").val(),
-                    sign: $("#sign").val(),
-                    rto: $("#rto").val(),
-                    rpo: $("#rpo").val(),
-                    sort: $("#sort").val(),
-                    color: $("#process_color").val(),
+                    ip_addr: $("#ip_addr").val(),
+                    username: $("#username").val(),
+                    password: $("#password").val(),
                 },
             success: function (data) {
+                $("#rsync_loading").hide();
                 var myres = data["res"];
                 var mydata = data["data"];
                 if (myres == "保存成功。") {

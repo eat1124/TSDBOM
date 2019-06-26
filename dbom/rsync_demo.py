@@ -18,7 +18,6 @@ class RsyncBackup(object):
         执行Rsync的命令选项
         执行Rsync的参数：服务器端文件地址，虚拟用户名，IP地址，模块名称
     """
-
     def __init__(self, server):
         self.client = paramiko.SSHClient()
         self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -65,6 +64,14 @@ class RsyncBackup(object):
 
     def install_rsync_by_yum(self):
         result, info = self.run_shell_cmd('yum install rsync -y')
+        return result, info
+
+    def check_ever_existed(self):
+        """
+        查看rsync是否已经安装
+        :return:
+        """
+        result, info = self.run_shell_cmd('rsync')
         return result, info
 
     def set_rsync_server_config(self, model_list):
@@ -180,8 +187,8 @@ if __name__ == '__main__':
     # result, info = rsync_backup.start_rsync()
     # result, info = rsync_backup.stop_rsync()
     # result, info = rsync_backup.run_shell_cmd('ls')
-    # result, info = rsync_backup.install_rsync_by_yum()
-    result, info = rsync_backup.rsync_exec_avz(r'/root/backup/', 'rsync_backup', '192.168.85.151', 'server01', delete=True)
+    result, info = rsync_backup.install_rsync_by_yum()
+    # result, info = rsync_backup.rsync_exec_avz(r'/root/backup/', 'rsync_backup', '192.168.85.151', 'server01', delete=True)
     # result, info = rsync_backup.tail_rsync_log()
     # result, info = rsync_backup.set_rsync_server_config([{"model_name": "server01", "host_allowd": "192.168.85.151", "backup_path": "/root/backup"}])
     print(result, info)

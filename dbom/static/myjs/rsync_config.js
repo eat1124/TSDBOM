@@ -10,7 +10,7 @@ $(document).ready(function () {
             {"data": null},
             {"data": null},
             {"data": null},
-            {"data": null},
+            {"data": "status"},
             {"data": null}
         ],
 
@@ -47,23 +47,15 @@ $(document).ready(function () {
                     return "<td>" + full.hours + ":" + full.minutes + '/ ' + per_week + "/ " + per_month + "</td>"
                 },
             }, {
-                "targets": -2,
-                "render": function (data, type, full) {
-                    var log_tag = ""
-                    if (full.status == "失败") {
-                        var log_tag = '  <span class="fa fa-info" style="color:red;border:solid 1px;padding: 0 3px 0 3px" title="服务器没开起来"></span>'
-                    }
-                    return "<td>" + full.status + log_tag + "</td>";
-                }
-            }, {
                 "data": null,
                 "width": "120px",
                 "targets": -1,
                 "render": function (data, type, full) {
                     var exec_tag = "<button  id='edit' title='编辑' data-toggle='modal'  data-target='#static'  class='btn btn-xs btn-primary' type='button'><i class='fa fa-edit'></i></button><button title='删除'  id='delrow' class='btn btn-xs btn-primary' type='button'><i class='fa fa-trash-o'></i></button>";
-                    if ($.inArray(full.status, ['失败', '关闭']) != -1) {
+                    if (full.status == "关闭") {
                         exec_tag += "<button  id='stop' title='启动' data-toggle='modal'  data-target='#static'  class='btn btn-xs btn-info' type='button'><i class='fa fa-play'></i></button>";
-                    } else {
+                    }
+                    if (full.status == "开启"){
                         exec_tag += "<button  id='start' title='终止' data-toggle='modal'  data-target='#static'  class='btn btn-xs btn-danger' type='button'><i class='fa fa-stop'></i></button>";
                     }
                     exec_tag += "<button title='恢复'  id='recover' class='btn btn-xs btn-warning' type='button'><i class='fa fa-reply-all'></i></button>"
