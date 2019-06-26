@@ -646,7 +646,7 @@ def rsync_hosts_save(request):
             'username': username,
             'password': password,
         }
-
+        print(server)
         if ip_addr.strip() == '':
             result["res"] = '主机IP不能为空。'
         else:
@@ -669,6 +669,7 @@ def rsync_hosts_save(request):
                                 # 远程安装Rsync
                                 rsync_backup = RsyncBackup(server)
                                 if rsync_backup.msg == "远程连接成功。":
+                                    new_rsync_host.server_status = 1
                                     # 查看是否安装
                                     res, info = rsync_backup.check_ever_existed()
                                     if res == 0:
@@ -676,19 +677,21 @@ def rsync_hosts_save(request):
                                         res, info = rsync_backup.install_rsync_by_yum()
                                         if res == 1:
                                             # 安装成功
-                                            new_rsync_host.status = 1
+                                            new_rsync_host.install_status = 1
                                         else:
-                                            result["res"] = "安装失败。"
                                             new_rsync_host.log = info
-                                            new_rsync_host.status = 3
+                                            new_rsync_host.install_status = 3
                                     else:
-                                        new_rsync_host.status = 1
-
-                                    new_rsync_host.save()
-                                    result["res"] = "保存成功。"
-                                    result["data"] = new_rsync_host.id
+                                        print(res, '已经安装')
+                                        new_rsync_host.install_status = 1
                                 else:
-                                    result["res"] = rsync_backup.msg
+                                    # 服务器未开启
+                                    new_rsync_host.server_status = 2
+                                    new_rsync_host.install_status = 4
+
+                                new_rsync_host.save()
+                                result["res"] = "保存成功。"
+                                result["data"] = new_rsync_host.id
                             except:
                                 result["res"] = "新增失败。"
                     else:
@@ -705,22 +708,24 @@ def rsync_hosts_save(request):
                                 # 远程安装Rsync
                                 rsync_backup = RsyncBackup(server)
                                 if rsync_backup.msg == "远程连接失败。":
-                                    cur_rsync_host.log = rsync_backup.msg
-                                    cur_rsync_host.status = 3
+                                    # 服务器未开启
+                                    cur_rsync_host.server_status = 2
+                                    cur_rsync_host.install_status = 4
                                 else:
+                                    cur_rsync_host.server_status = 1
                                     res, info = rsync_backup.check_ever_existed()
                                     if res == 1:
                                         # 未安装
                                         res, info = rsync_backup.install_rsync_by_yum()
                                         if res == 1:
                                             # 安装成功
-                                            cur_rsync_host.status = 1
+                                            cur_rsync_host.install_status = 1
                                         else:
                                             result["res"] = "安装失败。"
                                             cur_rsync_host.log = info
-                                            cur_rsync_host.status = 3
+                                            cur_rsync_host.install_status = 3
                                     else:
-                                        cur_rsync_host.status = 1
+                                        cur_rsync_host.install_status = 1
 
                                 cur_rsync_host.save()
                                 result["res"] = "保存成功。"
@@ -742,7 +747,9 @@ def rsync_hosts_data(request):
             'ip_addr': rsync_host.ip_addr,
             'username': rsync_host.username,
             'password': rsync_host.password,
-            'status': rsync_host.get_status_display(),
+            'server_status': rsync_host.get_server_status_display(),
+            'install_status': rsync_host.get_install_status_display(),
+            'log': rsync_host.log,
         })
 
     return JsonResponse({"data": result})

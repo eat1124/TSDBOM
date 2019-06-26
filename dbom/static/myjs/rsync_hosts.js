@@ -9,26 +9,28 @@ $(document).ready(function () {
             {"data": "ip_addr"},
             {"data": "username"},
             {"data": "password"},
+            {"data": "server_status"},
             {"data": null},
-            {"data": null}
+            {"data": null},
         ],
 
         "columnDefs": [{
             "targets": -2,
             "render": function (data, type, full) {
                 var log_tag = ""
-                if (full.status == "失败") {
-                    var log_tag = '  <span class="fa fa-info" style="color:red;border:solid 1px;padding: 0 3px 0 3px" title="服务器没开起来"></span>'
+                if (full.install_status == "失败") {
+                    var log_tag = '  <span class="fa fa-info" style="color:red;border:solid 1px;padding: 0 3px 0 3px" title="' + full.log + '"></span>'
                 }
-                return "<td>" + full.status + log_tag + "</td>";
+                return "<td>" + full.install_status + log_tag + "</td>";
             }
         }, {
             "data": null,
             "width": "100px",
             "targets": -1,
             "render": function (data, type, full) {
+                // 什么时候需要重装：开启and未安装/失败
                 var exec_tag = "<button  id='edit' title='编辑' data-toggle='modal'  data-target='#static'  class='btn btn-xs btn-primary' type='button'><i class='fa fa-edit'></i></button><button title='删除'  id='delrow' class='btn btn-xs btn-primary' type='button'><i class='fa fa-trash-o'></i></button>"
-                if ($.inArray(full.status, ['失败', '未安装']) != -1) {
+                if ($.inArray(full.install_status, ['失败', '未安装']) != -1 && full.server_status == '开启') {
                     exec_tag += "<button  id='edit' title='重装' data-toggle='modal'  data-target='#static'  class='btn btn-xs btn-info' type='button'><i class='fa fa-refresh'></i></button>"
                 }
                 return "<td>" + exec_tag + "</td>";

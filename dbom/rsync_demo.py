@@ -35,7 +35,7 @@ class RsyncBackup(object):
                                 'else' + '\n' + \
                                 '   echo "cmd_failed"' + '\n' + \
                                 'fi'
-        self.sudo_permission = 'echo {0}|sudo -S '.format(server['password']) if server['username'] == 'root' else ''
+        self.sudo_permission = 'echo {0}|sudo -S '.format(server['password']) if server['username'] != 'root' else ''
 
     def run_shell_cmd(self, shell_cmd, get_pty=True):
         result = 1
@@ -179,9 +179,9 @@ class RsyncBackup(object):
 
 if __name__ == '__main__':
     server = {
-        'hostname': '192.168.85.152',
-        'username': 'root',
-        'password': '!zxcvbn123'
+        'hostname': '192.168.85.134',
+        'username': 'miaokela',
+        'password': 'password'
     }
     rsync_backup = RsyncBackup(server)
     # result, info = rsync_backup.start_rsync()
