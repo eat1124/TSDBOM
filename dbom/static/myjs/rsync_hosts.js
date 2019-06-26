@@ -9,32 +9,31 @@ $(document).ready(function () {
             {"data": "ip_addr"},
             {"data": "username"},
             {"data": "password"},
-            {"data": "status"},
+            {"data": null},
             {"data": null}
         ],
 
-        "columnDefs": [
-            {
-                "targets": -2,
-                "render": function (data, type, full) {
-                    var log_tag = ""
-                    if (full.status == "失败") {
-                        var log_tag = '  <span class="fa fa-info" style="color:red;border:solid 1px;padding: 0 3px 0 3px" title="服务器没开起来"></span>'
-                    }
-                    return "<td>" + full.status + log_tag + "</td>";
+        "columnDefs": [{
+            "targets": -2,
+            "render": function (data, type, full) {
+                var log_tag = ""
+                if (full.status == "失败") {
+                    var log_tag = '  <span class="fa fa-info" style="color:red;border:solid 1px;padding: 0 3px 0 3px" title="服务器没开起来"></span>'
                 }
-            }, {
-                "data": null,
-                "width": "100px",
-                "targets": -1,
-                "render": function (data, type, full) {
-                    var exec_tag = "<button  id='edit' title='编辑' data-toggle='modal'  data-target='#static'  class='btn btn-xs btn-primary' type='button'><i class='fa fa-edit'></i></button><button title='删除'  id='delrow' class='btn btn-xs btn-primary' type='button'><i class='fa fa-trash-o'></i></button>"
-                    if ($.inArray(full.status, ['失败', '未安装']) != -1) {
-                        exec_tag += "<button  id='edit' title='重装' data-toggle='modal'  data-target='#static'  class='btn btn-xs btn-info' type='button'><i class='fa fa-refresh'></i></button>"
-                    }
-                    return "<td>" + exec_tag + "</td>";
-                },
-            }],
+                return "<td>" + full.status + log_tag + "</td>";
+            }
+        }, {
+            "data": null,
+            "width": "100px",
+            "targets": -1,
+            "render": function (data, type, full) {
+                var exec_tag = "<button  id='edit' title='编辑' data-toggle='modal'  data-target='#static'  class='btn btn-xs btn-primary' type='button'><i class='fa fa-edit'></i></button><button title='删除'  id='delrow' class='btn btn-xs btn-primary' type='button'><i class='fa fa-trash-o'></i></button>"
+                if ($.inArray(full.status, ['失败', '未安装']) != -1) {
+                    exec_tag += "<button  id='edit' title='重装' data-toggle='modal'  data-target='#static'  class='btn btn-xs btn-info' type='button'><i class='fa fa-refresh'></i></button>"
+                }
+                return "<td>" + exec_tag + "</td>";
+            },
+        }],
         "oLanguage": {
             "sLengthMenu": "每页显示 _MENU_ 条记录",
             "sZeroRecords": "抱歉， 没有找到",

@@ -682,7 +682,28 @@ def rsync_config_data(request):
         'per_month': 5,
         'status': '已安装',
     })
-
+    result.append({
+        'id': 2,
+        'main_host': '192.168.85.152',
+        'backup_host': ['192.168.85.147', '192.168.85.148'],
+        'model': ['model01', 'model02'],
+        'minutes': 15,
+        'hours': 11,
+        'per_week': 2,
+        'per_month': 5,
+        'status': '关闭',
+    })
+    result.append({
+        'id': 3,
+        'main_host': '192.168.85.148',
+        'backup_host': ['192.168.85.151', '192.168.85.152'],
+        'model': ['model01', 'model02'],
+        'minutes': 15,
+        'hours': 11,
+        'per_week': 2,
+        'per_month': 5,
+        'status': '失败',
+    })
     return JsonResponse({"data": result})
 
 

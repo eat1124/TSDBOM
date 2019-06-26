@@ -10,7 +10,7 @@ $(document).ready(function () {
             {"data": null},
             {"data": null},
             {"data": null},
-            {"data": "status"},
+            {"data": null},
             {"data": null}
         ],
 
@@ -42,19 +42,32 @@ $(document).ready(function () {
                 "targets": -3,
                 "render": function (data, type, full) {
                     // 定时任务
-                    var per_week = full.per_week ? '周per_week'.replace("per_week", full.per_week):"";
-                    var per_month = full.per_month ? 'per_month月'.replace("per_month", full.per_month):"";
+                    var per_week = full.per_week ? '周per_week'.replace("per_week", full.per_week) : "";
+                    var per_month = full.per_month ? 'per_month月'.replace("per_month", full.per_month) : "";
                     return "<td>" + full.hours + ":" + full.minutes + '/ ' + per_week + "/ " + per_month + "</td>"
                 },
             }, {
+                "targets": -2,
+                "render": function (data, type, full) {
+                    var log_tag = ""
+                    if (full.status == "失败") {
+                        var log_tag = '  <span class="fa fa-info" style="color:red;border:solid 1px;padding: 0 3px 0 3px" title="服务器没开起来"></span>'
+                    }
+                    return "<td>" + full.status + log_tag + "</td>";
+                }
+            }, {
                 "data": null,
-                "width": "100px",
+                "width": "120px",
                 "targets": -1,
                 "render": function (data, type, full) {
-                    var exec_tag = "<button  id='edit' title='编辑' data-toggle='modal'  data-target='#static'  class='btn btn-xs btn-primary' type='button'><i class='fa fa-edit'></i></button><button title='删除'  id='delrow' class='btn btn-xs btn-primary' type='button'><i class='fa fa-trash-o'></i></button>"
-                    if ($.inArray(full.status, ['失败', '未安装']) != -1) {
-                        exec_tag += "<button  id='edit' title='重装' data-toggle='modal'  data-target='#static'  class='btn btn-xs btn-info' type='button'><i class='fa fa-refresh'></i></button>"
+                    var exec_tag = "<button  id='edit' title='编辑' data-toggle='modal'  data-target='#static'  class='btn btn-xs btn-primary' type='button'><i class='fa fa-edit'></i></button><button title='删除'  id='delrow' class='btn btn-xs btn-primary' type='button'><i class='fa fa-trash-o'></i></button>";
+                    if ($.inArray(full.status, ['失败', '关闭']) != -1) {
+                        exec_tag += "<button  id='stop' title='启动' data-toggle='modal'  data-target='#static'  class='btn btn-xs btn-info' type='button'><i class='fa fa-play'></i></button>";
+                    } else {
+                        exec_tag += "<button  id='start' title='终止' data-toggle='modal'  data-target='#static'  class='btn btn-xs btn-danger' type='button'><i class='fa fa-stop'></i></button>";
                     }
+                    exec_tag += "<button title='恢复'  id='recover' class='btn btn-xs btn-warning' type='button'><i class='fa fa-reply-all'></i></button>"
+
                     return "<td>" + exec_tag + "</td>";
                 },
             }],
@@ -163,12 +176,12 @@ $(document).ready(function () {
     $("#node_new").click(function () {
         var cNum = $("#model_info_div").children("div").length + 1;
         $("#model_info_div").append('<div class="col-md-12" style="margin-bottom:9px;padding-left: 0px;padding-right: 0px;">\n' +
-            '    <label class="col-md-2 control-label"><span style="color:red;"></span>模块名称:</label>\n' +
+            '    <label class="col-md-2 control-label"><span style="color:red;">*</span>模块名称:</label>\n' +
             '    <div class="col-md-4" style="padding-right:0px;">\n' +
             '        <input type="text" class="form-control" name="model_name_' + cNum + '" placeholder="">\n' +
             '        <div class="form-control-focus"></div>\n' +
             '    </div>\n' +
-            '    <label class="col-md-2 control-label"><span style="color:red;"></span>备份路径:</label>\n' +
+            '    <label class="col-md-2 control-label"><span style="color:red;">*</span>备份路径:</label>\n' +
             '    <div class="col-md-4" style="padding-right:0px;">\n' +
             '        <input type="text" class="form-control" name="backup_path_' + cNum + '" placeholder="">\n' +
             '        <div class="form-control-focus"></div>\n' +
