@@ -3,26 +3,49 @@ $(document).ready(function () {
         "bAutoWidth": true,
         "bSort": false,
         "bProcessing": true,
-        "ajax": "../rsync_hosts_data/",
+        "ajax": "../rsync_config_data/",
         "columns": [
             {"data": "id"},
-            {"data": "ip_addr"},
-            {"data": "username"},
-            {"data": "password"},
+            {"data": "main_host"},
+            {"data": null},
+            {"data": null},
+            {"data": null},
             {"data": "status"},
             {"data": null}
         ],
 
         "columnDefs": [
             {
-                "targets": -2,
+                "data": null,
+                "targets": -5,
                 "render": function (data, type, full) {
-                    var log_tag = ""
-                    if (full.status == "失败") {
-                        var log_tag = '  <span class="fa fa-info" style="color:red;border:solid 1px;padding: 0 3px 0 3px" title="服务器没开起来"></span>'
+                    // 备机
+                    var backup_host_init = '';
+                    for (var i = 0; i < full.backup_host.length; i++) {
+                        backup_host_init += full.backup_host[i] + ','
                     }
-                    return "<td>" + full.status + log_tag + "</td>";
-                }
+                    return "<td>" + backup_host_init ? backup_host_init.slice(0, -1) : '' + "</td>";
+                },
+            }, {
+                "data": null,
+                "targets": -4,
+                "render": function (data, type, full) {
+                    // 模块
+                    var model_init = '';
+                    for (var i = 0; i < full.model.length; i++) {
+                        model_init += full.model[i] + ','
+                    }
+                    return "<td>" + model_init ? model_init.slice(0, -1) : '' + "</td>";
+                },
+            }, {
+                "data": null,
+                "targets": -3,
+                "render": function (data, type, full) {
+                    // 定时任务
+                    var per_week = full.per_week ? '周per_week'.replace("per_week", full.per_week):"";
+                    var per_month = full.per_month ? 'per_month月'.replace("per_month", full.per_month):"";
+                    return "<td>" + full.hours + ":" + full.minutes + '/ ' + per_week + "/ " + per_month + "</td>"
+                },
             }, {
                 "data": null,
                 "width": "100px",
@@ -177,6 +200,7 @@ $(document).ready(function () {
         width: null,
     });
 
+    // time-picker
     $("#per_time").timepicker({
         showMeridian: false,
     });

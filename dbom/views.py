@@ -667,6 +667,25 @@ def rsync_config(request, funid):
     })
 
 
+@login_required
+def rsync_config_data(request):
+    result = []
+
+    result.append({
+        'id': 1,
+        'main_host': '192.168.85.151',
+        'backup_host': ['192.168.85.147', '192.168.85.148'],
+        'model': ['model01', 'model02'],
+        'minutes': 15,
+        'hours': 12,
+        'per_week': 2,
+        'per_month': 5,
+        'status': '已安装',
+    })
+
+    return JsonResponse({"data": result})
+
+
 def client_data_index(request, funid):
     if request.user.is_authenticated():
         return render(request, 'clients.html', {'username': request.user.userinfo.fullname,
