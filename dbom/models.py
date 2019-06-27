@@ -165,30 +165,29 @@ class RsyncHost(models.Model):
     state = models.CharField("逻辑删除:'9'", max_length=16, blank=True, default="")
 
 
-class RsyncModel(models.Model):
-    """
-    Rsync模块>>备份路径
-    """
-    model_name = models.CharField("模块名称", max_length=128)
-    rsync_path = models.CharField("Rsync的文件路径", max_length=512)
-    state = models.CharField("逻辑删除:'9'", max_length=16, blank=True, default="")
-
-
 class RsyncConfig(models.Model):
     """
     Rsync配置
     """
     main_host = models.ForeignKey(RsyncHost, null=True, verbose_name="主机")
     backup_host = models.ManyToManyField(RsyncHost, related_name="rsyncconfig_backup_host", verbose_name="备机")
-    rsync_model = models.ForeignKey(RsyncModel, null=True, verbose_name="Rsync备份模块")
     dj_crontab = models.ForeignKey(djmodels.CrontabSchedule, null=True, verbose_name="定时任务")
     status_choices = (
-        (1, "备份中"),
-        (2, "关闭"),
-        (3, "开启"),
+        (1, "关闭"),
+        (2, "开启"),
     )
-    status = models.IntegerField("定时任务状态", choices=status_choices, default=3)
-    log = models.CharField("配置失败日志", max_length=512, blank=True)
+    status = models.IntegerField("定时任务状态", choices=status_choices, default=1)
+    log = models.CharField("配置失败日志", max_length=512, blank=True, default="")
+    state = models.CharField("逻辑删除:'9'", max_length=16, blank=True, default="")
+
+
+class RsyncModel(models.Model):
+    """
+    Rsync模块>>备份路径
+    """
+    rsync_config = models.ForeignKey(RsyncConfig, null=True, verbose_name="Rsync配置")
+    model_name = models.CharField("模块名称", max_length=128)
+    rsync_path = models.CharField("Rsync的文件路径", max_length=512)
     state = models.CharField("逻辑删除:'9'", max_length=16, blank=True, default="")
 
 

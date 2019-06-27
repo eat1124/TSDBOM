@@ -62,6 +62,15 @@ class RsyncBackup(object):
             info = stderr_init
         return result, info
 
+    def check_file_path_existed(self, file_path):
+        """
+        检查文件路径是否存在
+        :param file_path:
+        :return:
+        """
+        result, info = self.run_shell_cmd('ls {0}'.format(file_path))
+        return result, info
+
     def install_rsync_by_yum(self):
         result, info = self.run_shell_cmd('yum install rsync -y')
         return result, info

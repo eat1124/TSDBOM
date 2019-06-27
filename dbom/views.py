@@ -40,6 +40,7 @@ from django.core.mail import send_mail
 from django.forms.models import model_to_dict
 from django.template.response import TemplateResponse
 from django.contrib.auth.decorators import login_required
+from djcelery.models import CrontabSchedule, PeriodicTask
 
 from dbom.tasks import *
 from dbom.models import *
@@ -646,7 +647,6 @@ def rsync_hosts_save(request):
             'username': username,
             'password': password,
         }
-        print(server)
         if ip_addr.strip() == '':
             result["res"] = '主机IP不能为空。'
         else:
@@ -885,6 +885,195 @@ def rsync_config_data(request):
         'status': '开启',
     })
     return JsonResponse({"data": result})
+
+
+@login_required
+def rsync_config_save(request):
+    main_host_ip = request.POST.get('main_host_ip', '')
+    selected_backup_host = request.POST.get('selected_backup_host', '')
+    per_time = request.POST.get('per_time', '')
+    per_month = request.POST.get('per_month', '')
+    per_week = request.POST.get('per_week', '')
+    status = request.POST.get('status', '')
+    id = request.POST.get('id', '')
+
+    try:
+        main_host_ip = int(main_host_ip)
+        id = int(id)
+    except ValueError as e:
+        return JsonResponse({
+            'ret': 0,
+            'data': '网络异常。'
+        })
+
+
+    # <QueryDict: {'model_id_1': [''], 'per_month': ['0'], 'backup_host_ip': ['1', '2'], 'csrfmiddlewaretoken': ['XJup3IWk84APr9Yc1WInxSIK1z1VspqL'],
+    # 'selected_backup_host': ['1,2'], 'backup_path_1': [''], 'per_time': ['12:00'], 'status': ['on'], 'model_name_1': [''], 'main_host_ip': ['1'], 'id': [''], 'per_week': ['0']}>
+
+    rsync_model_tag = False
+    rsync_backup_path_tag = False
+    backup_path_list = []
+    rsync_model_num = 0
+    for key in request.POST.keys():
+        if "model_id_" in key:
+            rsync_model_num += 1
+        # 文件路径
+        if "backup_path_" in key:
+            backup_path = request.POST.get(key, "")
+            backup_path_list.append(backup_path)
+
+    # 校验
+    if not main_host_ip:
+        result["res"] = '主机不能为空。'
+    else:
+        if selected_backup_host.strip() == '':
+            result["res"] = '备机不能为空。'
+        else:
+            # 拆分出备机
+            selected_backup_host_list = selected_backup_host.split(",")
+
+            # 模块未填写则不添加
+            if rsync_model_num > 0:
+                for key in request.POST.keys():
+                    model_name = request.POST.get(key, "")
+                    if "model_name_" in key and model_name == "":
+                        rsync_model_tag = True
+                        break
+                if rsync_model_tag:
+                    return JsonResponse({
+                        "ret": 0,
+                        "data": "模块名未填写。"
+                    })
+                for key in request.POST.keys():
+                    backup_path = request.POST.get(key, "")
+                    if "backup_path_" in key and backup_path == "":
+                        rsync_backup_path_tag = True
+                        break
+                if rsync_backup_path_tag:
+                    return JsonResponse({
+                        "ret": 0,
+                        "data": "文件路径未填写。"
+                    })
+
+                # 检测服务器链接情况；
+                # 检测文件路径，不存在则不添加；
+                # 1.主机
+                try:
+                    cur_main_host = RsyncHost.objects.get(id=main_host_ip)
+                except RsyncHost.DoesNotExist:
+                    return JsonResponse({
+                        "ret": 0,
+                        "data": "当前选中主机不存在，请联系管理员。"
+                    })
+                else:
+                    server = {
+                        'hostname': cur_main_host.ip_addr,
+                        'username': cur_main_host.username,
+                        'password': cur_main_host.password,
+                    }
+                    rsync_backup = RsyncBackup(server)
+                    if rsync_backup.msg == '远程连接失败。':
+                        return JsonResponse({
+                            "ret": 0,
+                            "data": "当前主机未开启，请检查后再配置。"
+                        })
+                    else:
+                        # 检测模块路径
+                        for temp_path in backup_path_list:
+                            result, info = rsync_backup.check_file_path_existed(temp_path)
+                            if result == 0:
+                                return JsonResponse({
+                                    "ret": 0,
+                                    "data": "路径：{0} 在主服务器中不存在，请检查后再配置。".format(temp_path)
+                                })
+                # 2.备机
+                for backup_host in selected_backup_host_list:
+                    try:
+                        backup_host = int(backup_host)
+                    except ValueError as e:
+                        return JsonResponse({
+                            'ret': 0,
+                            'data': '网络异常。'
+                        })
+
+                    try:
+                        cur_backup_host = RsyncHost.objects.get(id=backup_host)
+                    except RsyncHost.DoesNotExist:
+                        return JsonResponse({
+                            "ret": 0,
+                            "data": "当前选中备不存在，请联系管理员。"
+                        })
+                    else:
+                        server = {
+                            'hostname': cur_backup_host.ip_addr,
+                            'username': cur_backup_host.username,
+                            'password': cur_backup_host.password,
+                        }
+                        rsync_backup = RsyncBackup(server)
+                        if rsync_backup.msg == '远程连接失败。':
+                            return JsonResponse({
+                                "ret": 0,
+                                "data": "当前主机未开启，请检查后再配置。"
+                            })
+                        else:
+                            # 检测模块路径
+                            for temp_path in backup_path_list:
+                                result, info = rsync_backup.check_file_path_existed(temp_path)
+                                if result == 0:
+                                    return JsonResponse({
+                                        "ret": 0,
+                                        "data": "路径：{0} 在备份服务器中不存在，请检查后再配置。".format(temp_path)
+                                    })
+
+                # 保存数据：RsyncConfig,RsyncModel,CrontabSchedule,Periodictask
+                if id == 0:
+                    cur_rsync_config = RsyncConfig()
+                else:
+                    try:
+                        cur_rsync_config = RsyncConfig.objects.get(id=id)
+                    except RsyncConfig.DoesNotExist as e:
+                        return JsonResponse({
+                            "ret": 0,
+                            "data": "当前主机不存在，请检查后再配置。"
+                        })
+                # 定时任务CrontabSchedule,Periodictask
+                hour, minute = per_time.split(':')
+                cur_crontab_schedule = CrontabSchedule()
+                cur_crontab_schedule.hour = hour
+                cur_crontab_schedule.minute = minute
+                if int(per_week):
+                    cur_crontab_schedule.day_of_week = per_week
+                if int(per_month):
+                    cur_crontab_schedule.month_of_year = per_month
+                cur_crontab_schedule.save()
+
+                cur_periodictask = PeriodicTask()
+                cur_periodictask.crontab_id = cur_crontab_schedule.id
+
+                # RsyncConfig
+                cur_rsync_config.main_host_id = main_host_ip
+
+                # 模型RsyncModel
+                for i in range(0, rsync_model_num):
+                    pass
+                    # report_info_name = request.POST.get(
+                    #     "report_info_name_%d" % (i + 1), "")
+                    # report_info_default_value = request.POST.get(
+                    #     "report_info_value_%d" % (i + 1), "")
+                    # report_info_id = request.POST.get(
+                    #     "report_info_id_%d" % (i + 1), "")
+                    # report_info_id = int(
+                    #     report_info_id) if report_info_id else ""
+
+
+
+
+
+            else:
+                return JsonResponse({
+                    "ret": 0,
+                    "data": "必须至少设置一个备份模块。"
+                })
 
 
 def client_data_index(request, funid):

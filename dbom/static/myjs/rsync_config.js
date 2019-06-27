@@ -128,23 +128,16 @@ $(document).ready(function () {
 
     $('#save').click(function () {
         var table = $('#sample_1').DataTable();
-
+        var selected = $("#backup_host_ip").select2('data');//选择的值
+        var selected_backup_host_list = new Array();
+        for (var i=0;i<selected.length;i++) {
+            selected_backup_host_list.push(selected[i].id)
+        }
         $.ajax({
             type: "POST",
             dataType: 'json',
-            url: "../process_save/",
-            data:
-                {
-                    id: $("#id").val(),
-                    code: $("#code").val(),
-                    name: $("#name").val(),
-                    remark: $("#remark").val(),
-                    sign: $("#sign").val(),
-                    rto: $("#rto").val(),
-                    rpo: $("#rpo").val(),
-                    sort: $("#sort").val(),
-                    color: $("#process_color").val(),
-                },
+            url: "../rsync_config_save/",
+            data: $("#rsync_config_form").serialize() + '&selected_backup_host=' +  selected_backup_host_list,
             success: function (data) {
                 var myres = data["res"];
                 var mydata = data["data"];
