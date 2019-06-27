@@ -31,7 +31,7 @@ $(document).ready(function () {
                 // 什么时候需要重装：开启and未安装/失败
                 var exec_tag = "<button  id='edit' title='编辑' data-toggle='modal'  data-target='#static'  class='btn btn-xs btn-primary' type='button'><i class='fa fa-edit'></i></button><button title='删除'  id='delrow' class='btn btn-xs btn-primary' type='button'><i class='fa fa-trash-o'></i></button>"
                 if ($.inArray(full.install_status, ['失败', '未安装']) != -1 && full.server_status == '开启') {
-                    exec_tag += "<button  id='edit' title='重装' data-toggle='modal'  data-target='#static'  class='btn btn-xs btn-info' type='button'><i class='fa fa-refresh'></i></button>"
+                    exec_tag += "<button  id='reinstall' title='重装' class='btn btn-xs btn-info' type='button'><i class='fa fa-refresh'></i></button>"
                 }
                 return "<td>" + exec_tag + "</td>";
             },
@@ -76,7 +76,6 @@ $(document).ready(function () {
                     alert("删除失败，请于管理员联系。");
                 }
             });
-
         }
     });
     $('#sample_1 tbody').on('click', 'button#edit', function () {
@@ -127,6 +126,28 @@ $(document).ready(function () {
             }
         });
     })
+
+    // 重新安装
+    $('#sample_1 tbody').on('click', 'button#reinstall', function () {
+        alert(1)
+        var table = $('#sample_1').DataTable();
+        var data = table.row($(this).parents('tr')).data();
+        $.ajax({
+            type: "POST",
+            url: "../rsync_reinstall/",
+            data:
+                {
+                    id: data.id,
+                },
+            success: function (data) {
+                table.ajax.reload();
+                alert(data.data)
+            },
+            error: function (e) {
+                alert("安装失败，请于管理员联系。");
+            }
+        });
+    });
 
     $('#error').click(function () {
         $(this).hide()

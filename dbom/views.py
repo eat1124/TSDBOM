@@ -736,6 +736,70 @@ def rsync_hosts_save(request):
 
 
 @login_required
+def rsync_reinstall(request):
+    id = request.POST.get('id', "")
+    result = ''
+    data = ''
+
+    try:
+        id = int(id)
+    except:
+        return JsonResponse({
+            'ret': 0,
+            'data': '网络异常。'
+        })
+
+    try:
+        cur_rsync_host = RsyncHost.objects.get(id=id)
+    except RsyncHost.DoesNotExist as e:
+        JsonResponse({
+            'ret': 0,
+            'data': '当前记录不存在，请联系管理员。',
+        })
+    else:
+
+        server = {
+            'hostname': cur_rsync_host.ip_addr,
+            'username': cur_rsync_host.username,
+            'password': cur_rsync_host.password,
+        }
+        rsync_backup = RsyncBackup(server)
+        if rsync_backup.msg == "远程连接失败。":
+            # 服务器未开启
+            cur_rsync_host.server_status = 2
+            cur_rsync_host.install_status = 4
+            result = 0
+            data = "远程连接失败。"
+        else:
+            cur_rsync_host.server_status = 1
+            res, info = rsync_backup.check_ever_existed()
+            if res == 1:
+                # 未安装
+                res, info = rsync_backup.install_rsync_by_yum()
+                if res == 1:
+                    # 安装成功
+                    cur_rsync_host.install_status = 1
+                    cur_rsync_host.save()
+                    result = 1
+                    data = '安装成功。'
+                else:
+                    result = 0
+                    data = "安装失败。"
+                    cur_rsync_host.log = info
+                    cur_rsync_host.install_status = 3
+            else:
+                cur_rsync_host.install_status = 1
+                result = 0
+                data = 'Rsync已经安装。'
+
+        cur_rsync_host.save()
+        return JsonResponse({
+            'ret': result,
+            'data': data,
+        })
+
+
+@login_required
 def rsync_hosts_data(request):
     result = []
 
