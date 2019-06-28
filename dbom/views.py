@@ -854,12 +854,12 @@ def rsync_config_data(request):
     all_rsync_configs = RsyncConfig.objects.exclude(state="9")
     for rsync_config in all_rsync_configs:
         # 主机
-        id = rsync_config.main_host.id
+        id = rsync_config.id
         main_host = rsync_config.main_host.ip_addr
         # 备机
         all_backup_host = rsync_config.backup_host.exclude(state="9")
         all_backup_host_list = []
-        for backup_host in all_backup_host_list:
+        for backup_host in all_backup_host:
             all_backup_host_list.append({
                 "id": backup_host.id,
                 "backup_host": backup_host.ip_addr,
@@ -888,39 +888,40 @@ def rsync_config_data(request):
             status = "on"
         else:
             status = "off"
+        result.append({
+            "id": id,
+            "main_host": main_host,
+            "backup_host": all_backup_host_list,
+            "model": all_rsync_model_list,
+            "status": status,
+            "minutes": minutes,
+            "hours": hours,
+            "per_week": per_week,
+            "per_month": per_month,
+        })
         # result.append({
-        #     "id": id,
-        #     "main_host": main_host,
-        #     "backup_host": all_backup_host_list,
-        #     "model": all_rsync_model_list,
-        #     "status": status,
-        #     "minutes": minutes,
-        #     "hours": hours,
-        #     "per_week": per_week,
-        #     "per_month": per_month,
+        #     'id': 2,
+        #     'main_host': '192.168.85.152',
+        #     'backup_host': ['192.168.85.147', '192.168.85.148'],
+        #     'model': ['model01', 'model02'],
+        #     'minutes': 15,
+        #     'hours': 11,
+        #     'per_week': 2,
+        #     'per_month': 5,
+        #     'status': '关闭',
         # })
-    result.append({
-        'id': 2,
-        'main_host': '192.168.85.152',
-        'backup_host': ['192.168.85.147', '192.168.85.148'],
-        'model': ['model01', 'model02'],
-        'minutes': 15,
-        'hours': 11,
-        'per_week': 2,
-        'per_month': 5,
-        'status': '关闭',
-    })
-    result.append({
-        'id': 3,
-        'main_host': '192.168.85.148',
-        'backup_host': ['192.168.85.151', '192.168.85.152'],
-        'model': ['model01', 'model02'],
-        'minutes': 15,
-        'hours': 11,
-        'per_week': 2,
-        'per_month': 5,
-        'status': '开启',
-    })
+        # result.append({
+        #     'id': 3,
+        #     'main_host': '192.168.85.148',
+        #     'backup_host': ['192.168.85.151', '192.168.85.152'],
+        #     'model': ['model01', 'model02'],
+        #     'minutes': 15,
+        #     'hours': 11,
+        #     'per_week': 2,
+        #     'per_month': 5,
+        #     'status': '开启',
+        # })
+    print(result)
     return JsonResponse({"data": result})
 
 
@@ -1126,8 +1127,8 @@ def rsync_config_save(request):
 
                         # 模型RsyncModel
                         for i in range(0, rsync_model_num):
-                            model_name = request.POST.get('model_name_{0}'.format(i+1), "")
-                            backup_path = request.POST.get('backup_path_{0}'.format(i+1), "")
+                            model_name = request.POST.get('model_name_{0}'.format(i + 1), "")
+                            backup_path = request.POST.get('backup_path_{0}'.format(i + 1), "")
 
                             cur_rsync_model = RsyncModel()
                             cur_rsync_model.model_name = model_name

@@ -8,63 +8,87 @@ $(document).ready(function () {
             {"data": "id"},
             {"data": "main_host"},
             // visible_false
+            {"data": "minutes"},
+            {"data": "hours"},
+            {"data": "per_week"},
+            {"data": "per_month"},
 
-            {"data": null},
-            {"data": null},
+            {"data": "backup_host"},
+            {"data": "model"},
             {"data": null},
             {"data": "status"},
             {"data": null}
         ],
 
-        "columnDefs": [
-            {
-                "data": null,
-                "targets": -5,
-                "render": function (data, type, full) {
-                    // 备机
-                    var backup_host_init = '';
-                    for (var i = 0; i < full.backup_host.length; i++) {
-                        backup_host_init += full.backup_host[i] + ','
-                    }
-                    return "<td>" + backup_host_init ? backup_host_init.slice(0, -1) : '' + "</td>";
-                },
-            }, {
-                "data": null,
-                "targets": -4,
-                "render": function (data, type, full) {
-                    // 模块
-                    var model_init = '';
-                    for (var i = 0; i < full.model.length; i++) {
-                        model_init += full.model[i] + ','
-                    }
-                    return "<td>" + model_init ? model_init.slice(0, -1) : '' + "</td>";
-                },
-            }, {
-                "data": null,
-                "targets": -3,
-                "render": function (data, type, full) {
-                    // 定时任务
-                    var per_week = full.per_week ? '周per_week'.replace("per_week", full.per_week) : "";
-                    var per_month = full.per_month ? 'per_month月'.replace("per_month", full.per_month) : "";
-                    return "<td>" + full.hours + ":" + full.minutes + '/ ' + per_week + "/ " + per_month + "</td>"
-                },
-            }, {
-                "data": null,
-                "width": "120px",
-                "targets": -1,
-                "render": function (data, type, full) {
-                    var exec_tag = "<button  id='edit' title='编辑' data-toggle='modal'  data-target='#static'  class='btn btn-xs btn-primary' type='button'><i class='fa fa-edit'></i></button><button title='删除'  id='delrow' class='btn btn-xs btn-primary' type='button'><i class='fa fa-trash-o'></i></button>";
-                    // if (full.status == "关闭") {
-                    //     exec_tag += "<button  id='stop' title='启动' data-toggle='modal'  data-target='#static'  class='btn btn-xs btn-info' type='button'><i class='fa fa-play'></i></button>";
-                    // }
-                    // if (full.status == "开启"){
-                    //     exec_tag += "<button  id='start' title='终止' data-toggle='modal'  data-target='#static'  class='btn btn-xs btn-danger' type='button'><i class='fa fa-stop'></i></button>";
-                    // }
-                    exec_tag += "<button title='恢复'  id='recover' class='btn btn-xs btn-warning' type='button'><i class='fa fa-reply-all'></i></button>"
+        "columnDefs": [{
+            "targets": -9,
+            "visible": false
+        }, {
+            "targets": -8,
+            "visible": false
+        }, {
+            "targets": -7,
+            "visible": false
+        }, {
+            "targets": -6,
+            "visible": false
+        }, {
+            "data": null,
+            "targets": -5,
+            "render": function (data, type, full) {
+                // 备机
+                var backup_host_init = '';
+                for (var i = 0; i < full.backup_host.length; i++) {
+                    console.log(full.backup_host[i])
+                    console.log(typeof(full.backup_host[i]))
+                    backup_host_init += full.backup_host[i].backup_host + ','
+                }
+                return "<td>" + backup_host_init ? backup_host_init.slice(0, -1) : '' + "</td>";
+            },
+        }, {
+            "data": null,
+            "targets": -4,
+            "render": function (data, type, full) {
+                // 模块
+                var model_init = '';
+                for (var i = 0; i < full.model.length; i++) {
+                    model_init += full.model[i].model_name + ','
+                }
+                return "<td>" + model_init ? model_init.slice(0, -1) : '' + "</td>";
+            },
+        }, {
+            "data": null,
+            "targets": -3,
+            "render": function (data, type, full) {
+                // 定时任务
+                var per_week = full.per_week && full.per_week != "*" ? '/ 周per_week/ '.replace("per_week", full.per_week) : "";
+                var per_month = full.per_month && full.per_month != "*" ? 'per_month月'.replace("per_month", full.per_month) : "";
+                return "<td>" + full.hours + ":" + full.minutes + per_week + per_month + "</td>"
+            },
+        }, {
+            "data": null,
+            "targets": -2,
+            "render": function (data, type, full) {
+                var status = ""
+                if (full.status === "off"){
+                    status = "关闭"
+                }
+                if (full.status === "on") {
+                    status = "开启"
+                }
+                return "<td>" + status + "</td>";
+            },
+        }, {
+            "data": null,
+            "width": "100px",
+            "targets": -1,
+            "render": function (data, type, full) {
+                var exec_tag = "<button  id='edit' title='编辑' data-toggle='modal'  data-target='#static'  class='btn btn-xs btn-primary' type='button'><i class='fa fa-edit'></i></button><button title='删除'  id='delrow' class='btn btn-xs btn-primary' type='button'><i class='fa fa-trash-o'></i></button>";
+                exec_tag += "<button title='恢复'  id='recover' class='btn btn-xs btn-warning' type='button'><i class='fa fa-reply-all'></i></button>"
 
-                    return "<td>" + exec_tag + "</td>";
-                },
-            }],
+                return "<td>" + exec_tag + "</td>";
+            },
+        }],
         "oLanguage": {
             "sLengthMenu": "每页显示 _MENU_ 条记录",
             "sZeroRecords": "抱歉， 没有找到",
@@ -132,14 +156,14 @@ $(document).ready(function () {
         var table = $('#sample_1').DataTable();
         var selected = $("#backup_host_ip").select2('data');//选择的值
         var selected_backup_host_list = new Array();
-        for (var i=0;i<selected.length;i++) {
+        for (var i = 0; i < selected.length; i++) {
             selected_backup_host_list.push(selected[i].id)
         }
         $.ajax({
             type: "POST",
             dataType: 'json',
             url: "../rsync_config_save/",
-            data: $("#rsync_config_form").serialize() + '&selected_backup_host=' +  selected_backup_host_list,
+            data: $("#rsync_config_form").serialize() + '&selected_backup_host=' + selected_backup_host_list,
             success: function (data) {
                 console.log(data);
                 console.log(data.ret)
