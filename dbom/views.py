@@ -851,17 +851,54 @@ def rsync_config(request, funid):
 def rsync_config_data(request):
     result = []
 
-    result.append({
-        'id': 1,
-        'main_host': '192.168.85.151',
-        'backup_host': ['192.168.85.147', '192.168.85.148'],
-        'model': ['model01', 'model02'],
-        'minutes': 15,
-        'hours': 12,
-        'per_week': 2,
-        'per_month': 5,
-        'status': '备份中',
-    })
+    all_rsync_configs = RsyncConfig.objects.exclude(state="9")
+    for rsync_config in all_rsync_configs:
+        # 主机
+        id = rsync_config.main_host.id
+        main_host = rsync_config.main_host.ip_addr
+        # 备机
+        all_backup_host = rsync_config.backup_host.exclude(state="9")
+        all_backup_host_list = []
+        for backup_host in all_backup_host_list:
+            all_backup_host_list.append({
+                "id": backup_host.id,
+                "backup_host": backup_host.ip_addr,
+            })
+        # 模块
+        all_rsync_models = rsync_config.rsyncmodel_set.exclude(state="9")
+        all_rsync_model_list = []
+        for rsync_model in all_rsync_models:
+            all_rsync_model_list.append({
+                "id": rsync_model.id,
+                "model_name": rsync_model.model_name,
+                "rsync_path": rsync_model.rsync_path,
+            })
+        # 定时任务
+        status, minutes, hours, per_week, per_month = "", "", "", "", ""
+        periodictask = rsync_config.dj_periodictask
+        if periodictask:
+            status = periodictask.enabled
+            cur_crontab_schedule = periodictask.crontab
+            if cur_crontab_schedule:
+                minutes = cur_crontab_schedule.minute
+                hours = cur_crontab_schedule.hour
+                per_week = cur_crontab_schedule.day_of_week
+                per_month = cur_crontab_schedule.month_of_year
+        if status:
+            status = "on"
+        else:
+            status = "off"
+        # result.append({
+        #     "id": id,
+        #     "main_host": main_host,
+        #     "backup_host": all_backup_host_list,
+        #     "model": all_rsync_model_list,
+        #     "status": status,
+        #     "minutes": minutes,
+        #     "hours": hours,
+        #     "per_week": per_week,
+        #     "per_month": per_month,
+        # })
     result.append({
         'id': 2,
         'main_host': '192.168.85.152',
@@ -919,6 +956,17 @@ def rsync_config_save(request):
         if "backup_path_" in key:
             backup_path = request.POST.get(key, "")
             backup_path_list.append(backup_path)
+
+    model_list = []
+
+    for i in range(0, rsync_model_num):
+        model_name = request.POST.get('model_name_{0}'.format(i + 1), "")
+        backup_path = request.POST.get('backup_path_{0}'.format(i + 1), "")
+        model_list.append({
+            "model_name": model_name,
+            "backup_path": backup_path,
+        })
+
     # 校验
     if not main_host_ip:
         result["res"] = '主机不能为空。'
@@ -982,6 +1030,14 @@ def rsync_config_save(request):
                                     "ret": 0,
                                     "data": "路径：{0} 在主服务器中不存在，请检查后再配置。".format(temp_path)
                                 })
+                        # 配置主机
+                        result, info = rsync_backup.set_rsync_server_config(model_list)
+                        if result == 0:
+                            return JsonResponse({
+                                "ret": 0,
+                                "data": "主服务器{0} 配置失败。".format(cur_main_host.ip_addr)
+                            })
+
                 # 2.备机
                 selected_backup_host_list_int = []
                 for backup_host in selected_backup_host_list:
@@ -1021,7 +1077,13 @@ def rsync_config_save(request):
                                         "ret": 0,
                                         "data": "路径：{0} 在备份服务器中不存在，请检查后再配置。".format(temp_path)
                                     })
-
+                    # 配置备机
+                    result, info = rsync_backup.set_rsync_server_config(model_list)
+                    if result == 0:
+                        return JsonResponse({
+                            "ret": 0,
+                            "data": "备份服务器{0} 配置失败。".format(cur_backup_host.ip_addr)
+                        })
                 # 保存数据：RsyncConfig,RsyncModel,CrontabSchedule,Periodictask
                 if id == 0:
                     try:
@@ -1052,7 +1114,7 @@ def rsync_config_save(request):
                         cur_periodictask.save()
                         # RsyncConfig
                         cur_rsync_config.main_host_id = main_host_ip
-                        cur_rsync_config.dj_crontab_id = cur_crontab_schedule.id
+                        cur_rsync_config.dj_periodictask_id = cur_periodictask.id
                         cur_rsync_config.save()
 
                         # cur_rsync_config关联backup_host对象

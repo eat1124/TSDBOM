@@ -171,12 +171,7 @@ class RsyncConfig(models.Model):
     """
     main_host = models.ForeignKey(RsyncHost, null=True, verbose_name="主机")
     backup_host = models.ManyToManyField(RsyncHost, related_name="rsyncconfig_backup_host", verbose_name="备机")
-    dj_crontab = models.ForeignKey(djmodels.CrontabSchedule, null=True, verbose_name="定时任务")
-    status_choices = (
-        (1, "关闭"),
-        (2, "开启"),
-    )
-    status = models.IntegerField("定时任务状态", choices=status_choices, default=1)
+    dj_periodictask = models.ForeignKey(djmodels.PeriodicTask, null=True, verbose_name="定时任务")
     log = models.CharField("配置失败日志", max_length=512, blank=True, default="")
     state = models.CharField("逻辑删除:'9'", max_length=16, blank=True, default="")
 

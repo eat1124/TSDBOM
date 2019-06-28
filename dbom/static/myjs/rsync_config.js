@@ -7,6 +7,8 @@ $(document).ready(function () {
         "columns": [
             {"data": "id"},
             {"data": "main_host"},
+            // visible_false
+
             {"data": null},
             {"data": null},
             {"data": null},
@@ -52,12 +54,12 @@ $(document).ready(function () {
                 "targets": -1,
                 "render": function (data, type, full) {
                     var exec_tag = "<button  id='edit' title='编辑' data-toggle='modal'  data-target='#static'  class='btn btn-xs btn-primary' type='button'><i class='fa fa-edit'></i></button><button title='删除'  id='delrow' class='btn btn-xs btn-primary' type='button'><i class='fa fa-trash-o'></i></button>";
-                    if (full.status == "关闭") {
-                        exec_tag += "<button  id='stop' title='启动' data-toggle='modal'  data-target='#static'  class='btn btn-xs btn-info' type='button'><i class='fa fa-play'></i></button>";
-                    }
-                    if (full.status == "开启"){
-                        exec_tag += "<button  id='start' title='终止' data-toggle='modal'  data-target='#static'  class='btn btn-xs btn-danger' type='button'><i class='fa fa-stop'></i></button>";
-                    }
+                    // if (full.status == "关闭") {
+                    //     exec_tag += "<button  id='stop' title='启动' data-toggle='modal'  data-target='#static'  class='btn btn-xs btn-info' type='button'><i class='fa fa-play'></i></button>";
+                    // }
+                    // if (full.status == "开启"){
+                    //     exec_tag += "<button  id='start' title='终止' data-toggle='modal'  data-target='#static'  class='btn btn-xs btn-danger' type='button'><i class='fa fa-stop'></i></button>";
+                    // }
                     exec_tag += "<button title='恢复'  id='recover' class='btn btn-xs btn-warning' type='button'><i class='fa fa-reply-all'></i></button>"
 
                     return "<td>" + exec_tag + "</td>";

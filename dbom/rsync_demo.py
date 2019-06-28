@@ -114,7 +114,7 @@ class RsyncBackup(object):
                            'ignore errors' + '\n' + \
                            'read only = false' + '\n' + \
                            'list = false' + '\n' + \
-                           'hosts allow = {0}/24'.format(temp_model['host_allowd']) + '\n' + \
+                           'hosts allow = *' + '\n' + \
                            'auth users = rsync_backup' + '\n' + \
                            'secrets file = /etc/rsync_server.password'
         result, info = self.run_shell_cmd("echo '{0}' > /etc/rsyncd.conf".format(base_config))
