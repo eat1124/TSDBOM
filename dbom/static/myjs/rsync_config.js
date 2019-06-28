@@ -139,14 +139,15 @@ $(document).ready(function () {
             url: "../rsync_config_save/",
             data: $("#rsync_config_form").serialize() + '&selected_backup_host=' +  selected_backup_host_list,
             success: function (data) {
-                var myres = data["res"];
-                var mydata = data["data"];
-                if (myres == "保存成功。") {
-                    $("#id").val(data["data"]);
+                console.log(data);
+                console.log(data.ret)
+                var myres = data.ret;
+                var mydata = data.data;
+                if (myres === 1) {
                     $('#static').modal('hide');
                     table.ajax.reload();
                 }
-                alert(myres);
+                alert(mydata);
             },
             error: function (e) {
                 alert("页面出现错误，请于管理员联系。");

@@ -896,7 +896,6 @@ def rsync_config_save(request):
     per_week = request.POST.get('per_week', '')
     status = request.POST.get('status', '')
     id = request.POST.get('id', '')
-
     try:
         main_host_ip = int(main_host_ip)
         id = int(id)
@@ -905,7 +904,6 @@ def rsync_config_save(request):
             'ret': 0,
             'data': '网络异常。'
         })
-
 
     # <QueryDict: {'model_id_1': [''], 'per_month': ['0'], 'backup_host_ip': ['1', '2'], 'csrfmiddlewaretoken': ['XJup3IWk84APr9Yc1WInxSIK1z1VspqL'],
     # 'selected_backup_host': ['1,2'], 'backup_path_1': [''], 'per_time': ['12:00'], 'status': ['on'], 'model_name_1': [''], 'main_host_ip': ['1'], 'id': [''], 'per_week': ['0']}>
@@ -921,7 +919,6 @@ def rsync_config_save(request):
         if "backup_path_" in key:
             backup_path = request.POST.get(key, "")
             backup_path_list.append(backup_path)
-
     # 校验
     if not main_host_ip:
         result["res"] = '主机不能为空。'
@@ -954,7 +951,6 @@ def rsync_config_save(request):
                         "ret": 0,
                         "data": "文件路径未填写。"
                     })
-
                 # 检测服务器链接情况；
                 # 检测文件路径，不存在则不添加；
                 # 1.主机
@@ -987,6 +983,7 @@ def rsync_config_save(request):
                                     "data": "路径：{0} 在主服务器中不存在，请检查后再配置。".format(temp_path)
                                 })
                 # 2.备机
+                selected_backup_host_list_int = []
                 for backup_host in selected_backup_host_list:
                     try:
                         backup_host = int(backup_host)
@@ -995,7 +992,7 @@ def rsync_config_save(request):
                             'ret': 0,
                             'data': '网络异常。'
                         })
-
+                    selected_backup_host_list_int.append(backup_host)
                     try:
                         cur_backup_host = RsyncHost.objects.get(id=backup_host)
                     except RsyncHost.DoesNotExist:
@@ -1027,8 +1024,67 @@ def rsync_config_save(request):
 
                 # 保存数据：RsyncConfig,RsyncModel,CrontabSchedule,Periodictask
                 if id == 0:
-                    cur_rsync_config = RsyncConfig()
+                    try:
+                        cur_rsync_config = RsyncConfig()
+
+                        # 定时任务CrontabSchedule,Periodictask
+                        hour, minute = per_time.split(':')
+                        cur_crontab_schedule = CrontabSchedule()
+                        cur_crontab_schedule.hour = hour
+                        cur_crontab_schedule.minute = minute
+                        if int(per_week):
+                            cur_crontab_schedule.day_of_week = per_week
+                        if int(per_month):
+                            cur_crontab_schedule.month_of_year = per_month
+                        cur_crontab_schedule.save()
+                        # 启动定时任务
+                        cur_periodictask = PeriodicTask()
+                        cur_periodictask.crontab_id = cur_crontab_schedule.id
+                        cur_periodictask.name = uuid.uuid1()
+                        if status == "on":
+                            cur_periodictask.enabled = 1
+                        else:
+                            cur_periodictask.enabled = 0
+                        # 任务名称
+                        # dest_dir, auth_user, dest_server_list, model_name_list
+                        cur_periodictask.task = "dbom.tasks.reysnc_exec"
+
+                        cur_periodictask.save()
+                        # RsyncConfig
+                        cur_rsync_config.main_host_id = main_host_ip
+                        cur_rsync_config.dj_crontab_id = cur_crontab_schedule.id
+                        cur_rsync_config.save()
+
+                        # cur_rsync_config关联backup_host对象
+                        backup_hosts = RsyncHost.objects.filter(id__in=selected_backup_host_list_int)
+                        if backup_hosts.exists():
+                            cur_rsync_config.backup_host.add(*backup_hosts)
+                        else:
+                            print("不存在")
+
+                        # 模型RsyncModel
+                        for i in range(0, rsync_model_num):
+                            model_name = request.POST.get('model_name_{0}'.format(i+1), "")
+                            backup_path = request.POST.get('backup_path_{0}'.format(i+1), "")
+
+                            cur_rsync_model = RsyncModel()
+                            cur_rsync_model.model_name = model_name
+                            cur_rsync_model.rsync_path = backup_path
+                            cur_rsync_model.rsync_config_id = cur_rsync_config.id
+                            cur_rsync_model.save()
+                        return JsonResponse({
+                            "ret": 1,
+                            "data": "配置成功。"
+                        })
+
+                    except Exception as e:
+                        print(e)
+                        return JsonResponse({
+                            "ret": 0,
+                            "data": "配置失败。"
+                        })
                 else:
+                    # 修改
                     try:
                         cur_rsync_config = RsyncConfig.objects.get(id=id)
                     except RsyncConfig.DoesNotExist as e:
@@ -1036,39 +1092,8 @@ def rsync_config_save(request):
                             "ret": 0,
                             "data": "当前主机不存在，请检查后再配置。"
                         })
-                # 定时任务CrontabSchedule,Periodictask
-                hour, minute = per_time.split(':')
-                cur_crontab_schedule = CrontabSchedule()
-                cur_crontab_schedule.hour = hour
-                cur_crontab_schedule.minute = minute
-                if int(per_week):
-                    cur_crontab_schedule.day_of_week = per_week
-                if int(per_month):
-                    cur_crontab_schedule.month_of_year = per_month
-                cur_crontab_schedule.save()
-
-                cur_periodictask = PeriodicTask()
-                cur_periodictask.crontab_id = cur_crontab_schedule.id
-
-                # RsyncConfig
-                cur_rsync_config.main_host_id = main_host_ip
-
-                # 模型RsyncModel
-                for i in range(0, rsync_model_num):
-                    pass
-                    # report_info_name = request.POST.get(
-                    #     "report_info_name_%d" % (i + 1), "")
-                    # report_info_default_value = request.POST.get(
-                    #     "report_info_value_%d" % (i + 1), "")
-                    # report_info_id = request.POST.get(
-                    #     "report_info_id_%d" % (i + 1), "")
-                    # report_info_id = int(
-                    #     report_info_id) if report_info_id else ""
-
-
-
-
-
+                    else:
+                        pass
             else:
                 return JsonResponse({
                     "ret": 0,
