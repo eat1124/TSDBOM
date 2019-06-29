@@ -841,9 +841,12 @@ def rsync_host_del(request):
 
 @login_required
 def rsync_config(request, funid):
+    all_rsync_hosts = RsyncHost.objects.exclude(state="9")
+
     return render(request, 'rsync_config.html', {
         'username': request.user.userinfo.fullname,
         "pagefuns": getpagefuns(funid, request),
+        "all_rsync_hosts": all_rsync_hosts
     })
 
 
@@ -853,8 +856,9 @@ def rsync_config_data(request):
 
     all_rsync_configs = RsyncConfig.objects.exclude(state="9")
     for rsync_config in all_rsync_configs:
-        # 主机
         id = rsync_config.id
+        # 主机
+        main_host_id = rsync_config.main_host.id
         main_host = rsync_config.main_host.ip_addr
         # 备机
         all_backup_host = rsync_config.backup_host.exclude(state="9")
@@ -890,6 +894,7 @@ def rsync_config_data(request):
             status = "off"
         result.append({
             "id": id,
+            "main_host_id": main_host_id,
             "main_host": main_host,
             "backup_host": all_backup_host_list,
             "model": all_rsync_model_list,
@@ -899,29 +904,7 @@ def rsync_config_data(request):
             "per_week": per_week,
             "per_month": per_month,
         })
-        # result.append({
-        #     'id': 2,
-        #     'main_host': '192.168.85.152',
-        #     'backup_host': ['192.168.85.147', '192.168.85.148'],
-        #     'model': ['model01', 'model02'],
-        #     'minutes': 15,
-        #     'hours': 11,
-        #     'per_week': 2,
-        #     'per_month': 5,
-        #     'status': '关闭',
-        # })
-        # result.append({
-        #     'id': 3,
-        #     'main_host': '192.168.85.148',
-        #     'backup_host': ['192.168.85.151', '192.168.85.152'],
-        #     'model': ['model01', 'model02'],
-        #     'minutes': 15,
-        #     'hours': 11,
-        #     'per_week': 2,
-        #     'per_month': 5,
-        #     'status': '开启',
-        # })
-    print(result)
+
     return JsonResponse({"data": result})
 
 

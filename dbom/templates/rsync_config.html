@@ -33,6 +33,7 @@
         <thead>
         <tr>
             <th style="width:40px;"> 序号</th>
+            <th> 主机id</th>
             <th> 主机</th>
             <th> 分</th>
             <th> 时</th>
@@ -69,9 +70,9 @@
                                         style="color:red; ">*</span>主机</label>
                                 <div class="col-md-10">
                                     <select name="main_host_ip" id="main_host_ip" class="form-control">
-                                        <option value="8">192.168.85.151</option>
-                                        <option value="7">192.168.85.152</option>
-                                        <option value="4">192.168.85.147</option>
+                                        {% for rsync_host in all_rsync_hosts %}
+                                            <option value="{{ rsync_host.id }}">{{ rsync_host.ip_addr }}</option>
+                                        {% endfor %}
                                     </select>
 
                                     <div class="form-control-focus"></div>
@@ -83,9 +84,9 @@
                                         style="color:red; ">*</span>备机</label>
                                 <div class="col-md-10">
                                     <select name="backup_host_ip" id="backup_host_ip" class="form-control select2" placeholder="test" multiple>
-                                        <option value="8">192.168.85.151</option>
-                                        <option value="7">192.168.85.152</option>
-                                        <option value="4">192.168.85.147</option>
+                                        {% for rsync_host in all_rsync_hosts %}
+                                            <option value="{{ rsync_host.id }}">{{ rsync_host.ip_addr }}</option>
+                                        {% endfor %}
                                     </select>
                                 </div>
                                 <div class="form-control-focus"></div>
@@ -196,11 +197,7 @@
                                 <label class="col-md-2 control-label"><span
                                         style="color:red; "></span>是否开启</label>
                                 <div class="col-md-10">
-                                    <div class="bootstrap-switch bootstrap-switch-wrapper bootstrap-switch-animate bootstrap-switch-off" style="width: 100px;">
-                                        <div class="bootstrap-switch-container">
-                                            <input type="checkbox" class="make-switch" checked="" data-on-color="success" data-off-color="warning" name="status" id="status">
-                                        </div>
-                                    </div>
+                                    <input type="checkbox" id="status" name="status">
                                     <div class="form-control-focus"></div>
                                 </div>
                             </div>

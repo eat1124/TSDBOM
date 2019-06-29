@@ -1,4 +1,17 @@
 $(document).ready(function () {
+    // select2
+    $(".select2").select2({
+        width: null,
+    });
+
+    // time-picker
+    $("#per_time").timepicker({
+        showMeridian: false,
+    });
+
+    // bootstrap-switch
+    $("#status").bootstrapSwitch();
+
     $('#sample_1').dataTable({
         "bAutoWidth": true,
         "bSort": false,
@@ -6,6 +19,7 @@ $(document).ready(function () {
         "ajax": "../rsync_config_data/",
         "columns": [
             {"data": "id"},
+            {"data": "main_host_id"},
             {"data": "main_host"},
             // visible_false
             {"data": "minutes"},
@@ -21,6 +35,9 @@ $(document).ready(function () {
         ],
 
         "columnDefs": [{
+            "targets": -11,
+            "visible": false
+        }, {
             "targets": -9,
             "visible": false
         }, {
@@ -40,7 +57,7 @@ $(document).ready(function () {
                 var backup_host_init = '';
                 for (var i = 0; i < full.backup_host.length; i++) {
                     console.log(full.backup_host[i])
-                    console.log(typeof(full.backup_host[i]))
+                    console.log(typeof (full.backup_host[i]))
                     backup_host_init += full.backup_host[i].backup_host + ','
                 }
                 return "<td>" + backup_host_init ? backup_host_init.slice(0, -1) : '' + "</td>";
@@ -70,7 +87,7 @@ $(document).ready(function () {
             "targets": -2,
             "render": function (data, type, full) {
                 var status = ""
-                if (full.status === "off"){
+                if (full.status === "off") {
                     status = "关闭"
                 }
                 if (full.status === "on") {
@@ -135,15 +152,27 @@ $(document).ready(function () {
     $('#sample_1 tbody').on('click', 'button#edit', function () {
         var table = $('#sample_1').DataTable();
         var data = table.row($(this).parents('tr')).data();
-        $("#id").val(data.process_id);
-        $("#code").val(data.process_code);
-        $("#name").val(data.process_name);
-        $("#remark").val(data.process_remark);
-        $("#sign").val(data.process_sign);
-        $("#rto").val(data.process_rto);
-        $("#rpo").val(data.process_rpo);
-        $("#sort").val(data.process_sort);
-        $("#process_color").val(data.process_color);
+        $("#id").val(data.id);
+        $("#main_host_ip").val(data.main_host_id);
+        var backup_host_id_list = []
+        for (var i = 0; i < data.backup_host.length; i++) {
+            backup_host_id_list.push(data.backup_host[i].id);
+        }
+        $("#backup_host_ip").val(backup_host_id_list).trigger("change");
+        // 模块
+
+
+        // 设置定时器
+        var per_time = data.hours + ":" + data.minutes;
+        $("#per_time").val(per_time).timepicker("setTime", per_time);
+        $("#per_week").val(data.per_week != "*" ? data.per_week : 0).trigger("change");
+        $("#per_month").val(data.per_month != "*" ? data.per_month : 0).trigger("change");
+        if (data.status === "on") {
+            $("#toggle-state-switch").bootstrapSwitch("setState", true);
+        } else {
+            $("#toggle-state-switch").bootstrapSwitch("setState", false);
+        }
+
     });
 
     $("#new").click(function () {
@@ -220,13 +249,4 @@ $(document).ready(function () {
         }
     });
 
-    // select2
-    $(".select2").select2({
-        width: null,
-    });
-
-    // time-picker
-    $("#per_time").timepicker({
-        showMeridian: false,
-    });
 });
