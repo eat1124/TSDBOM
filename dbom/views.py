@@ -926,9 +926,6 @@ def rsync_config_save(request):
             'data': '网络异常。'
         })
 
-    # <QueryDict: {'model_id_1': [''], 'per_month': ['0'], 'backup_host_ip': ['1', '2'], 'csrfmiddlewaretoken': ['XJup3IWk84APr9Yc1WInxSIK1z1VspqL'],
-    # 'selected_backup_host': ['1,2'], 'backup_path_1': [''], 'per_time': ['12:00'], 'status': ['on'], 'model_name_1': [''], 'main_host_ip': ['1'], 'id': [''], 'per_week': ['0']}>
-
     rsync_model_tag = False
     rsync_backup_path_tag = False
     backup_path_list = []

@@ -183,17 +183,40 @@ $(document).ready(function () {
         $("#per_week").val(data.per_week != "*" ? data.per_week : 0).trigger("change");
         $("#per_month").val(data.per_month != "*" ? data.per_month : 0).trigger("change");
         if (data.status === "on") {
-            $("#toggle-state-switch").bootstrapSwitch("setState", true);
+            $("#status").bootstrapSwitch("state", true);
         } else {
-            $("#toggle-state-switch").bootstrapSwitch("setState", false);
+            $("#status").bootstrapSwitch("state", false);
         }
 
     });
 
     $("#new").click(function () {
         $("#id").val("0");
-
-
+        $("#main_host_ip").val("");
+        $("#backup_host_ip").val("").trigger("change");
+        // 模块，移除/新增
+        $("#model_info_div").empty();
+        $("#model_info_div").append('<div class="col-md-12" style="margin-bottom:9px;padding-left: 0px;padding-right: 0px;">\n' +
+            '    <label class="col-md-2 control-label"><span style="color:red; ">*</span>模块名称:</label>\n' +
+            '    <div class="col-md-4" style="padding-right:0px;">\n' +
+            '        <input type="text" class="form-control" name="model_name_1"\n' +
+            '               placeholder="">\n' +
+            '        <div class="form-control-focus"></div>\n' +
+            '    </div>\n' +
+            '    <label class="col-md-2 control-label"><span style="color:red; ">*</span>备份路径:</label>\n' +
+            '    <div class="col-md-4" style="padding-right:0px;">\n' +
+            '        <input type="text" class="form-control" name="backup_path_1"\n' +
+            '               placeholder="">\n' +
+            '        <div class="form-control-focus"></div>\n' +
+            '    </div>\n' +
+            '    <span hidden>\n' +
+            '        <input type="text" class="form-control" name="model_id_1" placeholder="">\n' +
+            '    </span>\n' +
+            '</div>');
+        $("#per_time").val("00:00").timepicker("setTime", "00:00");
+        $("#per_week").val("0").trigger("change");
+        $("#per_month").val("0").trigger("change");
+        $("#status").bootstrapSwitch("state", false);
     });
 
     $('#save').click(function () {
