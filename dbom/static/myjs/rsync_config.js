@@ -56,8 +56,6 @@ $(document).ready(function () {
                 // 备机
                 var backup_host_init = '';
                 for (var i = 0; i < full.backup_host.length; i++) {
-                    console.log(full.backup_host[i])
-                    console.log(typeof (full.backup_host[i]))
                     backup_host_init += full.backup_host[i].backup_host + ','
                 }
                 return "<td>" + backup_host_init ? backup_host_init.slice(0, -1) : '' + "</td>";
@@ -160,7 +158,24 @@ $(document).ready(function () {
         }
         $("#backup_host_ip").val(backup_host_id_list).trigger("change");
         // 模块
-
+        $("#model_info_div").empty();
+        for (i = 0; i < data.model.length; i++) {
+            $("#model_info_div").append('<div class="col-md-12" style="margin-bottom:9px;padding-left: 0px;padding-right: 0px;">\n' +
+                '    <label class="col-md-2 control-label"><span style="color:red;">*</span>模块名称:</label>\n' +
+                '    <div class="col-md-4" style="padding-right:0px;">\n' +
+                '        <input type="text" class="form-control" name="model_name_' + (i + 1) + '" value="' + data.model[i].model_name + '" placeholder="">\n' +
+                '        <div class="form-control-focus"></div>\n' +
+                '    </div>\n' +
+                '    <label class="col-md-2 control-label"><span style="color:red;">*</span>备份路径:</label>\n' +
+                '    <div class="col-md-4" style="padding-right:0px;">\n' +
+                '        <input type="text" class="form-control" name="backup_path_' + (i + 1) + '" value="' + data.model[i].rsync_path + '" placeholder="">\n' +
+                '        <div class="form-control-focus"></div>\n' +
+                '<span hidden>\n' +
+                '    <input type="text" class="form-control" name="model_id_' + (i + 1) + '" value="' + data.model[i].id + '" placeholder="">\n' +
+                '</span>' +
+                '    </div>\n'
+            );
+        }
 
         // 设置定时器
         var per_time = data.hours + ":" + data.minutes;
@@ -194,8 +209,6 @@ $(document).ready(function () {
             url: "../rsync_config_save/",
             data: $("#rsync_config_form").serialize() + '&selected_backup_host=' + selected_backup_host_list,
             success: function (data) {
-                console.log(data);
-                console.log(data.ret)
                 var myres = data.ret;
                 var mydata = data.data;
                 if (myres === 1) {
