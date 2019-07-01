@@ -154,6 +154,9 @@ $(document).ready(function () {
         }
     });
     $('#sample_1 tbody').on('click', 'button#edit', function () {
+        $("#rsync_loading").hide();
+        $("#save").removeProp("disabled", true);
+        $("#close").removeProp("disabled", true);
         var table = $('#sample_1').DataTable();
         var data = table.row($(this).parents('tr')).data();
         $("#id").val(data.id);
@@ -198,6 +201,9 @@ $(document).ready(function () {
     });
 
     $("#new").click(function () {
+        $("#rsync_loading").hide();
+        $("#save").removeProp("disabled", true);
+        $("#close").removeProp("disabled", true);
         $("#id").val("0");
         $("#main_host_ip").val("");
         $("#backup_host_ip").val("").trigger("change");
