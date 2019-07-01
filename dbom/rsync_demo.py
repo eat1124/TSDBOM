@@ -118,6 +118,14 @@ class RsyncBackup(object):
                            'auth users = rsync_backup' + '\n' + \
                            'secrets file = /etc/rsync_server.password'
         result, info = self.run_shell_cmd("echo '{0}' > /etc/rsyncd.conf".format(base_config))
+        # 配置Rsync用户
+        self.set_rsync_virtual_auth()
+
+        # 设置防火墙开放端口
+        self.open_873_port()
+
+        # 启动rsync
+        self.start_rsync()
 
         return result, info
 
@@ -164,6 +172,23 @@ class RsyncBackup(object):
             result, info = self.run_shell_cmd('pkill rsync')
         return result, info
 
+    def open_873_port(self):
+        result, info = self.run_shell_cmd('firewall-cmd --zone=public --add-port=873/tcp --permanent;systemctl restart firewalld.service')
+        return result, info
+
+    def restart_rsync(self):
+        result, info = self.run_shell_cmd('ps -ef|grep rsync|grep -v grep')
+        if result:
+            result, info = self.run_shell_cmd('pkill rsync', get_pty=False)
+            if result == 1:
+                result, info = self.run_shell_cmd('rsync --daemon', get_pty=False)
+            else:
+                result, info = self.start_rsync()
+        else:
+            result, info = self.start_rsync()
+
+        return result, info
+
     def rsync_exec_avz(self, dest_dir, dest_server, model_name, delete=False):
         """
         -avz 方式备份
@@ -176,24 +201,24 @@ class RsyncBackup(object):
         """
         # 异常处理
         if delete:
-            result, info = self.run_shell_cmd('rsync -avz {0} rsync_backup@{2}::{3}/ --password-file=/etc/rsync.password --delete'.format(dest_dir, dest_server, model_name))
+            result, info = self.run_shell_cmd(r'rsync -avz {0} rsync_backup@{1}::{2}/ --password-file=/etc/rsync.password --delete'.format(dest_dir, dest_server, model_name))
         else:
-            result, info = self.run_shell_cmd('rsync -avz {0} rsync_backup@{2}::{3}/ --password-file=/etc/rsync.password'.format(dest_dir, dest_server, model_name))
+            result, info = self.run_shell_cmd(r'rsync -avz {0} rsync_backup@{1}::{2}/ --password-file=/etc/rsync.password'.format(dest_dir, dest_server, model_name))
         return result, info
 
 
 if __name__ == '__main__':
     server = {
-        'hostname': '192.168.85.134',
-        'username': 'miaokela',
-        'password': 'password'
+        'hostname': '192.168.85.151',
+        'username': 'root',
+        'password': '!zxcvbn123'
     }
     rsync_backup = RsyncBackup(server)
     # result, info = rsync_backup.start_rsync()
     # result, info = rsync_backup.stop_rsync()
     # result, info = rsync_backup.run_shell_cmd('ls')
-    result, info = rsync_backup.install_rsync_by_yum()
-    # result, info = rsync_backup.rsync_exec_avz(r'/root/backup/', 'rsync_backup', '192.168.85.151', 'server01', delete=True)
+    # result, info = rsync_backup.install_rsync_by_yum()
+    result, info = rsync_backup.rsync_exec_avz(r'/temp_data', '192.168.85.154', 'temp_model', delete=True)
     # result, info = rsync_backup.tail_rsync_log()
     # result, info = rsync_backup.set_rsync_server_config([{"model_name": "server01", "host_allowd": "192.168.85.151", "backup_path": "/root/backup"}])
     print(result, info)

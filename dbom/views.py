@@ -1049,13 +1049,13 @@ def rsync_config_save(request):
                                         "ret": 0,
                                         "data": "路径：{0} 在备份服务器中不存在，请检查后再配置。".format(temp_path)
                                     })
-                    # 配置备机
-                    result, info = rsync_backup.set_rsync_server_config(model_list)
-                    if result == 0:
-                        return JsonResponse({
-                            "ret": 0,
-                            "data": "备份服务器{0} 配置失败。".format(cur_backup_host.ip_addr)
-                        })
+                        # 配置备机
+                        result, info = rsync_backup.set_rsync_server_config(model_list)
+                        if result == 0:
+                            return JsonResponse({
+                                "ret": 0,
+                                "data": "备份服务器{0} 配置失败。".format(cur_backup_host.ip_addr)
+                            })
                 # 保存数据：RsyncConfig,RsyncModel,CrontabSchedule,Periodictask
                 if id == 0:
                     try:
@@ -1080,7 +1080,7 @@ def rsync_config_save(request):
                         # 任务名称
                         # dest_dir, auth_user, dest_server_list, model_name_list
                         cur_periodictask.task = "dbom.tasks.remote_sync"
-                        cur_periodictask.args = ["dest_dir", "backup_host_list", "model_list"]
+                        cur_periodictask.args = [main_host_ip, str(selected_backup_host_list_int), str(model_list)]
                         cur_periodictask.save()
                         # RsyncConfig
                         cur_rsync_config.main_host_id = main_host_ip
@@ -1145,6 +1145,7 @@ def rsync_config_save(request):
                                 cur_crontab_schedule.month_of_year = per_month if per_month != "0" else "*"
                                 cur_crontab_schedule.save()
                                 # 任务名称
+                                cur_periodictask.args = [main_host_ip, str(selected_backup_host_list), str(model_list)]
                                 cur_periodictask.save()
                         # RsyncConfig
                         cur_rsync_config.main_host_id = main_host_ip
