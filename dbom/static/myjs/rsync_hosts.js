@@ -81,7 +81,7 @@ $(document).ready(function () {
     $('#sample_1 tbody').on('click', 'button#edit', function () {
         var table = $('#sample_1').DataTable();
         var data = table.row($(this).parents('tr')).data();
-        $("#id").val(data.process_id);
+        $("#id").val(data.id);
         $("#ip_addr").val(data.ip_addr);
         $("#username").val(data.username);
         $("#password").val(data.password);

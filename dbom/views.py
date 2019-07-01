@@ -634,7 +634,7 @@ def rsync_hosts_save(request):
         ip_addr = request.POST.get('ip_addr', '')
         username = request.POST.get('username', '')
         password = request.POST.get('password', '')
-        print(ip_addr)
+        print(id)
         try:
             id = int(id)
         except:
@@ -770,9 +770,7 @@ def rsync_hosts_data(request):
             'username': rsync_host.username,
             'password': rsync_host.password,
         }
-        print(server)
         rsync_backup = RsyncBackup(server)
-        print(11111111111111)
         if rsync_backup.msg == "远程连接失败。":
             # 服务器未开启
             server_status = "关闭"
