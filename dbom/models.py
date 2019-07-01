@@ -149,18 +149,18 @@ class RsyncHost(models.Model):
     ip_addr = models.CharField("主机ip", max_length=128)
     username = models.CharField("用户名", max_length=64)
     password = models.CharField("密码", max_length=256)
-    server_status_choices = (
-        (1, "开启"),
-        (2, "关闭"),
-    )
-    server_status = models.IntegerField("服务器状态", choices=server_status_choices, default=1)
-    install_status_choices = (
-        (1, "已安装"),
-        (2, "未安装"),
-        (3, "失败"),
-        (4, "未知"),
-    )
-    install_status = models.IntegerField("Rsync安装状态", choices=install_status_choices, default=1)
+    # server_status_choices = (
+    #     (1, "开启"),
+    #     (2, "关闭"),
+    # )
+    # server_status = models.IntegerField("服务器状态", choices=server_status_choices, default=1)
+    # install_status_choices = (
+    #     (1, "已安装"),
+    #     (2, "未安装"),
+    #     (3, "失败"),
+    #     (4, "未知"),
+    # )
+    # install_status = models.IntegerField("Rsync安装状态", choices=install_status_choices, default=1)
     log = models.CharField("安装错误日志", max_length=512, blank=True)
     state = models.CharField("逻辑删除:'9'", max_length=16, blank=True, default="")
 

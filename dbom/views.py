@@ -666,28 +666,6 @@ def rsync_hosts_save(request):
                                 new_rsync_host.ip_addr = ip_addr
                                 new_rsync_host.username = username
                                 new_rsync_host.password = password
-                                # 远程安装Rsync
-                                rsync_backup = RsyncBackup(server)
-                                if rsync_backup.msg == "远程连接成功。":
-                                    new_rsync_host.server_status = 1
-                                    # 查看是否安装
-                                    res, info = rsync_backup.check_ever_existed()
-                                    if res == 0:
-                                        # 未安装
-                                        res, info = rsync_backup.install_rsync_by_yum()
-                                        if res == 1:
-                                            # 安装成功
-                                            new_rsync_host.install_status = 1
-                                        else:
-                                            new_rsync_host.log = info
-                                            new_rsync_host.install_status = 3
-                                    else:
-                                        print(res, '已经安装')
-                                        new_rsync_host.install_status = 1
-                                else:
-                                    # 服务器未开启
-                                    new_rsync_host.server_status = 2
-                                    new_rsync_host.install_status = 4
 
                                 new_rsync_host.save()
                                 result["res"] = "保存成功。"
@@ -704,28 +682,6 @@ def rsync_hosts_save(request):
                                 cur_rsync_host.ip_addr = ip_addr
                                 cur_rsync_host.username = username
                                 cur_rsync_host.password = password
-
-                                # 远程安装Rsync
-                                rsync_backup = RsyncBackup(server)
-                                if rsync_backup.msg == "远程连接失败。":
-                                    # 服务器未开启
-                                    cur_rsync_host.server_status = 2
-                                    cur_rsync_host.install_status = 4
-                                else:
-                                    cur_rsync_host.server_status = 1
-                                    res, info = rsync_backup.check_ever_existed()
-                                    if res == 1:
-                                        # 未安装
-                                        res, info = rsync_backup.install_rsync_by_yum()
-                                        if res == 1:
-                                            # 安装成功
-                                            cur_rsync_host.install_status = 1
-                                        else:
-                                            result["res"] = "安装失败。"
-                                            cur_rsync_host.log = info
-                                            cur_rsync_host.install_status = 3
-                                    else:
-                                        cur_rsync_host.install_status = 1
 
                                 cur_rsync_host.save()
                                 result["res"] = "保存成功。"
@@ -757,7 +713,6 @@ def rsync_reinstall(request):
             'data': '当前记录不存在，请联系管理员。',
         })
     else:
-
         server = {
             'hostname': cur_rsync_host.ip_addr,
             'username': cur_rsync_host.username,
@@ -766,33 +721,27 @@ def rsync_reinstall(request):
         rsync_backup = RsyncBackup(server)
         if rsync_backup.msg == "远程连接失败。":
             # 服务器未开启
-            cur_rsync_host.server_status = 2
-            cur_rsync_host.install_status = 4
             result = 0
             data = "远程连接失败。"
         else:
-            cur_rsync_host.server_status = 1
+            # cur_rsync_host.server_status = 1
             res, info = rsync_backup.check_ever_existed()
             if res == 1:
                 # 未安装
                 res, info = rsync_backup.install_rsync_by_yum()
                 if res == 1:
                     # 安装成功
-                    cur_rsync_host.install_status = 1
-                    cur_rsync_host.save()
                     result = 1
                     data = '安装成功。'
                 else:
                     result = 0
                     data = "安装失败。"
                     cur_rsync_host.log = info
-                    cur_rsync_host.install_status = 3
+                    cur_rsync_host.save()
             else:
-                cur_rsync_host.install_status = 1
                 result = 0
                 data = 'Rsync已经安装。'
 
-        cur_rsync_host.save()
         return JsonResponse({
             'ret': result,
             'data': data,
@@ -804,15 +753,45 @@ def rsync_hosts_data(request):
     result = []
 
     all_rsync_hosts = RsyncHost.objects.exclude(state="9")
-
+    # server_status_choices = (
+    #     (1, "开启"),
+    #     (2, "关闭"),
+    # )
+    # install_status_choices = (
+    #     (1, "已安装"),
+    #     (2, "未安装"),
+    #     (3, "失败"),
+    #     (4, "未知"),
+    # )
     for rsync_host in all_rsync_hosts:
+        # server_status, install_status
+        server = {
+            'hostname': rsync_host.ip_addr,
+            'username': rsync_host.username,
+            'password': rsync_host.password,
+        }
+        print(server)
+        rsync_backup = RsyncBackup(server)
+        print(11111111111111)
+        if rsync_backup.msg == "远程连接失败。":
+            # 服务器未开启
+            server_status = "关闭"
+            install_status = "未知"
+        else:
+            server_status = "开启"
+            res, info = rsync_backup.check_ever_existed()
+            if res == 1:
+                install_status = "未安装"
+            else:
+                install_status = "已安装"
+
         result.append({
             'id': rsync_host.id,
             'ip_addr': rsync_host.ip_addr,
             'username': rsync_host.username,
             'password': rsync_host.password,
-            'server_status': rsync_host.get_server_status_display(),
-            'install_status': rsync_host.get_install_status_display(),
+            'server_status': server_status,
+            'install_status': install_status,
             'log': rsync_host.log,
         })
 
@@ -903,8 +882,8 @@ def rsync_config_data(request):
             "hours": hours,
             "per_week": per_week,
             "per_month": per_month,
+            "periodictask_id": periodictask.id if periodictask else ""
         })
-
     return JsonResponse({"data": result})
 
 
@@ -916,6 +895,8 @@ def rsync_config_save(request):
     per_month = request.POST.get('per_month', '')
     per_week = request.POST.get('per_week', '')
     status = request.POST.get('status', '')
+    periodictask_id = request.POST.get('periodictask_id', '')
+
     id = request.POST.get('id', '')
     try:
         main_host_ip = int(main_host_ip)
@@ -1136,12 +1117,114 @@ def rsync_config_save(request):
                             "data": "当前主机不存在，请检查后再配置。"
                         })
                     else:
-                        pass
+                        # 定时任务CrontabSchedule,Periodictask
+                        if periodictask_id:
+                            periodictask_id = int(periodictask_id)
+                            try:
+                                cur_periodictask = PeriodicTask.objects.get(id=periodictask_id)
+                            except PeriodicTask.DoesNotExist as e:
+                                return JsonResponse({
+                                    "ret": 0,
+                                    "data": "网络异常。"
+                                })
+                            else:
+                                # cur_periodictask.crontab_id = cur_crontab_schedule.id
+                                # cur_periodictask.name = uuid.uuid1()
+                                if status == "on":
+                                    cur_periodictask.enabled = 1
+                                else:
+                                    cur_periodictask.enabled = 0
+
+                                # crontab修改
+                                hour, minute = per_time.split(':')
+                                cur_crontab_schedule = cur_periodictask.crontab
+                                cur_crontab_schedule.hour = hour
+                                cur_crontab_schedule.minute = minute
+                                if int(per_week):
+                                    cur_crontab_schedule.day_of_week = per_week
+                                if int(per_month):
+                                    cur_crontab_schedule.month_of_year = per_month
+                                cur_crontab_schedule.save()
+                            # 任务名称
+                            # dest_dir, auth_user, dest_server_list, model_name_list
+                            # cur_periodictask.task = "dbom.tasks.reysnc_exec"
+
+                            cur_periodictask.save()
+                        # RsyncConfig
+                        cur_rsync_config.main_host_id = main_host_ip
+                        # cur_rsync_config.dj_periodictask_id = cur_periodictask.id
+                        cur_rsync_config.save()
+
+                        # cur_rsync_config关联backup_host对象
+                        cur_rsync_config.backup_host.all().update(state="9")
+                        backup_hosts = RsyncHost.objects.filter(id__in=selected_backup_host_list_int)
+                        if backup_hosts.exists():
+                            cur_rsync_config.backup_host.add(*backup_hosts)
+                        else:
+                            print("不存在")
+
+                        # 模型RsyncModel
+                        cur_rsync_model_num = len(cur_rsync_config.rsyncmodel_set.all())
+
+                        if cur_rsync_model_num == rsync_model_num:
+                            # 直接修改
+                            for i in range(0, rsync_model_num):
+                                model_name = request.POST.get('model_name_{0}'.format(i + 1), "")
+                                backup_path = request.POST.get('backup_path_{0}'.format(i + 1), "")
+                                model_id = request.POST.get('model_id_{0}'.format(i + 1), "")
+
+                                try:
+                                    cur_rsync_model = RsyncModel.objects.get(id=int(model_id))
+                                except RsyncModel.DoesNotExist as e:
+                                    return JsonResponse({
+                                        "ret": 0,
+                                        "data": "网络异常。"
+                                    })
+                                else:
+                                    cur_rsync_model.model_name = model_name
+                                    cur_rsync_model.rsync_path = backup_path
+                                    cur_rsync_model.rsync_config_id = cur_rsync_config.id
+                                    cur_rsync_model.save()
+                        else:
+                            cur_rsync_config.rsyncmodel_set.all().update(state="9")
+                            for i in range(0, rsync_model_num):
+                                model_name = request.POST.get('model_name_{0}'.format(i + 1), "")
+                                backup_path = request.POST.get('backup_path_{0}'.format(i + 1), "")
+
+                                cur_rsync_model = RsyncModel()
+                                cur_rsync_model.model_name = model_name
+                                cur_rsync_model.rsync_path = backup_path
+                                cur_rsync_model.rsync_config_id = cur_rsync_config.id
+                                cur_rsync_model.save()
+                        return JsonResponse({
+                            "ret": 1,
+                            "data": "配置成功。"
+                        })
             else:
                 return JsonResponse({
                     "ret": 0,
                     "data": "必须至少设置一个备份模块。"
                 })
+
+
+@login_required
+def rsync_config_del(request):
+    if 'id' in request.POST:
+        id = request.POST.get('id', '')
+        try:
+            id = int(id)
+        except:
+            return HttpResponse(0)
+        try:
+            cur_rsync_host = RsyncConfig.objects.get(id=id)
+        except RsyncConfig.DoesNotExist as e:
+            return HttpResponse(0)
+        else:
+            cur_rsync_host.state = "9"
+            cur_rsync_host.save()
+        return HttpResponse(1)
+    else:
+        return HttpResponse(0)
 
 
 def client_data_index(request, funid):

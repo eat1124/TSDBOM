@@ -24,7 +24,7 @@ class RsyncBackup(object):
         self.msg = ''
         self.server = server
         try:
-            self.client.connect(hostname=server['hostname'], username=server['username'], password=server['password'])
+            self.client.connect(hostname=server['hostname'], username=server['username'], password=server['password'], timeout=2)
         except:
             self.msg = '远程连接失败。'
         else:

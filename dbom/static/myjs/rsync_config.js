@@ -19,6 +19,7 @@ $(document).ready(function () {
         "ajax": "../rsync_config_data/",
         "columns": [
             {"data": "id"},
+            {"data": "periodictask_id"},
             {"data": "main_host_id"},
             {"data": "main_host"},
             // visible_false
@@ -35,6 +36,9 @@ $(document).ready(function () {
         ],
 
         "columnDefs": [{
+            "targets": -12,
+            "visible": false
+        }, {
             "targets": -11,
             "visible": false
         }, {
@@ -128,10 +132,10 @@ $(document).ready(function () {
             var data = table.row($(this).parents('tr')).data();
             $.ajax({
                 type: "POST",
-                url: "../process_del/",
+                url: "../rsync_config_del/",
                 data:
                     {
-                        id: data.process_id,
+                        id: data.id,
                     },
                 success: function (data) {
                     if (data == 1) {
