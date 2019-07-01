@@ -79,6 +79,9 @@ $(document).ready(function () {
         }
     });
     $('#sample_1 tbody').on('click', 'button#edit', function () {
+        $("#rsync_loading").hide();
+        $("#save").removeProp("disabled", true);
+        $("#close").removeProp("disabled", true);
         var table = $('#sample_1').DataTable();
         var data = table.row($(this).parents('tr')).data();
         $("#id").val(data.id);
@@ -88,6 +91,9 @@ $(document).ready(function () {
     });
 
     $("#new").click(function () {
+        $("#rsync_loading").hide();
+        $("#save").removeProp("disabled", true);
+        $("#close").removeProp("disabled", true);
         $("#id").val("0");
         $("#ip_addr").val("");
         $("#username").val("");
@@ -97,7 +103,8 @@ $(document).ready(function () {
 
     $('#save').click(function () {
         $("#rsync_loading").show();
-
+        $("#save").prop("disabled", true);
+        $("#close").prop("disabled", true);
         var table = $('#sample_1').DataTable();
         $.ajax({
             type: "POST",

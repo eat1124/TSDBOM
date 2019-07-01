@@ -1,18 +1,6 @@
 {% extends "base1.html" %}
 
 {% block content %}
-    <style>
-        #rsync_loading {
-            height: 300px;
-            width: 100%;
-            background-image: url(../static/new/images/loading.gif);
-            background-repeat: no-repeat;
-            background-position: center;
-            margin-top: -300px;
-            z-index: 9999999;
-            position: absolute
-        }
-    </style>
     <div style="height:10px"></div>
     <div class="table-toolbar">
         <div id="error">
@@ -61,10 +49,16 @@
                     <input hidden id="id" type="text" name="id">
                 </div>
                 <div class="panel-body">
-
                     <form class="bs-example form-horizontal activate-form">{% csrf_token %}
                         <input type="text" id="id" hidden>
                         <div class="form-body">
+                            <div class="rsync_host_spinner form-group" id="rsync_loading" hidden>
+                                <div class="rect1"></div>
+                                <div class="rect2"></div>
+                                <div class="rect3"></div>
+                                <div class="rect4"></div>
+                                <div class="rect5"></div>
+                            </div>
                             <div class="form-group">
                                 <label class="col-md-2 control-label"><span
                                         style="color:red; ">*</span>主机IP</label>
@@ -97,7 +91,7 @@
                         </div>
                         <div class="form-actions ">
                             <div class="modal-footer">
-                                <button type="button" data-dismiss="modal" class="btn dark btn-outline">关闭
+                                <button type="button" id="close" data-dismiss="modal" class="btn dark btn-outline">关闭
                                 </button>
                                 <button type="button" id="save" name="save" class="btn green">安装</button>
                             </div>
@@ -106,7 +100,7 @@
                 </div>
             </div>
         </div>
-        <div id="rsync_loading" hidden></div>
+
     </div>
 
 {% endblock %}

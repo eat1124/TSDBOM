@@ -935,19 +935,22 @@ def rsync_config_save(request):
             "model_name": model_name,
             "backup_path": backup_path,
         })
-
+    result_info = {}
     # 校验
     if not main_host_ip:
-        result["res"] = '主机不能为空。'
+        result_info["ret"] = 0
+        result_info["data"] = '主机不能为空。'
     else:
         if selected_backup_host.strip() == '':
-            result["res"] = '备机不能为空。'
+            result_info["ret"] = 0
+            result_info["data"] = '备机不能为空。'
         else:
             # 拆分出备机
             selected_backup_host_list = selected_backup_host.split(",")
 
             # 模块未填写则不添加
             if rsync_model_num > 0:
+                hour, minute = "", ""
                 for key in request.POST.keys():
                     model_name = request.POST.get(key, "")
                     if "model_name_" in key and model_name == "":
@@ -1063,10 +1066,8 @@ def rsync_config_save(request):
                         cur_crontab_schedule = CrontabSchedule()
                         cur_crontab_schedule.hour = hour
                         cur_crontab_schedule.minute = minute
-                        if int(per_week):
-                            cur_crontab_schedule.day_of_week = per_week
-                        if int(per_month):
-                            cur_crontab_schedule.month_of_year = per_month
+                        cur_crontab_schedule.day_of_week = per_week if per_week != "0" else "*"
+                        cur_crontab_schedule.month_of_year = per_month if per_month != "0" else "*"
                         cur_crontab_schedule.save()
                         # 启动定时任务
                         cur_periodictask = PeriodicTask()
@@ -1078,8 +1079,8 @@ def rsync_config_save(request):
                             cur_periodictask.enabled = 0
                         # 任务名称
                         # dest_dir, auth_user, dest_server_list, model_name_list
-                        cur_periodictask.task = "dbom.tasks.reysnc_exec"
-
+                        cur_periodictask.task = "dbom.tasks.remote_sync"
+                        cur_periodictask.args = ["dest_dir", "backup_host_list", "model_list"]
                         cur_periodictask.save()
                         # RsyncConfig
                         cur_rsync_config.main_host_id = main_host_ip
@@ -1103,17 +1104,12 @@ def rsync_config_save(request):
                             cur_rsync_model.rsync_path = backup_path
                             cur_rsync_model.rsync_config_id = cur_rsync_config.id
                             cur_rsync_model.save()
-                        return JsonResponse({
-                            "ret": 1,
-                            "data": "配置成功。"
-                        })
-
+                        result_info["ret"] = 1
+                        result_info["data"] = '配置成功。'
                     except Exception as e:
                         print(e)
-                        return JsonResponse({
-                            "ret": 0,
-                            "data": "配置失败。"
-                        })
+                        result_info["ret"] = 0
+                        result_info["data"] = '配置失败。'
                 else:
                     # 修改
                     try:
@@ -1135,8 +1131,6 @@ def rsync_config_save(request):
                                     "data": "网络异常。"
                                 })
                             else:
-                                # cur_periodictask.crontab_id = cur_crontab_schedule.id
-                                # cur_periodictask.name = uuid.uuid1()
                                 if status == "on":
                                     cur_periodictask.enabled = 1
                                 else:
@@ -1147,23 +1141,17 @@ def rsync_config_save(request):
                                 cur_crontab_schedule = cur_periodictask.crontab
                                 cur_crontab_schedule.hour = hour
                                 cur_crontab_schedule.minute = minute
-                                if int(per_week):
-                                    cur_crontab_schedule.day_of_week = per_week
-                                if int(per_month):
-                                    cur_crontab_schedule.month_of_year = per_month
+                                cur_crontab_schedule.day_of_week = per_week if per_week != "0" else "*"
+                                cur_crontab_schedule.month_of_year = per_month if per_month != "0" else "*"
                                 cur_crontab_schedule.save()
-                            # 任务名称
-                            # dest_dir, auth_user, dest_server_list, model_name_list
-                            # cur_periodictask.task = "dbom.tasks.reysnc_exec"
-
-                            cur_periodictask.save()
+                                # 任务名称
+                                cur_periodictask.save()
                         # RsyncConfig
                         cur_rsync_config.main_host_id = main_host_ip
-                        # cur_rsync_config.dj_periodictask_id = cur_periodictask.id
                         cur_rsync_config.save()
 
                         # cur_rsync_config关联backup_host对象
-                        cur_rsync_config.backup_host.all().update(state="9")
+                        cur_rsync_config.backup_host.clear()
                         backup_hosts = RsyncHost.objects.filter(id__in=selected_backup_host_list_int)
                         if backup_hosts.exists():
                             cur_rsync_config.backup_host.add(*backup_hosts)
@@ -1190,7 +1178,6 @@ def rsync_config_save(request):
                                 else:
                                     cur_rsync_model.model_name = model_name
                                     cur_rsync_model.rsync_path = backup_path
-                                    cur_rsync_model.rsync_config_id = cur_rsync_config.id
                                     cur_rsync_model.save()
                         else:
                             cur_rsync_config.rsyncmodel_set.all().update(state="9")
@@ -1203,15 +1190,12 @@ def rsync_config_save(request):
                                 cur_rsync_model.rsync_path = backup_path
                                 cur_rsync_model.rsync_config_id = cur_rsync_config.id
                                 cur_rsync_model.save()
-                        return JsonResponse({
-                            "ret": 1,
-                            "data": "配置成功。"
-                        })
+                        result_info["ret"] = 1
+                        result_info["data"] = '配置成功。'
             else:
-                return JsonResponse({
-                    "ret": 0,
-                    "data": "必须至少设置一个备份模块。"
-                })
+                result_info["ret"] = 0
+                result_info["data"] = '必须至少设置一个备份模块。'
+    return JsonResponse(result_info)
 
 
 @login_required

@@ -66,6 +66,13 @@
                     <form class="bs-example form-horizontal activate-form" id="rsync_config_form">{% csrf_token %}
                         <input type="text" id="id" name="id" hidden>
                         <div class="form-body">
+                            <div class="rsync_config_spinner form-group" id="rsync_loading" hidden>
+                                <div class="rect1"></div>
+                                <div class="rect2"></div>
+                                <div class="rect3"></div>
+                                <div class="rect4"></div>
+                                <div class="rect5"></div>
+                            </div>
                             <div class="form-group">
                                 <label class="col-md-2 control-label"><span
                                         style="color:red; ">*</span>主机</label>
@@ -141,6 +148,7 @@
                                     <hr>
                                 </div>
                             </div>
+                            <input type="text" id="periodictask_id" name="periodictask_id" hidden>
                             <div class="form-group">
                                 <label class="col-md-2 control-label"><span
                                         style="color:red; ">*</span>时间</label>
@@ -205,7 +213,7 @@
                         </div>
                         <div class="form-actions ">
                             <div class="modal-footer">
-                                <button type="button" data-dismiss="modal" class="btn dark btn-outline">关闭
+                                <button type="button" id="close" data-dismiss="modal" class="btn dark btn-outline">关闭
                                 </button>
                                 <button type="button" id="save" name="save" class="btn green">保存</button>
                             </div>

@@ -164,7 +164,7 @@ class RsyncBackup(object):
             result, info = self.run_shell_cmd('pkill rsync')
         return result, info
 
-    def rsync_exec_avz(self, dest_dir, auth_user, dest_server, model_name, delete=False):
+    def rsync_exec_avz(self, dest_dir, dest_server, model_name, delete=False):
         """
         -avz 方式备份
         :param dest_dir: 服务器备份路径
@@ -175,14 +175,10 @@ class RsyncBackup(object):
         :return:
         """
         # 异常处理
-        # 1.dest_dir是否存在
-
-
-
         if delete:
-            result, info = self.run_shell_cmd('rsync -avz {0} {1}@{2}::{3}/ --password-file=/etc/rsync.password --delete'.format(dest_dir, auth_user, dest_server, model_name))
+            result, info = self.run_shell_cmd('rsync -avz {0} rsync_backup@{2}::{3}/ --password-file=/etc/rsync.password --delete'.format(dest_dir, dest_server, model_name))
         else:
-            result, info = self.run_shell_cmd('rsync -avz {0} {1}@{2}::{3}/ --password-file=/etc/rsync.password'.format(dest_dir, auth_user, dest_server, model_name))
+            result, info = self.run_shell_cmd('rsync -avz {0} rsync_backup@{2}::{3}/ --password-file=/etc/rsync.password'.format(dest_dir, dest_server, model_name))
         return result, info
 
 

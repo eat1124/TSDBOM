@@ -7,6 +7,8 @@ $(document).ready(function () {
     // time-picker
     $("#per_time").timepicker({
         showMeridian: false,
+        minuteStep: 5,
+
     });
 
     // bootstrap-switch
@@ -156,6 +158,7 @@ $(document).ready(function () {
         var data = table.row($(this).parents('tr')).data();
         $("#id").val(data.id);
         $("#main_host_ip").val(data.main_host_id);
+        $("#periodictask_id").val(data.periodictask_id);
         var backup_host_id_list = []
         for (var i = 0; i < data.backup_host.length; i++) {
             backup_host_id_list.push(data.backup_host[i].id);
@@ -224,6 +227,9 @@ $(document).ready(function () {
     });
 
     $('#save').click(function () {
+        $("#rsync_loading").show();
+        $("#save").prop("disabled", true);
+        $("#close").prop("disabled", true);
         var table = $('#sample_1').DataTable();
         var selected = $("#backup_host_ip").select2('data');//选择的值
         var selected_backup_host_list = new Array();
