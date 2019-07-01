@@ -253,6 +253,10 @@ $(document).ready(function () {
                 if (myres === 1) {
                     $('#static').modal('hide');
                     table.ajax.reload();
+                } else {
+                    $("#rsync_loading").hide();
+                    $("#save").removeProp("disabled");
+                    $("#close").removeProp("disabled");
                 }
                 alert(mydata);
             },

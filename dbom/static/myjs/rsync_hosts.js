@@ -125,6 +125,10 @@ $(document).ready(function () {
                     $("#id").val(data["data"]);
                     $('#static').modal('hide');
                     table.ajax.reload();
+                } else {
+                    $("#rsync_loading").hide();
+                    $("#save").removeProp("disabled");
+                    $("#close").removeProp("disabled");
                 }
                 alert(myres);
             },
