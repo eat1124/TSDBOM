@@ -634,7 +634,7 @@ def rsync_hosts_save(request):
         ip_addr = request.POST.get('ip_addr', '')
         username = request.POST.get('username', '')
         password = request.POST.get('password', '')
-        print(id)
+        print(ip_addr)
         try:
             id = int(id)
         except:
@@ -667,6 +667,11 @@ def rsync_hosts_save(request):
                                 new_rsync_host.username = username
                                 new_rsync_host.password = password
 
+                                # 远程安装Rsync
+                                rsync_backup = RsyncBackup(server)
+                                if rsync_backup.msg == "远程连接成功。":
+                                    rsync_backup.install_rsync_by_yum()
+
                                 new_rsync_host.save()
                                 result["res"] = "保存成功。"
                                 result["data"] = new_rsync_host.id
@@ -682,6 +687,11 @@ def rsync_hosts_save(request):
                                 cur_rsync_host.ip_addr = ip_addr
                                 cur_rsync_host.username = username
                                 cur_rsync_host.password = password
+
+                                # 远程安装Rsync
+                                rsync_backup = RsyncBackup(server)
+                                if rsync_backup.msg == "远程连接成功。":
+                                    rsync_backup.install_rsync_by_yum()
 
                                 cur_rsync_host.save()
                                 result["res"] = "保存成功。"
@@ -724,7 +734,6 @@ def rsync_reinstall(request):
             result = 0
             data = "远程连接失败。"
         else:
-            # cur_rsync_host.server_status = 1
             res, info = rsync_backup.check_ever_existed()
             if res == 1:
                 # 未安装
