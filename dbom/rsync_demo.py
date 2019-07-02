@@ -24,7 +24,7 @@ class RsyncBackup(object):
         self.msg = ''
         self.server = server
         try:
-            self.client.connect(hostname=server['hostname'], username=server['username'], password=server['password'], timeout=1)
+            self.client.connect(hostname=server['hostname'], username=server['username'], password=server['password'], timeout=2)
         except:
             self.msg = '远程连接失败。'
         else:
@@ -37,10 +37,14 @@ class RsyncBackup(object):
                                 'fi'
         self.sudo_permission = 'echo {0}|sudo -S '.format(server['password']) if server['username'] != 'root' else ''
 
+    def close_rsync(self):
+        self.client.close()
+
     def run_shell_cmd(self, shell_cmd, get_pty=True):
         result = 1
         info = ''
         # root用户
+        print("cmd:",self.sudo_permission + shell_cmd + ';' + self.verify_shell_cmd)
         stdin, stdout, stderr = self.client.exec_command(self.sudo_permission + shell_cmd + ';' + self.verify_shell_cmd, get_pty=get_pty)
         stdout_init = ''
         stderr_init = ''
@@ -80,7 +84,7 @@ class RsyncBackup(object):
         查看rsync是否已经安装
         :return:
         """
-        result, info = self.run_shell_cmd('rsync')
+        result, info = self.run_shell_cmd('rsync --help')
         return result, info
 
     def set_rsync_server_config(self, model_list):
@@ -213,16 +217,20 @@ class RsyncBackup(object):
 
 if __name__ == '__main__':
     server = {
-        'hostname': '192.168.85.146',
-        'username': 'root',
-        'password': '!zxcvbn123'
+        'hostname': '192.168.85.155',
+        'username': 'miaokela',
+        'password': r'tesunet123'
     }
     rsync_backup = RsyncBackup(server)
+    print(rsync_backup.msg)
     # result, info = rsync_backup.start_rsync()
     # result, info = rsync_backup.stop_rsync()
     # result, info = rsync_backup.run_shell_cmd('ls')
     # result, info = rsync_backup.install_rsync_by_yum()
-    result, info = rsync_backup.rsync_exec_avz(r'/temp_data', '192.168.85.147', 'temp_model', delete=True)
+    result, info = rsync_backup.check_ever_existed()
+    rsync_backup.close_rsync()
+
+    # result, info = rsync_backup.rsync_exec_avz(r'/temp_data', '192.168.85.138', 'temp_model', delete=True)
     # result, info = rsync_backup.tail_rsync_log()
     # result, info = rsync_backup.set_rsync_server_config([{"model_name": "server01", "host_allowd": "192.168.85.151", "backup_path": "/root/backup"}])
     print(result, info)

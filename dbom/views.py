@@ -698,6 +698,8 @@ def rsync_hosts_save(request):
                                 result["data"] = cur_rsync_host.id
                             except:
                                 result["res"] = "修改失败。"
+    rsync_backup.close_rsync()
+
     return JsonResponse(result)
 
 
@@ -750,6 +752,7 @@ def rsync_reinstall(request):
             else:
                 result = 0
                 data = 'Rsync已经安装。'
+        rsync_backup.close_rsync()
 
         return JsonResponse({
             'ret': result,
@@ -780,6 +783,7 @@ def rsync_hosts_data(request):
             'password': rsync_host.password,
         }
         rsync_backup = RsyncBackup(server)
+        print(rsync_backup.msg)
         if rsync_backup.msg == "远程连接失败。":
             # 服务器未开启
             server_status = "关闭"
@@ -788,9 +792,9 @@ def rsync_hosts_data(request):
             server_status = "开启"
             res, info = rsync_backup.check_ever_existed()
             if res == 1:
-                install_status = "未安装"
-            else:
                 install_status = "已安装"
+            else:
+                install_status = "未安装"
 
         result.append({
             'id': rsync_host.id,
@@ -801,6 +805,7 @@ def rsync_hosts_data(request):
             'install_status': install_status,
             'log': rsync_host.log,
         })
+        rsync_backup.close_rsync()
 
     return JsonResponse({"data": result})
 
@@ -997,7 +1002,10 @@ def rsync_config_save(request):
                         # 检测模块路径
                         for temp_path in backup_path_list:
                             result, info = rsync_backup.check_file_path_existed(temp_path)
+
                             if result == 0:
+                                rsync_backup.close_rsync()
+
                                 return JsonResponse({
                                     "ret": 0,
                                     "data": "路径：{0} 在主服务器中不存在，请检查后再配置。".format(temp_path)
@@ -1005,6 +1013,8 @@ def rsync_config_save(request):
                         # 配置主机
                         result, info = rsync_backup.set_rsync_server_config(model_list)
                         if result == 0:
+                            rsync_backup.close_rsync()
+
                             return JsonResponse({
                                 "ret": 0,
                                 "data": "主服务器{0} 配置失败。".format(cur_main_host.ip_addr)
@@ -1045,11 +1055,15 @@ def rsync_config_save(request):
                             for temp_path in backup_path_list:
                                 # 杜绝根目录下的文件夹备份
                                 if not temp_path.startswith("/"):
+                                    rsync_backup.close_rsync()
+
                                     return JsonResponse({
                                         "ret": 0,
                                         "data": "路径：{0} 不符合绝对路径条件。".format(temp_path)
                                     })
                                 if temp_path == "/" or temp_path.count("/") == 2 and temp_path.endswith("/"):
+                                    rsync_backup.close_rsync()
+
                                     return JsonResponse({
                                         "ret": 0,
                                         "data": "备份路径不能为根目录，或者根目录第一层文件夹。".format(temp_path)
@@ -1061,6 +1075,8 @@ def rsync_config_save(request):
 
                                 result, info = rsync_backup.check_file_path_existed(cur_path)
                                 if result == 0:
+                                    rsync_backup.close_rsync()
+
                                     return JsonResponse({
                                         "ret": 0,
                                         "data": "路径：{0} 在备份服务器中不存在，请检查后再配置。".format(temp_path[:-1])
@@ -1068,6 +1084,8 @@ def rsync_config_save(request):
                         # 配置备机
                         result, info = rsync_backup.set_rsync_server_config(model_list)
                         if result == 0:
+                            rsync_backup.close_rsync()
+
                             return JsonResponse({
                                 "ret": 0,
                                 "data": "备份服务器{0} 配置失败。".format(cur_backup_host.ip_addr)
@@ -1291,6 +1309,7 @@ def rsync_recover(request):
         else:
             ret = 0
             info = "模块不存在，请联系管理员。"
+    rsync_backup.close_rsync()
 
     return JsonResponse({
         "ret": ret,
