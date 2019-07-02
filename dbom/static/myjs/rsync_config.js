@@ -105,7 +105,7 @@ $(document).ready(function () {
             "targets": -1,
             "render": function (data, type, full) {
                 var exec_tag = "<button  id='edit' title='编辑' data-toggle='modal'  data-target='#static'  class='btn btn-xs btn-primary' type='button'><i class='fa fa-edit'></i></button><button title='删除'  id='delrow' class='btn btn-xs btn-primary' type='button'><i class='fa fa-trash-o'></i></button>";
-                exec_tag += "<button title='恢复'  id='recover' class='btn btn-xs btn-warning' type='button'><i class='fa fa-reply-all'></i></button>"
+                exec_tag += "<button title='恢复' id='recover_btn' data-toggle='modal'  data-target='#static_recover'  class='btn btn-xs btn-warning' type='button'><i class='fa fa-reply-all'></i></button>"
 
                 return "<td>" + exec_tag + "</td>";
             },
@@ -199,6 +199,40 @@ $(document).ready(function () {
         }
 
     });
+    $('#sample_1 tbody').on('click', 'button#recover_btn', function () {
+        var table = $('#sample_1').DataTable();
+        var data = table.row($(this).parents('tr')).data();
+        $("#recover_id").val(data.main_host_id);
+        $("#rsync_config_id").val(data.id);
+        // 恢复
+        $("#dest_main_host").val(data.main_host);
+        $("#selected_backup_host").empty();
+        for (var i = 0; i < data.backup_host.length; i++) {
+            $("#selected_backup_host").append('<option value="' + data.backup_host[i]["id"] + '">' + data.backup_host[i]["backup_host"] + '</option>');
+        }
+    });
+
+    $("#recover").click(function () {
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            url: "../rsync_recover/",
+            data: {
+                "id": $("#rsync_config_id").val(),
+                "dest_main_host": $("#dest_main_host").val(),
+                "backup_host": $("#selected_backup_host").val(),
+            },
+            success: function (data) {
+                alert(data.info);
+                if (data.ret == 1) {
+                    $("#static_recover").modal("hide");
+                }
+            },
+            error: function (e) {
+                alert("页面出现错误，请于管理员联系。");
+            }
+        })
+    })
 
     $("#new").click(function () {
         $("#rsync_loading").hide();
@@ -262,6 +296,9 @@ $(document).ready(function () {
             },
             error: function (e) {
                 alert("页面出现错误，请于管理员联系。");
+                $("#rsync_loading").hide();
+                $("#save").removeProp("disabled", true);
+                $("#close").removeProp("disabled", true);
             }
         });
     });

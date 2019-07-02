@@ -134,13 +134,15 @@ $(document).ready(function () {
             },
             error: function (e) {
                 alert("页面出现错误，请于管理员联系。");
+                $("#rsync_loading").hide();
+                $("#save").removeProp("disabled", true);
+                $("#close").removeProp("disabled", true);
             }
         });
     })
 
     // 重新安装
     $('#sample_1 tbody').on('click', 'button#reinstall', function () {
-        alert(1)
         var table = $('#sample_1').DataTable();
         var data = table.row($(this).parents('tr')).data();
         $.ajax({
