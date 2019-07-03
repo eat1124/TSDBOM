@@ -35,7 +35,8 @@ class RsyncBackup(object):
                                 'else' + '\n' + \
                                 '   echo "cmd_failed"' + '\n' + \
                                 'fi'
-        self.sudo_permission = 'echo {0}|sudo -S '.format(server['password']) if server['username'] != 'root' else ''
+        # self.sudo_permission = 'echo {0}|sudo sh -c '.format(server['password']) if server['username'] != 'root' else ''
+        # sudo sh -c 'echo "This is testPage." >/usr/local/nginx/html/index.html'
 
     def close_rsync(self):
         self.client.close()
@@ -43,9 +44,10 @@ class RsyncBackup(object):
     def run_shell_cmd(self, shell_cmd, get_pty=True):
         result = 1
         info = ''
-        # root用户
-        print("cmd:",self.sudo_permission + shell_cmd + ';' + self.verify_shell_cmd)
-        stdin, stdout, stderr = self.client.exec_command(self.sudo_permission + shell_cmd + ';' + self.verify_shell_cmd, get_pty=get_pty)
+        print("echo {0}|sudo -S sh -c '{1}'".format(self.server["password"], shell_cmd) if self.server["username"] != "root" else shell_cmd)
+        # root/普通用户
+        stdin, stdout, stderr = self.client.exec_command("echo {0}|sudo -S sh -c '{1}'".format(self.server["password"], shell_cmd) if self.server["username"] != "root" else shell_cmd + self.verify_shell_cmd, get_pty=get_pty)
+
         stdout_init = ''
         stderr_init = ''
         if not stderr.readlines():
@@ -91,49 +93,75 @@ class RsyncBackup(object):
         """
         secrets file 默认/etc/rsync.password
         auth users  默认rsync_backup
-        :param model_list: [{"model_name": "", "host_allowd": "", "backup_path": ""}]
+        :param model_list: [{"model_name": "", ""backup_path": ""}]
         :return:
         """
+        result = 1
+        info = ""
         # 设置互通密码
-        self.set_server_password()
-        self.set_client_password()
+        server_passwd_ret, server_passwd_info = self.set_server_password()
+        print(1)
+        if server_passwd_ret == 0:
+            result = 0
+            info = "服务端密码配置失败:{0}".format(server_passwd_info)
+        else:
+            client_passwd_ret, client_passwd_info = self.set_client_password()
+            if client_passwd_ret == 0:
+                result = 0
+                info = "客户端端密码配置失败:{0}".format(server_passwd_info)
+            else:
+                base_config = "uid = rsync" + '\n' + \
+                              'gid = rsync' + '\n' + \
+                              'use chroot = no' + '\n' + \
+                              'max connections = 200' + '\n' + \
+                              'timeout = 300' + '\n' + \
+                              'pid file = /var/run/rsyncd.pid' + '\n' + \
+                              'lock file = /var/run/rsyncd.lock ' + '\n' + \
+                              'log file = /var/log/rsyncd.log' + '\n' + \
+                              'fake super = yes'
 
-        base_config = "uid = rsync" + '\n' + \
-                      'gid = rsync' + '\n' + \
-                      'use chroot = no' + '\n' + \
-                      'max connections = 200' + '\n' + \
-                      'timeout = 300' + '\n' + \
-                      'pid file = /var/run/rsyncd.pid' + '\n' + \
-                      'lock file = /var/run/rsyncd.lock ' + '\n' + \
-                      'log file = /var/log/rsyncd.log' + '\n' + \
-                      'fake super = yes'
+                for temp_model in model_list:
+                    backup_path = temp_model['backup_path']
+                    cur_path = backup_path.replace(backup_path.split("/")[-1], "")
+                    # self.run_shell_cmd('chown -R rsync.rsync {0}'.format(cur_path))
 
-        for temp_model in model_list:
-            # 设置备份地址权限
-            self.run_shell_cmd('chown -R rsync.rsync {0}'.format(temp_model))
-
-            backup_path = temp_model['backup_path']
-            cur_path = backup_path.replace(backup_path.split("/")[-1], "")
-            self.run_shell_cmd('chown -R rsync.rsync {0}'.format(cur_path))
-
-            base_config += '\n' + \
-                           '[{0}]'.format(temp_model['model_name']) + '\n' + \
-                           'path = {0}'.format(cur_path) + '\n' + \
-                           'ignore errors' + '\n' + \
-                           'read only = false' + '\n' + \
-                           'list = false' + '\n' + \
-                           'hosts allow = *' + '\n' + \
-                           'auth users = rsync_backup' + '\n' + \
-                           'secrets file = /etc/rsync_server.password'
-        result, info = self.run_shell_cmd("echo '{0}' > /etc/rsyncd.conf".format(base_config))
-        # 配置Rsync用户
-        self.set_rsync_virtual_auth()
-
-        # 设置防火墙开放端口
-        self.open_873_port()
-
-        # 启动rsync
-        self.start_rsync()
+                    # 设置备份地址权限
+                    mode_auth_ret, mode_auth_info = self.run_shell_cmd('chown -R rsync.rsync {0}'.format(cur_path))
+                    if mode_auth_ret == 0:
+                        return mode_auth_ret, "备份路径权限配置失败:{0}".format(mode_auth_info)
+                    base_config += '\n' + \
+                                   '[{0}]'.format(temp_model['model_name']) + '\n' + \
+                                   'path = {0}'.format(cur_path) + '\n' + \
+                                   'ignore errors' + '\n' + \
+                                   'read only = false' + '\n' + \
+                                   'list = false' + '\n' + \
+                                   'hosts allow = *' + '\n' + \
+                                   'auth users = rsync_backup' + '\n' + \
+                                   'secrets file = /etc/rsync_server.password'
+                print(2)
+                rsync_config_result, rsync_config_info = self.run_shell_cmd("""echo "{0}" > /etc/rsyncd.conf""".format(base_config))
+                if rsync_config_result == 0:
+                    result = 0
+                    info = "Rsync配置文件写入失败:{0}".format(rsync_config_info)
+                else:
+                    print(3)
+                    # 配置Rsync用户
+                    rsync_virtual_result, rsync_virtual_info = self.set_rsync_virtual_auth()
+                    if rsync_virtual_result == 0:
+                        result = 0
+                        info = "虚拟用户rsync设置失败:{0}".format(rsync_virtual_info)
+                    else:
+                        # 设置防火墙开放端口
+                        port_result, port_info = self.open_873_port()
+                        # if port_result == 0:
+                        #     result = 0
+                        #     info = "873端口设置失败:{0}".format(port_info)
+                        # else:
+                        #     # 启动rsync
+                        start_rysnc_result, start_rsync_info = self.start_rsync()
+                            # if start_rysnc_result == 0:
+                            #     result = 0
+                            #     info = "启动rsync失败:{0}".format(port_info)
 
         return result, info
 
@@ -145,8 +173,11 @@ class RsyncBackup(object):
         return result, info
 
     def set_server_password(self):
+        print("e")
         result, info = self.run_shell_cmd('echo "{0}" > /etc/rsync_server.password'.format('rsync_backup:password'))
+        print("a")
         result, info = self.run_shell_cmd('chmod 600 /etc/rsync_server.password')
+        print("b")
         return result, info
 
     def set_client_password(self):
@@ -219,7 +250,7 @@ if __name__ == '__main__':
     server = {
         'hostname': '192.168.85.155',
         'username': 'miaokela',
-        'password': r'tesunet123'
+        'password': 'tesunet123'
     }
     rsync_backup = RsyncBackup(server)
     print(rsync_backup.msg)
@@ -227,10 +258,13 @@ if __name__ == '__main__':
     # result, info = rsync_backup.stop_rsync()
     # result, info = rsync_backup.run_shell_cmd('ls')
     # result, info = rsync_backup.install_rsync_by_yum()
-    result, info = rsync_backup.check_ever_existed()
-    rsync_backup.close_rsync()
+    # result, info = rsync_backup.check_ever_existed()
 
     # result, info = rsync_backup.rsync_exec_avz(r'/temp_data', '192.168.85.138', 'temp_model', delete=True)
     # result, info = rsync_backup.tail_rsync_log()
-    # result, info = rsync_backup.set_rsync_server_config([{"model_name": "server01", "host_allowd": "192.168.85.151", "backup_path": "/root/backup"}])
+    result, info = rsync_backup.set_rsync_server_config([{"model_name": "temp_model", "backup_path": "/base_dir/temp_data"}])
+    rsync_backup.close_rsync()
+    # sudo sh -c 'echo "This is testPage." >/usr/local/nginx/html/index.html'
+    # 将一个字串作为完整的命令来执行
+    # sudo仅有root的部分权限
     print(result, info)
