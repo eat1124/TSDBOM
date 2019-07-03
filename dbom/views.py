@@ -1114,11 +1114,13 @@ def rsync_config_save(request):
                         # 任务名称
                         # dest_dir, auth_user, dest_server_list, model_name_list
                         cur_periodictask.task = "dbom.tasks.remote_sync"
-                        cur_periodictask.args = [main_host_ip, str(selected_backup_host_list_int), str(model_list)]
+                        cur_periodictask.save()
+                        cur_periodictask_id = cur_periodictask.id
+                        cur_periodictask.args = [main_host_ip, selected_backup_host_list_int, str(model_list), cur_periodictask_id]
                         cur_periodictask.save()
                         # RsyncConfig
                         cur_rsync_config.main_host_id = main_host_ip
-                        cur_rsync_config.dj_periodictask_id = cur_periodictask.id
+                        cur_rsync_config.dj_periodictask_id = cur_periodictask_id
                         cur_rsync_config.save()
 
                         # cur_rsync_config关联backup_host对象
@@ -1181,7 +1183,7 @@ def rsync_config_save(request):
                                 cur_crontab_schedule.month_of_year = per_month if per_month != "0" else "*"
                                 cur_crontab_schedule.save()
                                 # 任务名称
-                                cur_periodictask.args = [main_host_ip, str(selected_backup_host_list), str(model_list)]
+                                cur_periodictask.args = [main_host_ip, selected_backup_host_list_int, str(model_list), cur_periodictask.id]
                                 cur_periodictask.save()
                         # RsyncConfig
                         cur_rsync_config.main_host_id = main_host_ip
@@ -1254,6 +1256,11 @@ def rsync_config_del(request):
         else:
             cur_rsync_host.state = "9"
             cur_rsync_host.save()
+
+            # 删除定时任务
+            periodictask = cur_rsync_host.dj_periodictask
+            periodictask.enabled = 0
+            periodictask.save()
         return HttpResponse(1)
     else:
         return HttpResponse(0)
@@ -1319,12 +1326,73 @@ def rsync_recover(request):
 
 @login_required
 def rsync_history(request, funid):
-
     return render(request, 'rsync_history.html', {
         'username': request.user.userinfo.fullname,
         "pagefuns": getpagefuns(funid, request),
-        # "all_rsync_hosts": all_rsync_hosts
     })
+
+
+@login_required
+def rsync_history_data(request):
+    start_time = request.GET.get("startdate", "")
+    end_time = request.GET.get("enddate", "")
+    all_rsync_history = ""
+    if not start_time and not end_time:
+        all_rsync_history = RsyncRecord.objects.exclude(state="9")
+    if start_time and not end_time:
+        start_time = datetime.datetime.strptime(start_time, '%Y-%m-%d').strftime('%Y-%m-%d %H:%M:%S')
+        all_rsync_history = RsyncRecord.objects.exclude(state="9").filter(starttime__gte=start_time)
+    if not start_time and end_time:
+        end_time = (datetime.datetime.strptime(end_time, '%Y-%m-%d') + datetime.timedelta(days=1) - datetime.timedelta(
+            seconds=1)).strftime('%Y-%m-%d %H:%M:%S')
+        all_rsync_history = RsyncRecord.objects.exclude(state="9").filter(starttime__lte=end_time)
+    if start_time and end_time:
+        start_time = datetime.datetime.strptime(start_time, '%Y-%m-%d').strftime('%Y-%m-%d %H:%M:%S')
+        end_time = (datetime.datetime.strptime(end_time, '%Y-%m-%d') + datetime.timedelta(days=1) - datetime.timedelta(
+            seconds=1)).strftime('%Y-%m-%d %H:%M:%S')
+        all_rsync_history = RsyncRecord.objects.exclude(state="9").filter(starttime__range=(start_time, end_time))
+        if end_time < start_time:
+            JsonResponse({"date": []})
+
+    all_rsync_history_list = []
+    if all_rsync_history:
+        for rsync_history in all_rsync_history:
+            main_host = rsync_history.rsync_config.main_host.ip_addr
+            backup_hosts = rsync_history.rsync_config.backup_host.exclude(state="9")
+            backup_host_init = ""
+            for backup_host in backup_hosts:
+                backup_host_init += backup_host.ip_addr + ","
+
+            all_rsync_history_list.append({
+                "rsync_history_id": rsync_history.id,
+                "main_host": main_host,
+                "backup_host": backup_host_init[:-1],
+                "status": rsync_history.get_status_display(),
+                "rsync_log": rsync_history.log,
+                "start_time": "{0:%Y-%m-%d %H:%M:%S}".format(rsync_history.starttime) if rsync_history.starttime else "",
+                "end_time": "{0:%Y-%m-%d %H:%M:%S}".format(rsync_history.endtime) if rsync_history.endtime else "",
+            })
+    return JsonResponse({"data": all_rsync_history_list})
+
+
+@login_required
+def rsync_history_del(request):
+    if 'rsync_history_id' in request.POST:
+        id = request.POST.get('rsync_history_id', '')
+        try:
+            id = int(id)
+        except:
+            return HttpResponse(0)
+        try:
+            cur_rsync_record = RsyncRecord.objects.get(id=id)
+        except RsyncRecord.DoesNotExist as e:
+            return HttpResponse(0)
+        else:
+            cur_rsync_record.state = "9"
+            cur_rsync_record.save()
+        return HttpResponse(1)
+    else:
+        return HttpResponse(0)
 
 
 def client_data_index(request, funid):

@@ -5,24 +5,20 @@ $(document).ready(function () {
         "bProcessing": true,
         "ajax": "../rsync_history_data?startdate=" + $('#startdate').val() + "&enddate=" + $('#enddate').val(),
         "columns": [
-            {"data": "processrun_id"},
-            {"data": "process_name"},
-            {"data": "createuser"},
-            {"data": "state"},
-            {"data": "run_reason"},
+            {"data": "rsync_history_id"},
+            {"data": "main_host"},
+            {"data": "backup_host"},
+            {"data": "start_time"},
+            {"data": "end_time"},
+            {"data": "status"},
+            {"data": "rsync_log"},
             {"data": null},
         ],
         "columnDefs": [{
-            "targets": 1,
-            "render": function (data, type, full) {
-                return "<td><a href='process_url' target='_blank'>data</a></td>".replace("data", full.process_name).replace("process_url", "/processindex/" + full.processrun_id + "?s=true")
-            }
-        }, {
             "targets": -1,  // 指定最后一列添加按钮；
             "data": null,
-            "width": "60px",  // 指定列宽；
             "render": function (data, type, full) {
-                return "<td><button class='btn btn-xs btn-primary' type='button'><a href='/custom_pdf_report/?processrunid&processid'><i class='fa fa-arrow-circle-down' style='color: white'></i></a></button><button title='删除'  id='delrow' class='btn btn-xs btn-primary' type='button'><i class='fa fa-trash-o'></i></button></td>".replace("processrunid", "processrunid=" + full.processrun_id).replace("processid", "processid=" + full.process_id)
+                return "<button title='删除'  id='delrow' class='btn btn-xs btn-primary' type='button'><i class='fa fa-trash-o'></i></button></td>"
             }
         }],
 
@@ -44,31 +40,30 @@ $(document).ready(function () {
         }
     });
     $('#sample_1 tbody').on('click', 'button#delrow', function () {
-            if (confirm("确定要删除该条数据？")) {
-                var table = $('#sample_1').DataTable();
-                var data = table.row($(this).parents('tr')).data();
-                $.ajax({
-                    type: "POST",
-                    url: "../../delete_current_process_run/",
-                    data:
-                        {
-                            processrun_id: data.processrun_id
-                        },
-                    success: function (data) {
-                        if (data == 1) {
-                            table.ajax.reload();
-                            alert("删除成功！");
-                        }
-                        else
-                            alert("删除失败，请于管理员联系。");
+        if (confirm("确定要删除该条数据？")) {
+            var table = $('#sample_1').DataTable();
+            var data = table.row($(this).parents('tr')).data();
+            $.ajax({
+                type: "POST",
+                url: "../../rsync_history_del/",
+                data:
+                    {
+                        rsync_history_id: data.rsync_history_id
                     },
-                    error: function (e) {
+                success: function (data) {
+                    if (data == 1) {
+                        table.ajax.reload();
+                        alert("删除成功！");
+                    } else
                         alert("删除失败，请于管理员联系。");
-                    }
-                });
+                },
+                error: function (e) {
+                    alert("删除失败，请于管理员联系。");
+                }
+            });
 
-            }
-        });
+        }
+    });
 
     $('#startdate').datetimepicker({
         autoclose: true,
@@ -80,9 +75,9 @@ $(document).ready(function () {
         minView: "month",
         format: 'yyyy-mm-dd',
     });
-    // $('#cx').click(function () {
-    //     var table = $('#sample_1').DataTable();
-    //     table.ajax.url("../falconstorsearchdata?runstate=" + $('#runstate').val() + "&startdate=" + $('#startdate').val() + "&enddate=" + $('#enddate').val() + "&processname=" + $('#processname').val() + "&runperson=" + $('#runperson').val()).load();
-    // })
+    $('#cx').click(function () {
+        var table = $('#sample_1').DataTable();
+        table.ajax.url("../rsync_history_data?startdate=" + $('#startdate').val() + "&enddate=" + $('#enddate').val()).load();
+    })
 
 });
