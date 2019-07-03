@@ -187,3 +187,4 @@ class RsyncRecord(models.Model):
         (2, "失败"),
     )
     status = models.IntegerField("备份状态", choices=status_choices, default=1)
+    state = models.CharField("逻辑删除:'9'", max_length=16, blank=True, default="")

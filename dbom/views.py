@@ -1132,7 +1132,7 @@ def rsync_config_save(request):
                         for i in range(0, rsync_model_num):
                             model_name = request.POST.get('model_name_{0}'.format(i + 1), "")
                             backup_path = request.POST.get('backup_path_{0}'.format(i + 1), "")
-                            if len(backup_path) > 1 and  backup_path.endswith("/"):
+                            if len(backup_path) > 1 and backup_path.endswith("/"):
                                 backup_path = backup_path[:-1]
 
                             cur_rsync_model = RsyncModel()
@@ -1314,6 +1314,16 @@ def rsync_recover(request):
     return JsonResponse({
         "ret": ret,
         "info": info,
+    })
+
+
+@login_required
+def rsync_history(request, funid):
+
+    return render(request, 'rsync_history.html', {
+        'username': request.user.userinfo.fullname,
+        "pagefuns": getpagefuns(funid, request),
+        # "all_rsync_hosts": all_rsync_hosts
     })
 
 
