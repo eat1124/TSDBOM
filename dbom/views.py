@@ -810,7 +810,7 @@ def rsync_hosts_data(request):
 
     all_rsync_hosts = RsyncHost.objects.exclude(state="9")
 
-    pool = ThreadPoolExecutor(max_workers=5)
+    pool = ThreadPoolExecutor(max_workers=50)
 
     all_tasks = [pool.submit(check_rsync_hosts_status, rsync_host) for rsync_host in all_rsync_hosts]
 
