@@ -155,8 +155,9 @@ $(document).ready(function () {
     });
     $('#sample_1 tbody').on('click', 'button#edit', function () {
         $("#rsync_loading").hide();
-        $("#save").removeProp("disabled", true);
-        $("#close").removeProp("disabled", true);
+        $("#save").removeProp("disabled");
+        $("#close").removeProp("disabled");
+
         var table = $('#sample_1').DataTable();
         var data = table.row($(this).parents('tr')).data();
         $("#id").val(data.id);
@@ -200,6 +201,11 @@ $(document).ready(function () {
 
     });
     $('#sample_1 tbody').on('click', 'button#recover_btn', function () {
+        $("#rsync_recover_loading").hide();
+        $("#recover").removeProp("disabled");
+        $("#recover_close").removeProp("disabled");
+        $("#recover_modal_close").removeProp("disabled");
+
         var table = $('#sample_1').DataTable();
         var data = table.row($(this).parents('tr')).data();
         $("#recover_id").val(data.main_host_id);
@@ -213,6 +219,10 @@ $(document).ready(function () {
     });
 
     $("#recover").click(function () {
+        $("#rsync_recover_loading").show();
+        $("#recover").prop("disabled", true);
+        $("#recover_close").prop("disabled", true);
+        $("#recover_modal_close").prop("disabled", true);
         $.ajax({
             type: "POST",
             dataType: "json",
@@ -226,18 +236,34 @@ $(document).ready(function () {
                 alert(data.info);
                 if (data.ret == 1) {
                     $("#static_recover").modal("hide");
+                } else {
+                    $("#rsync_recover_loading").hide();
+                    $("#recover").removeProp("disabled");
+                    $("#recover_close").removeProp("disabled");
+                    $("#recover_modal_close").removeProp("disabled");
                 }
             },
             error: function (e) {
                 alert("页面出现错误，请于管理员联系。");
+                $("#rsync_recover_loading").hide();
+                $("#recover").removeProp("disabled");
+                $("#recover_close").removeProp("disabled");
+                $("#recover_modal_close").removeProp("disabled");
             }
         })
     })
 
     $("#new").click(function () {
         $("#rsync_loading").hide();
-        $("#save").removeProp("disabled", true);
-        $("#close").removeProp("disabled", true);
+        $("#save").removeProp("disabled");
+        $("#close").removeProp("disabled");
+        $("#rsync_modal_close").removeProp("disabled");
+
+        $("#rsync_recover_loading").hide();
+        $("#recover").removeProp("disabled");
+        $("#recover_close").removeProp("disabled");
+        $("#recover_modal_close").removeProp("disabled");
+
         $("#id").val("0");
         $("#main_host_ip").val("");
         $("#backup_host_ip").val("").trigger("change");
@@ -270,6 +296,8 @@ $(document).ready(function () {
         $("#rsync_loading").show();
         $("#save").prop("disabled", true);
         $("#close").prop("disabled", true);
+        $("#rsync_modal_close").prop("disabled", true);
+
         var table = $('#sample_1').DataTable();
         var selected = $("#backup_host_ip").select2('data');//选择的值
         var selected_backup_host_list = new Array();
@@ -291,14 +319,16 @@ $(document).ready(function () {
                     $("#rsync_loading").hide();
                     $("#save").removeProp("disabled");
                     $("#close").removeProp("disabled");
+                    $("#rsync_modal_close").removeProp("disabled");
                 }
                 alert(mydata);
             },
             error: function (e) {
                 alert("页面出现错误，请于管理员联系。");
                 $("#rsync_loading").hide();
-                $("#save").removeProp("disabled", true);
-                $("#close").removeProp("disabled", true);
+                $("#save").removeProp("disabled");
+                $("#close").removeProp("disabled");
+                $("#rsync_modal_close").removeProp("disabled");
             }
         });
     });
@@ -341,5 +371,4 @@ $(document).ready(function () {
             $("#node_del").css("visibility", "hidden");
         }
     });
-
 });
