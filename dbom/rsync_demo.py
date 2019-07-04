@@ -151,15 +151,15 @@ class RsyncBackup(object):
                     else:
                         # 设置防火墙开放端口
                         port_result, port_info = self.open_873_port()
-                        # if port_result == 0:
-                        #     result = 0
-                        #     info = "873端口设置失败:{0}".format(port_info)
-                        # else:
-                        #     # 启动rsync
-                        start_rysnc_result, start_rsync_info = self.start_rsync()
-                        # if start_rysnc_result == 0:
-                        #     result = 0
-                        #     info = "启动rsync失败:{0}".format(port_info)
+                        if port_result == 0:
+                            result = 0
+                            info = "873端口设置失败:{0}".format(port_info)
+                        else:
+                            # 启动rsync
+                            start_rysnc_result, start_rsync_info = self.start_rsync()
+                            # if start_rysnc_result == 0:
+                            #     result = 0
+                            #     info = "启动rsync失败:{0}".format(start_rsync_info)
 
         return result, info
 
@@ -190,7 +190,7 @@ class RsyncBackup(object):
         :return:
         """
         result, info = self.run_shell_cmd('ps -ef|grep rsync|grep -v grep')
-        if result:
+        if "rsync" in info:
             result = 0
             info = 'rsync已经在运行中。'
         else:
@@ -199,7 +199,7 @@ class RsyncBackup(object):
 
     def stop_rsync(self):
         result, info = self.run_shell_cmd('ps -ef|grep rsync|grep -v grep')
-        if not result:
+        if "rsync" not in info:
             result = 0
             info = 'rsync未运行。'
         else:
@@ -214,23 +214,69 @@ class RsyncBackup(object):
         # 查看centos版本
         result, info = 1, ""
         centOS_version_result, info = self.run_shell_cmd("cat /etc/redhat-release")
-        if " 7." in centOS_version_result:
-            result, info = self.run_shell_cmd('firewall-cmd --zone=public --add-port=873/tcp --permanent&&systemctl restart firewalld.service')  # centos7
+        if " 7." in info:
+            set_port_result, set_port_info = self.run_shell_cmd('firewall-cmd --zone=public --add-port=873/tcp --permanent')  # centos7
+            if set_port_result == 1:
+                restart_firewalld_result, restart_firewalld_info = self.run_shell_cmd('systemctl restart firewalld.service')
+                if restart_firewalld_result == 1:
+                    result = 1
+                    info = "防火墙设置成功。"
+                else:
+                    result = 0
+                    info = "防火墙设置失败：{0}".format(restart_firewalld_info)
+            else:
+                result = 0
+                info = "端口设置失败：{0}".format(set_port_info)
         else:
-            result, info = self.run_shell_cmd('/sbin/iptables -I INPUT -p tcp --dport 873 -j ACCEPT&&/etc/init.d/iptables save&&service iptables restart')  # centos6
+            set_port_result, set_port_info = self.run_shell_cmd('/sbin/iptables -I INPUT -p tcp --dport 873 -j ACCEPT')  # centos6
+            if set_port_result == 1:
+                save_port_result, save_port_info = self.run_shell_cmd('/etc/init.d/iptables save')
+                if save_port_result == 1:
+                    restart_iptables_result, restart_iptables_info = self.run_shell_cmd('service iptables restart')
+                    if restart_iptables_result == 1:
+                        result = 1
+                        info = "防火墙设置成功。"
+                    else:
+                        result = 0
+                        info = "防火墙重启失败：{0}".format(restart_iptables_info)
+                else:
+                    result = 0
+                    info = "端口设置保存失败：{0}".format(save_port_info)
+            else:
+                result = 0
+                info = "端口设置失败：{0}".format(set_port_info)
+
         return result, info
 
     def restart_rsync(self):
-        result, info = self.run_shell_cmd('ps -ef|grep rsync|grep -v grep')
-        if result:
-            result, info = self.run_shell_cmd('pkill rsync', get_pty=False)
-            if result == 1:
-                result, info = self.run_shell_cmd('rsync --daemon', get_pty=False)
+        result, info = 1, ""
+        check_rsync_result, check_rsync_info = self.run_shell_cmd('ps -ef|grep rsync|grep -v grep')
+        if "rsync" in check_rsync_info:
+            pkill_rsync_result, pkill_rsync_info = self.run_shell_cmd('pkill rsync', get_pty=False)
+            if pkill_rsync_result == 1:
+                run_rsync_result, run_rsync_info = self.run_shell_cmd('rsync --daemon', get_pty=False)
+                if run_rsync_result == 1:
+                    result = 1
+                    info = "rsync启动成功。"
+                else:
+                    result = 0
+                    info = run_rsync_info
             else:
-                result, info = self.start_rsync()
+                run_rsync_result, run_rsync_info = self.start_rsync()
+                if run_rsync_result == 1:
+                    result = 1
+                    info = "rsync启动成功。"
+                else:
+                    result = 0
+                    info = run_rsync_info
         else:
-            result, info = self.start_rsync()
-
+            run_rsync_result, run_rsync_info = self.start_rsync()
+            if run_rsync_result == 1:
+                result = 1
+                info = "rsync启动成功。"
+            else:
+                result = 0
+                info = run_rsync_info
         return result, info
 
     def rsync_exec_avz(self, dest_dir, dest_server, model_name, delete=False):

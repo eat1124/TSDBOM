@@ -1068,7 +1068,7 @@ def rsync_config_save(request):
 
                             return JsonResponse({
                                 "ret": 0,
-                                "data": "主服务器{0} 配置失败。".format(cur_main_host.ip_addr)
+                                "data": "主服务器{0} 配置失败, {1}".format(cur_main_host.ip_addr, info)
                             })
 
                 # 2.备机
@@ -1416,8 +1416,8 @@ def rsync_history_data(request):
 
             all_rsync_history_list.append({
                 "rsync_history_id": rsync_history.id,
-                "main_host": main_host,
-                "backup_host": backup_host_init[:-1],
+                "main_host": rsync_history.main_host,
+                "backup_host": rsync_history.backup_host,
                 "status": rsync_history.get_status_display(),
                 "rsync_log": rsync_history.log,
                 "start_time": "{0:%Y-%m-%d %H:%M:%S}".format(rsync_history.starttime) if rsync_history.starttime else "",

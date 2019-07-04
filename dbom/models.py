@@ -181,6 +181,8 @@ class RsyncRecord(models.Model):
     rsync_config = models.ForeignKey(RsyncConfig, null=True, verbose_name="Rsync配置")
     starttime = models.DateTimeField("开始时间", blank=True)
     endtime = models.DateTimeField("结束时间", blank=True)
+    main_host = models.CharField("关联主机", max_length=512, blank=True)
+    backup_host = models.CharField("关联备份主机", max_length=512, blank=True)
     log = models.CharField("备份失败日志", max_length=512, blank=True)
     status_choices = (
         (1, "成功"),

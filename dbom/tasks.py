@@ -53,6 +53,7 @@ def remote_sync(main_host_ip, backup_host_list, model_list, periodictask_id):
             }
             rsync_backup = RsyncBackup(server)
             if rsync_backup.msg == "远程连接成功。":
+                backup_host_string = ""
                 for backup_host in backup_host_list:
                     try:
                         cur_backup_host = RsyncHost.objects.get(id=int(backup_host))
@@ -81,9 +82,12 @@ def remote_sync(main_host_ip, backup_host_list, model_list, periodictask_id):
                                 cur_rsync_record.rsync_config_id = cur_rsync_config.id
                                 cur_rsync_record.save()
                                 return
+                        backup_host_string += cur_backup_host.ip_addr + ','
                 cur_rsync_record.starttime = start_time
                 cur_rsync_record.endtime = datetime.datetime.now()
                 cur_rsync_record.status = 1
+                cur_rsync_record.main_host = cur_rsync_host.ip_addr
+                cur_rsync_record.backup_host = backup_host_string[:-1] if backup_host_string else ""
                 cur_rsync_record.rsync_config_id = cur_rsync_config.id
                 cur_rsync_record.save()
             else:
