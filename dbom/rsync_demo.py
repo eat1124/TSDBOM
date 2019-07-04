@@ -253,7 +253,7 @@ class RsyncBackup(object):
 
 if __name__ == '__main__':
     server = {
-        'hostname': '192.168.85.155',
+        'hostname': '192.168.85.101',
         'username': 'miaokela',
         'password': 'tesunet123'
     }
@@ -262,12 +262,12 @@ if __name__ == '__main__':
     # result, info = rsync_backup.start_rsync()
     # result, info = rsync_backup.stop_rsync()
     # result, info = rsync_backup.run_shell_cmd('ls')
-    # result, info = rsync_backup.install_rsync_by_yum()
+    result, info = rsync_backup.install_rsync_by_yum()
     # result, info = rsync_backup.check_ever_existed()
 
     # result, info = rsync_backup.rsync_exec_avz(r'/temp_data', '192.168.85.138', 'temp_model', delete=True)
     # result, info = rsync_backup.tail_rsync_log()
-    result, info = rsync_backup.set_rsync_server_config([{"model_name": "temp_model", "backup_path": "/base_dir/temp_data"}])
+    # result, info = rsync_backup.set_rsync_server_config([{"model_name": "temp_model", "backup_path": "/base_dir/temp_data"}])
     rsync_backup.close_rsync()
     # sudo sh -c 'echo "This is testPage." >/usr/local/nginx/html/index.html'
     # 将一个字串作为完整的命令来执行

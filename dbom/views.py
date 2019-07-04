@@ -634,7 +634,7 @@ def rsync_hosts_save(request):
         ip_addr = request.POST.get('ip_addr', '')
         username = request.POST.get('username', '')
         password = request.POST.get('password', '')
-        print(ip_addr)
+        password2 = request.POST.get('password2', '')
         try:
             id = int(id)
         except:
@@ -656,51 +656,57 @@ def rsync_hosts_save(request):
                 if password.strip() == "":
                     result["res"] = '密码不能为空。'
                 else:
-                    if id == 0:
-                        all_rsync_hosts = RsyncHost.objects.exclude(state="9").filter(ip_addr=ip_addr)
-                        if all_rsync_hosts.exists():
-                            result["res"] = '主机IP:' + ip_addr + '已存在。'
-                        else:
-                            try:
-                                new_rsync_host = RsyncHost()
-                                new_rsync_host.ip_addr = ip_addr
-                                new_rsync_host.username = username
-                                new_rsync_host.password = password
-
-                                # 远程安装Rsync
-                                rsync_backup = RsyncBackup(server)
-                                if rsync_backup.msg == "远程连接成功。":
-                                    rsync_backup.install_rsync_by_yum()
-
-                                new_rsync_host.save()
-                                result["res"] = "保存成功。"
-                                result["data"] = new_rsync_host.id
-                            except:
-                                result["res"] = "新增失败。"
+                    if password != password2:
+                        result["res"] = '两次密码不一致，请重新输入。'
                     else:
-                        try:
-                            cur_rsync_host = RsyncHost.objects.exclude(state="9").get(id=id)
-                        except RsyncHost.DoesNotExist as e:
-                            result["res"] = "该主机不存在，无法修改。"
+                        if id == 0:
+                            all_rsync_hosts = RsyncHost.objects.exclude(state="9").filter(ip_addr=ip_addr)
+                            if all_rsync_hosts.exists():
+                                result["res"] = '主机IP:' + ip_addr + '已存在。'
+                            else:
+                                try:
+                                    new_rsync_host = RsyncHost()
+                                    new_rsync_host.ip_addr = ip_addr
+                                    new_rsync_host.username = username
+                                    new_rsync_host.password = password
+
+                                    # 远程安装Rsync
+                                    rsync_backup = RsyncBackup(server)
+                                    if rsync_backup.msg == "远程连接成功。":
+                                        rsync_backup.install_rsync_by_yum()
+
+                                    new_rsync_host.save()
+                                    result["res"] = "保存成功。"
+                                    result["data"] = new_rsync_host.id
+                                except:
+                                    result["res"] = "新增失败。"
+                                else:
+                                    rsync_backup.close_rsync()
                         else:
                             try:
-                                cur_rsync_host.ip_addr = ip_addr
-                                cur_rsync_host.username = username
-                                cur_rsync_host.password = password
+                                cur_rsync_host = RsyncHost.objects.exclude(state="9").get(id=id)
+                            except RsyncHost.DoesNotExist as e:
+                                result["res"] = "该主机不存在，无法修改。"
+                            else:
+                                try:
+                                    cur_rsync_host.ip_addr = ip_addr
+                                    cur_rsync_host.username = username
+                                    cur_rsync_host.password = password
 
-                                # 远程安装Rsync
-                                rsync_backup = RsyncBackup(server)
-                                if rsync_backup.msg == "远程连接成功。":
-                                    rsync_backup.install_rsync_by_yum()
+                                    # 远程安装Rsync
+                                    rsync_backup = RsyncBackup(server)
+                                    if rsync_backup.msg == "远程连接成功。":
+                                        rsync_backup.install_rsync_by_yum()
 
-                                cur_rsync_host.save()
-                                result["res"] = "保存成功。"
-                                result["data"] = cur_rsync_host.id
-                            except:
-                                result["res"] = "修改失败。"
-    rsync_backup.close_rsync()
+                                    cur_rsync_host.save()
+                                    result["res"] = "保存成功。"
+                                    result["data"] = cur_rsync_host.id
+                                except:
+                                    result["res"] = "修改失败。"
+                                else:
+                                    rsync_backup.close_rsync()
 
-    return JsonResponse(result)
+        return JsonResponse(result)
 
 
 @login_required
@@ -817,6 +823,9 @@ def rsync_hosts_data(request):
     for future in as_completed(all_tasks):
         if future.result():
             result.append(future.result())
+
+    # 排序
+    result = sorted(result, key=itemgetter('id'))
 
     # for rsync_host in all_rsync_hosts:
     #     # server_status, install_status

@@ -88,6 +88,7 @@ $(document).ready(function () {
         $("#ip_addr").val(data.ip_addr);
         $("#username").val(data.username);
         $("#password").val(data.password);
+        $("#password2").val("");
     });
 
     $("#new").click(function () {
@@ -98,7 +99,7 @@ $(document).ready(function () {
         $("#ip_addr").val("");
         $("#username").val("");
         $("#password").val("");
-
+        $("#password2").val("");
     });
 
     $('#save').click(function () {
@@ -116,6 +117,7 @@ $(document).ready(function () {
                     ip_addr: $("#ip_addr").val(),
                     username: $("#username").val(),
                     password: $("#password").val(),
+                    password2: $("#password2").val(),
                 },
             success: function (data) {
                 $("#rsync_loading").hide();
