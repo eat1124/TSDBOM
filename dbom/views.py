@@ -760,52 +760,94 @@ def rsync_reinstall(request):
         })
 
 
+def check_rsync_hosts_status(rsync_host):
+    server = {
+        'hostname': rsync_host.ip_addr,
+        'username': rsync_host.username,
+        'password': rsync_host.password,
+    }
+    rsync_backup = RsyncBackup(server)
+    if rsync_backup.msg == "远程连接失败。":
+        # 服务器未开启
+        server_status = "关闭"
+        install_status = "未知"
+    else:
+        server_status = "开启"
+        res, info = rsync_backup.check_ever_existed()
+        if res == 1:
+            install_status = "已安装"
+        else:
+            install_status = "未安装"
+    rsync_backup.close_rsync()
+    return {
+        'id': rsync_host.id,
+        'ip_addr': rsync_host.ip_addr,
+        'username': rsync_host.username,
+        'password': rsync_host.password,
+        'server_status': server_status,
+        'install_status': install_status,
+        'log': rsync_host.log,
+    }
+
+
 @login_required
 def rsync_hosts_data(request):
+    """
+    server_status_choices = (
+        (1, "开启"),
+        (2, "关闭"),
+    )
+    install_status_choices = (
+        (1, "已安装"),
+        (2, "未安装"),
+        (3, "失败"),
+        (4, "未知"),
+    )
+    :param request:
+    :return:
+    """
     result = []
 
     all_rsync_hosts = RsyncHost.objects.exclude(state="9")
-    # server_status_choices = (
-    #     (1, "开启"),
-    #     (2, "关闭"),
-    # )
-    # install_status_choices = (
-    #     (1, "已安装"),
-    #     (2, "未安装"),
-    #     (3, "失败"),
-    #     (4, "未知"),
-    # )
-    for rsync_host in all_rsync_hosts:
-        # server_status, install_status
-        server = {
-            'hostname': rsync_host.ip_addr,
-            'username': rsync_host.username,
-            'password': rsync_host.password,
-        }
-        rsync_backup = RsyncBackup(server)
-        print(rsync_backup.msg)
-        if rsync_backup.msg == "远程连接失败。":
-            # 服务器未开启
-            server_status = "关闭"
-            install_status = "未知"
-        else:
-            server_status = "开启"
-            res, info = rsync_backup.check_ever_existed()
-            if res == 1:
-                install_status = "已安装"
-            else:
-                install_status = "未安装"
 
-        result.append({
-            'id': rsync_host.id,
-            'ip_addr': rsync_host.ip_addr,
-            'username': rsync_host.username,
-            'password': rsync_host.password,
-            'server_status': server_status,
-            'install_status': install_status,
-            'log': rsync_host.log,
-        })
-        rsync_backup.close_rsync()
+    pool = ThreadPoolExecutor(max_workers=5)
+
+    all_tasks = [pool.submit(check_rsync_hosts_status, rsync_host) for rsync_host in all_rsync_hosts]
+
+    for future in as_completed(all_tasks):
+        if future.result():
+            result.append(future.result())
+
+    # for rsync_host in all_rsync_hosts:
+    #     # server_status, install_status
+    #     server = {
+    #         'hostname': rsync_host.ip_addr,
+    #         'username': rsync_host.username,
+    #         'password': rsync_host.password,
+    #     }
+    #     rsync_backup = RsyncBackup(server)
+    #     if rsync_backup.msg == "远程连接失败。":
+    #         # 服务器未开启
+    #         server_status = "关闭"
+    #         install_status = "未知"
+    #     else:
+    #         server_status = "开启"
+    #         res, info = rsync_backup.check_ever_existed()
+    #         if res == 1:
+    #             install_status = "已安装"
+    #         else:
+    #             install_status = "未安装"
+    #
+    #     result.append({
+    #         'id': rsync_host.id,
+    #         'ip_addr': rsync_host.ip_addr,
+    #         'username': rsync_host.username,
+    #         'password': rsync_host.password,
+    #         'server_status': server_status,
+    #         'install_status': install_status,
+    #         'log': rsync_host.log,
+    #     })
+    #     rsync_backup.close_rsync()
 
     return JsonResponse({"data": result})
 
