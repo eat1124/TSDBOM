@@ -8,7 +8,7 @@ $(document).ready(function () {
             {"data": "id"},
             {"data": "ip_addr"},
             {"data": "username"},
-            {"data": "password"},
+            // {"data": "password"},
             {"data": "server_status"},
             {"data": null},
             {"data": null},
