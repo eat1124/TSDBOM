@@ -18,6 +18,7 @@ class RsyncBackup(object):
         执行Rsync的命令选项
         执行Rsync的参数：服务器端文件地址，虚拟用户名，IP地址，模块名称
     """
+
     def __init__(self, server):
         self.client = paramiko.SSHClient()
         self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -44,7 +45,7 @@ class RsyncBackup(object):
     def run_shell_cmd(self, shell_cmd, get_pty=True):
         result = 1
         info = ''
-        print("echo {0}|sudo -S sh -c '{1}'".format(self.server["password"], shell_cmd) if self.server["username"] != "root" else shell_cmd)
+        print("本次执行命令: echo {0}|sudo -S sh -c '{1}'".format(self.server["password"], shell_cmd) if self.server["username"] != "root" else shell_cmd)
         # root/普通用户
         stdin, stdout, stderr = self.client.exec_command("echo {0}|sudo -S sh -c '{1}'".format(self.server["password"], shell_cmd) if self.server["username"] != "root" else shell_cmd + self.verify_shell_cmd, get_pty=get_pty)
 
@@ -100,7 +101,6 @@ class RsyncBackup(object):
         info = ""
         # 设置互通密码
         server_passwd_ret, server_passwd_info = self.set_server_password()
-        print(1)
         if server_passwd_ret == 0:
             result = 0
             info = "服务端密码配置失败:{0}".format(server_passwd_info)
@@ -138,13 +138,11 @@ class RsyncBackup(object):
                                    'hosts allow = *' + '\n' + \
                                    'auth users = rsync_backup' + '\n' + \
                                    'secrets file = /etc/rsync_server.password'
-                print(2)
                 rsync_config_result, rsync_config_info = self.run_shell_cmd("""echo "{0}" > /etc/rsyncd.conf""".format(base_config))
                 if rsync_config_result == 0:
                     result = 0
                     info = "Rsync配置文件写入失败:{0}".format(rsync_config_info)
                 else:
-                    print(3)
                     # 配置Rsync用户
                     rsync_virtual_result, rsync_virtual_info = self.set_rsync_virtual_auth()
                     if rsync_virtual_result == 0:
@@ -159,9 +157,9 @@ class RsyncBackup(object):
                         # else:
                         #     # 启动rsync
                         start_rysnc_result, start_rsync_info = self.start_rsync()
-                            # if start_rysnc_result == 0:
-                            #     result = 0
-                            #     info = "启动rsync失败:{0}".format(port_info)
+                        # if start_rysnc_result == 0:
+                        #     result = 0
+                        #     info = "启动rsync失败:{0}".format(port_info)
 
         return result, info
 
@@ -173,11 +171,8 @@ class RsyncBackup(object):
         return result, info
 
     def set_server_password(self):
-        print("e")
         result, info = self.run_shell_cmd('echo "{0}" > /etc/rsync_server.password'.format('rsync_backup:password'))
-        print("a")
         result, info = self.run_shell_cmd('chmod 600 /etc/rsync_server.password')
-        print("b")
         return result, info
 
     def set_client_password(self):
@@ -212,7 +207,17 @@ class RsyncBackup(object):
         return result, info
 
     def open_873_port(self):
-        result, info = self.run_shell_cmd('firewall-cmd --zone=public --add-port=873/tcp --permanent;systemctl restart firewalld.service')
+        """
+        与centos版本相关
+        :return:
+        """
+        # 查看centos版本
+        result, info = 1, ""
+        centOS_version_result, info = self.run_shell_cmd("cat /etc/redhat-release")
+        if " 7." in centOS_version_result:
+            result, info = self.run_shell_cmd('firewall-cmd --zone=public --add-port=873/tcp --permanent&&systemctl restart firewalld.service')  # centos7
+        else:
+            result, info = self.run_shell_cmd('/sbin/iptables -I INPUT -p tcp --dport 873 -j ACCEPT&&/etc/init.d/iptables save&&service iptables restart')  # centos6
         return result, info
 
     def restart_rsync(self):
