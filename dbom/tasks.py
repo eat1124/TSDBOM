@@ -41,7 +41,6 @@ def remote_sync(main_host_ip, backup_host_list, model_list, periodictask_id):
         pass
     else:
         cur_rsync_config = cur_periodictask.rsyncconfig
-        print("------------", cur_rsync_record.id)
         try:
             cur_rsync_host = RsyncHost.objects.get(id=int(main_host_ip))
         except RsyncHost.DoesNotExist as e:
@@ -94,4 +93,25 @@ def remote_sync(main_host_ip, backup_host_list, model_list, periodictask_id):
                 cur_rsync_record.log = "远程连接失败。"
                 cur_rsync_record.rsync_config_id = cur_rsync_config.id
                 cur_rsync_record.save()
+
+
+@shared_task
+def check_server_status():
+    """
+    每隔半小时检查所有rsync主机服务器是否开启，若关闭则取消定时任务。
+    :return:
+    """
+    all_rsync_configs = RsyncConfig.objects.exclude(state="9")
+    for rsync_config in all_rsync_configs:
+        main_host = rsync_config.main_host
+        server = {
+            'hostname': main_host.ip_addr,
+            'username': main_host.username,
+            'password': main_host.password,
+        }
+        rsync_backup = RsyncBackup(server)
+        if rsync_backup.msg == "远程连接失败。":
+            cur_periodictask = rsync_config.dj_periodictask
+            cur_periodictask.enabled = 0
+            cur_periodictask.save()
 
