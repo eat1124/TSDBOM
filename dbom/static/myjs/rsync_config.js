@@ -157,6 +157,7 @@ $(document).ready(function () {
         $("#rsync_loading").hide();
         $("#save").removeProp("disabled");
         $("#close").removeProp("disabled");
+        $("#rsync_modal_close").removeProp("disabled");
 
         var table = $('#sample_1').DataTable();
         var data = table.row($(this).parents('tr')).data();
