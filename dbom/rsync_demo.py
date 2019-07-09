@@ -31,7 +31,7 @@ class RsyncBackup(object):
         else:
             self.msg = '远程连接成功。'
 
-        self.verify_shell_cmd = 'if [ $? -eq 0 ]; then' + '\n' + \
+        self.verify_shell_cmd = ';if [ $? -eq 0 ]; then' + '\n' + \
                                 '   echo "cmd_succeed"' + '\n' + \
                                 'else' + '\n' + \
                                 '   echo "cmd_failed"' + '\n' + \
@@ -45,9 +45,10 @@ class RsyncBackup(object):
     def run_shell_cmd(self, shell_cmd, get_pty=True):
         result = 1
         info = ''
-        print("本次执行命令: echo {0}|sudo -S sh -c '{1}'".format(self.server["password"], shell_cmd) if self.server["username"] != "root" else shell_cmd)
+        # 区分主备密码
+        print("本次执行命令: echo '{0}'|sudo -S sh -c '{1}'".format(self.server["password"], shell_cmd) if self.server["username"] != "root" else shell_cmd)
         # root/普通用户
-        stdin, stdout, stderr = self.client.exec_command("echo {0}|sudo -S sh -c '{1}'".format(self.server["password"], shell_cmd) if self.server["username"] != "root" else shell_cmd + self.verify_shell_cmd, get_pty=get_pty)
+        stdin, stdout, stderr = self.client.exec_command("echo '{0}'|sudo -S sh -c '{1}' {2}".format(self.server["password"], shell_cmd, self.verify_shell_cmd) if self.server["username"] != "root" else shell_cmd, get_pty=get_pty)
 
         stdout_init = ''
         stderr_init = ''
@@ -57,7 +58,7 @@ class RsyncBackup(object):
             if 'cmd_succeed' in stdout_init:
                 stdout_init = stdout_init.replace('cmd_succeed', '')
                 result = 1
-            if 'cmd_failed' in stdout_init:
+            else:
                 stdout_init = stdout_init.replace('cmd_failed', '')
                 result = 0
 
