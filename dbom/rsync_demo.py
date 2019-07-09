@@ -172,13 +172,36 @@ class RsyncBackup(object):
         return result, info
 
     def set_server_password(self):
-        result, info = self.run_shell_cmd('echo "{0}" > /etc/rsync_server.password'.format('rsync_backup:password'))
-        result, info = self.run_shell_cmd('chmod 600 /etc/rsync_server.password')
+        server_passwd_result, server_passwd_info = self.run_shell_cmd('echo "{0}" > /etc/rsync_server.password'.format('rsync_backup:password'))
+        if server_passwd_result == 1:
+            chmod_result, chmod_info = self.run_shell_cmd('chmod 600 /etc/rsync_server.password')
+            if chmod_result == 1:
+                result = 1
+                info = "服务器Rsync密码设置成功。"
+            else:
+                result = 0
+                info = "服务器Rsync密码权限设置失败：{0}".format(chmod_info)
+        else:
+            result = 0
+            info = "服务器Rsync密码设置失败：{0}".format(server_passwd_info)
         return result, info
 
     def set_client_password(self):
-        result, info = self.run_shell_cmd('echo "{0}" > /etc/rsync.password'.format('password'))
-        result, info = self.run_shell_cmd('chmod 600 /etc/rsync.password')
+        client_passwd_result, server_passwd_info = self.run_shell_cmd('echo "{0}" > /etc/rsync.password'.format('password'))
+        if client_passwd_result == 1:
+            chmod_result, chmod_info = self.run_shell_cmd('chmod 600 /etc/rsync.password')
+            if chmod_result == 1:
+                result = 1
+                info = "客户端Rsync密码设置成功。"
+            else:
+                result = 0
+                info = "客户端Rsync密码权限设置失败：{0}".format(chmod_info)
+        else:
+            result = 0
+            info = "客户端Rsync密码设置失败：{0}".format(client_passwd_info)
+        return result, info
+
+
         return result, info
 
     def tail_rsync_log(self):
