@@ -84,6 +84,7 @@ def remote_sync(main_host_ip, backup_host_list, model_list, periodictask_id):
                                 cur_rsync_record.save()
                                 return
                         backup_host_string += cur_backup_host.ip_addr + ','
+                        
                 cur_rsync_record.starttime = start_time
                 cur_rsync_record.endtime = datetime.datetime.now()
                 cur_rsync_record.status = 1
