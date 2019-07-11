@@ -288,7 +288,7 @@ $(document).ready(function () {
         $("#exchange").prop("disabled", true);
         $("#exchange_close").prop("disabled", true);
         $("#exchange_modal_close").prop("disabled", true);
-
+        var table = $('#sample_1').DataTable();
         $.ajax({
             type: "POST",
             dataType: "json",
@@ -302,6 +302,7 @@ $(document).ready(function () {
                 alert(data.info);
                 if (data.ret == 1) {
                     $("#static_exchange").modal("hide");
+                    table.ajax.reload();
                 } else {
                     $("#exchange_recover_loading").hide();
                     $("#exchange").removeProp("disabled");

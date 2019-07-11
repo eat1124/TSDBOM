@@ -1390,7 +1390,6 @@ def server_exchange(request):
     :return:
     """
     id = request.POST.get("id")
-    main_host = request.POST.get("main_host")
     backup_host = request.POST.get("backup_host")
     ret = ""
     info = ""
@@ -1403,46 +1402,157 @@ def server_exchange(request):
         info = "网络异常"
     else:
         # 主从交替: 关闭/开启服务
+        main_host = cur_rsync_config.main_host
 
+        try:
+            backup_host = RsyncHost.objects.get(id=backup_host)
+        except RsyncHost.DoesNotExist as e:
+            ret = 0
+            info = "备用服务器不存在"
+        else:
+            main_server = {
+                'hostname': main_host.ip_addr,
+                'username': main_host.username,
+                'password': main_host.password,
+            }
+            backup_server = {
+                'hostname': backup_host.ip_addr,
+                'username': backup_host.username,
+                'password': backup_host.password,
+            }
 
+            rsync_main = RsyncBackup(main_server)
+            rsync_backup = RsyncBackup(backup_server)
 
-        pass
-        # model_list = cur_rsync_config.rsyncmodel_set.exclude(state="9")
-        # if model_list.exists():
-        #     try:
-        #         backup_host_obj = RsyncHost.objects.get(id=backup_host)
-        #     except RsyncHost.DoesNotExist as e:
-        #         ret = 0
-        #         info = "网络异常"
-        #     else:
-        #         server = {
-        #             'hostname': backup_host_obj.ip_addr,
-        #             'username': backup_host_obj.username,
-        #             'password': backup_host_obj.password,
-        #         }
-        #         rsync_backup = RsyncBackup(server)
-        #         if rsync_backup.msg == "远程连接成功。":
-        #             temp_info = ""
-        #             temp_tag = True
-        #             for cur_model in model_list:
-        #                 result, info = rsync_backup.rsync_exec_avz(cur_model.rsync_path, dest_main_host, cur_model.model_name, delete=True)
-        #                 if result == 1:
-        #                     temp_log = "备份成功。"
-        #                 else:
-        #                     temp_tag = False
-        #                     temp_log += info
-        #             info = temp_log
-        #             if temp_tag:
-        #                 ret = 1
-        #             else:
-        #                 ret = 0
-        #         else:
-        #             ret = 0
-        #             info = "远程连接失败。"
-        # else:
-        #     ret = 0
-        #     info = "模块不存在，请联系管理员。"
-        # rsync_backup.close_connection()
+            cur_main_host_status = main_host.status
+            if cur_main_host_status == 1:
+                # 关闭主服务，开启备用服务
+                print("关闭主服务，开启备用服务")
+
+                # 检查nginx是否已经开启
+                check_nginx_result, check_nginx_info = rsync_main.run_shell_cmd("ps -ef|grep nginx|grep -v grep")
+                if "nginx" in check_nginx_info:
+                    pkill_nginx_result, pkill_nginx_info = rsync_main.run_shell_cmd("pkill nginx")
+                else:
+                    pkill_nginx_result, pkill_nginx_info = 1, ""
+
+                if pkill_nginx_result == 1:
+                    pass
+                    # 检查uwsgi是否开启
+                    # check_uwsgi_result, check_uwsgi_info = rsync_main.run_shell_cmd("ps -ef|grep uwsgi|grep -v grep")
+                    # if "uwsgi" in check_uwsgi_info:
+                    #     pkill_uwsgi_result, pkill_uwsgi_info = rsync_main.run_shell_cmd("uwsgi --stop /var/www/html/TSDBOM/TSDBOM-master.pid")
+                    # else:
+                    #     pkill_uwsgi_result, pkill_uwsgi_info = 1, ""
+                    #
+                    # if pkill_uwsgi_result == 1:
+                    #     pass
+                    # else:
+                    #     return JsonResponse({
+                    #         "ret": 0,
+                    #         "info": "主服务器：{0}, 关闭uwsgi服务失败。 ".format(main_host.ip_addr),
+                    #     })
+                else:
+                    return JsonResponse({
+                        "ret": 0,
+                        "info": "主服务器：{0}, 关闭nginx服务失败。 ".format(main_host.ip_addr),
+                    })
+
+                check_nginx_result, check_nginx_info = rsync_backup.run_shell_cmd("ps -ef|grep nginx|grep -v grep")
+                if "nginx" in check_nginx_info:
+                    setup_nginx_result, setup_nginx_info = rsync_backup.run_shell_cmd("/usr/local/nginx/sbin/nginx -s reload")
+                else:
+                    setup_nginx_result, setup_nginx_info = rsync_backup.run_shell_cmd("/usr/local/nginx/sbin/nginx")
+                    if setup_nginx_result == 1:
+                        check_uwsgi_result, check_uwsgi_info = rsync_backup.run_shell_cmd("ps -ef|grep uwsgi|grep -v grep")
+                        if "uwsgi" in check_uwsgi_info:
+                            setup_uwsgi_result, setup_uwsgi_info = rsync_backup.run_shell_cmd("uwsgi --reload /var/www/html/TSDBOM/TSDBOM-master.pid")
+                        else:
+                            setup_uwsgi_result, setup_uwsgi_info = rsync_backup.run_shell_cmd("uwsgi --ini /var/www/html/TSDBOM/uwsgi.ini")
+                            if setup_uwsgi_result == 1:
+                                pass
+                            else:
+                                return JsonResponse({
+                                    "ret": 0,
+                                    "info": "备用服务器：{0}, 启动uwsgi服务失败。 ".format(backup_host.ip_addr),
+                                })
+                    else:
+                        return JsonResponse({
+                            "ret": 0,
+                            "info": "备用服务器：{0}, 启动nginx服务失败。 ".format(backup_host.ip_addr),
+                        })
+
+                main_host.status = 0
+                main_host.save()
+
+                backup_host.status = 1
+                backup_host.save()
+            else:
+                # 开启主服务，关闭备用服务
+                print("开启主服务，关闭备用服务")
+
+                # 检查nginx是否已经开启
+                check_nginx_result, check_nginx_info = rsync_backup.run_shell_cmd("ps -ef|grep nginx|grep -v grep")
+                if "nginx" in check_nginx_info:
+                    pkill_nginx_result, pkill_nginx_info = rsync_backup.run_shell_cmd("pkill nginx")
+                else:
+                    pkill_nginx_result, pkill_nginx_info = 1, ""
+
+                if pkill_nginx_result == 1:
+                    # 检查uwsgi是否开启
+                    pass
+                    # check_uwsgi_result, check_uwsgi_info = rsync_backup.run_shell_cmd("ps -ef|grep uwsgi|grep -v grep")
+                    # if "uwsgi" in check_uwsgi_info:
+                    #     pkill_uwsgi_result, pkill_uwsgi_info = rsync_backup.run_shell_cmd("uwsgi --stop /var/www/html/TSDBOM/TSDBOM-master.pid")
+                    # else:
+                    #     pkill_uwsgi_result, pkill_uwsgi_info = 1, ""
+                    #
+                    # if pkill_uwsgi_result == 1:
+                    #     pass
+                    # else:
+                    #     return JsonResponse({
+                    #         "ret": 0,
+                    #         "info": "备用服务器：{0}, 关闭uwsgi服务失败。 ".format(main_host.ip_addr),
+                    #     })
+                else:
+                    return JsonResponse({
+                        "ret": 0,
+                        "info": "备用服务器：{0}, 关闭nginx服务失败。 ".format(main_host.ip_addr),
+                    })
+
+                check_nginx_result, check_nginx_info = rsync_main.run_shell_cmd("ps -ef|grep nginx|grep -v grep")
+                if "nginx" in check_nginx_info:
+                    setup_nginx_result, setup_nginx_info = rsync_main.run_shell_cmd("/usr/local/nginx/sbin/nginx -s reload")
+                else:
+                    setup_nginx_result, setup_nginx_info = rsync_main.run_shell_cmd("/usr/local/nginx/sbin/nginx")
+                    if setup_nginx_result == 1:
+                        check_uwsgi_result, check_uwsgi_info = rsync_main.run_shell_cmd("ps -ef|grep uwsgi|grep -v grep")
+                        if "uwsgi" in check_uwsgi_info:
+                            setup_uwsgi_result, setup_uwsgi_info = rsync_main.run_shell_cmd("uwsgi --reload /var/www/html/TSDBOM/TSDBOM-master.pid")
+                        else:
+                            setup_uwsgi_result, setup_uwsgi_info = rsync_main.run_shell_cmd("uwsgi --ini /var/www/html/TSDBOM/uwsgi.ini")
+                            if setup_uwsgi_result == 1:
+                                pass
+                            else:
+                                return JsonResponse({
+                                    "ret": 0,
+                                    "info": "主服务器：{0}, 启动uwsgi服务失败。 ".format(backup_host.ip_addr),
+                                })
+                    else:
+                        return JsonResponse({
+                            "ret": 0,
+                            "info": "主服务器：{0}, 启动nginx服务失败。 ".format(backup_host.ip_addr),
+                        })
+
+                    main_host.status = 1
+                    main_host.save()
+
+                    backup_host.status = 0
+                    backup_host.save()
+            ret = 1
+            info = "服务切换成功。"
+            rsync_main.close_connection()
+            rsync_backup.close_connection()
 
     return JsonResponse({
         "ret": ret,

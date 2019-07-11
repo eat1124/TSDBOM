@@ -39,7 +39,7 @@ class RsyncBackup(object):
         # self.sudo_permission = 'echo {0}|sudo sh -c '.format(server['password']) if server['username'] != 'root' else ''
         # sudo sh -c 'echo "This is testPage." >/usr/local/nginx/html/index.html'
 
-    def close_rsync(self):
+    def close_connection(self):
         self.client.close()
 
     def run_shell_cmd(self, shell_cmd, get_pty=True):
