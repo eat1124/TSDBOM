@@ -44,6 +44,16 @@ $(document).ready(function () {
             "targets": -11,
             "visible": false
         }, {
+            "data": null,
+            "targets": -10,
+            "render": function (data, type, full) {
+                if (full.main_host_status == 1) {
+                    return "<td>" + full.main_host + " <i class='fa fa-fire' style='color:#ff1c1c' title='服务已启动'></i></td>";
+                } else {
+                    return "<td>" + full.main_host + "</td>";
+                }
+            }
+        }, {
             "targets": -9,
             "visible": false
         }, {
@@ -62,7 +72,11 @@ $(document).ready(function () {
                 // 备机
                 var backup_host_init = '';
                 for (var i = 0; i < full.backup_host.length; i++) {
-                    backup_host_init += full.backup_host[i].backup_host + ','
+                    if (full.backup_host[i].backup_host_status == 1) {
+                        backup_host_init += full.backup_host[i].backup_host + " <i class='fa fa-fire' style='color:#ff1c1c' title='服务已启动'></i>" + ','
+                    } else {
+                        backup_host_init += full.backup_host[i].backup_host + ','
+                    }
                 }
                 return "<td>" + backup_host_init ? backup_host_init.slice(0, -1) : '' + "</td>";
             },
@@ -73,7 +87,7 @@ $(document).ready(function () {
                 // 模块
                 var model_init = '';
                 for (var i = 0; i < full.model.length; i++) {
-                    model_init += full.model[i].model_name + ','
+                    model_init += full.model[i].model_name + ' ,'
                 }
                 return "<td>" + model_init ? model_init.slice(0, -1) : '' + "</td>";
             },
@@ -101,12 +115,12 @@ $(document).ready(function () {
             },
         }, {
             "data": null,
-            "width": "100px",
+            "width": "120px",
             "targets": -1,
             "render": function (data, type, full) {
                 var exec_tag = "<button  id='edit' title='编辑' data-toggle='modal'  data-target='#static'  class='btn btn-xs btn-primary' type='button'><i class='fa fa-edit'></i></button><button title='删除'  id='delrow' class='btn btn-xs btn-primary' type='button'><i class='fa fa-trash-o'></i></button>";
-                exec_tag += "<button title='恢复' id='recover_btn' data-toggle='modal'  data-target='#static_recover'  class='btn btn-xs btn-warning' type='button'><i class='fa fa-reply-all'></i></button>"
-
+                exec_tag += "<button title='切换' id='exchange_btn' data-toggle='modal'  data-target='#static_exchange'  class='btn btn-xs btn-info' type='button'><i class='fa fa-exchange'></i></button>";
+                exec_tag += "<button title='恢复' id='recover_btn' data-toggle='modal'  data-target='#static_recover'  class='btn btn-xs btn-warning' type='button'><i class='fa fa-reply-all'></i></button>";
                 return "<td>" + exec_tag + "</td>";
             },
         }],
@@ -218,7 +232,23 @@ $(document).ready(function () {
             $("#selected_backup_host").append('<option value="' + data.backup_host[i]["id"] + '">' + data.backup_host[i]["backup_host"] + '</option>');
         }
     });
+    $('#sample_1 tbody').on('click', 'button#exchange_btn', function () {
+        $("#exchange_recover_loading").hide();
+        $("#exchange").removeProp("disabled");
+        $("#exchange_close").removeProp("disabled");
+        $("#exchange_modal_close").removeProp("disabled");
 
+        var table = $('#sample_1').DataTable();
+        var data = table.row($(this).parents('tr')).data();
+        $("#exchange_id").val(data.main_host_id);
+        $("#rsync_config_id").val(data.id);
+
+        $("#exchange_main_host").val(data.main_host);
+        $("#exchange_backup_host").empty();
+        for (var i = 0; i < data.backup_host.length; i++) {
+            $("#exchange_backup_host").append('<option value="' + data.backup_host[i]["id"] + '">' + data.backup_host[i]["backup_host"] + '</option>');
+        }
+    });
     $("#recover").click(function () {
         $("#rsync_recover_loading").show();
         $("#recover").prop("disabled", true);
@@ -252,7 +282,42 @@ $(document).ready(function () {
                 $("#recover_modal_close").removeProp("disabled");
             }
         })
-    })
+    });
+    $("#exchange").click(function () {
+        $("#exchange_recover_loading").show();
+        $("#exchange").prop("disabled", true);
+        $("#exchange_close").prop("disabled", true);
+        $("#exchange_modal_close").prop("disabled", true);
+
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            url: "../server_exchange/",
+            data: {
+                "id": $("#rsync_config_id").val(),
+                "main_host": $("#exchange_main_host").val(),
+                "backup_host": $("#exchange_backup_host").val(),
+            },
+            success: function (data) {
+                alert(data.info);
+                if (data.ret == 1) {
+                    $("#static_exchange").modal("hide");
+                } else {
+                    $("#exchange_recover_loading").hide();
+                    $("#exchange").removeProp("disabled");
+                    $("#exchange_close").removeProp("disabled");
+                    $("#exchange_modal_close").removeProp("disabled");
+                }
+            },
+            error: function (e) {
+                alert("页面出现错误，请于管理员联系。");
+                $("#exchange_recover_loading").hide();
+                $("#exchange").removeProp("disabled");
+                $("#exchange_close").removeProp("disabled");
+                $("#exchange_modal_close").removeProp("disabled");
+            }
+        })
+    });
 
     $("#new").click(function () {
         $("#rsync_loading").hide();
@@ -265,6 +330,7 @@ $(document).ready(function () {
         $("#recover_close").removeProp("disabled");
         $("#recover_modal_close").removeProp("disabled");
 
+        $("#main_host_ip").val("0");
         $("#id").val("0");
         $("#main_host_ip").val("");
         $("#backup_host_ip").val("").trigger("change");

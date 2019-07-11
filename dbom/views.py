@@ -681,7 +681,7 @@ def rsync_hosts_save(request):
                                 except:
                                     result["res"] = "新增失败。"
                                 else:
-                                    rsync_backup.close_rsync()
+                                    rsync_backup.close_connection()
                         else:
                             try:
                                 cur_rsync_host = RsyncHost.objects.exclude(state="9").get(id=id)
@@ -704,7 +704,7 @@ def rsync_hosts_save(request):
                                 except:
                                     result["res"] = "修改失败。"
                                 else:
-                                    rsync_backup.close_rsync()
+                                    rsync_backup.close_connection()
 
         return JsonResponse(result)
 
@@ -758,7 +758,7 @@ def rsync_reinstall(request):
             else:
                 result = 0
                 data = 'Rsync已经安装。'
-        rsync_backup.close_rsync()
+        rsync_backup.close_connection()
 
         return JsonResponse({
             'ret': result,
@@ -784,7 +784,7 @@ def check_rsync_hosts_status(rsync_host):
             install_status = "已安装"
         else:
             install_status = "未安装"
-    rsync_backup.close_rsync()
+    rsync_backup.close_connection()
     return {
         'id': rsync_host.id,
         'ip_addr': rsync_host.ip_addr,
@@ -856,7 +856,7 @@ def rsync_hosts_data(request):
     #         'install_status': install_status,
     #         'log': rsync_host.log,
     #     })
-    #     rsync_backup.close_rsync()
+    #     rsync_backup.close_connection()
 
     return JsonResponse({"data": result})
 
@@ -909,6 +909,7 @@ def rsync_config_data(request):
             all_backup_host_list.append({
                 "id": backup_host.id,
                 "backup_host": backup_host.ip_addr,
+                "backup_host_status": backup_host.status,
             })
         # 模块
         all_rsync_models = rsync_config.rsyncmodel_set.exclude(state="9")
@@ -938,6 +939,7 @@ def rsync_config_data(request):
             "id": id,
             "main_host_id": main_host_id,
             "main_host": main_host,
+            "main_host_status": rsync_config.main_host.status,
             "backup_host": all_backup_host_list,
             "model": all_rsync_model_list,
             "status": status,
@@ -945,7 +947,7 @@ def rsync_config_data(request):
             "hours": hours,
             "per_week": per_week,
             "per_month": per_month,
-            "periodictask_id": periodictask.id if periodictask else ""
+            "periodictask_id": periodictask.id if periodictask else "",
         })
     return JsonResponse({"data": result})
 
@@ -962,7 +964,8 @@ def rsync_config_save(request):
 
     id = request.POST.get('id', '')
     try:
-        main_host_ip = int(main_host_ip)
+        if main_host_ip:
+            main_host_ip = int(main_host_ip)
         id = int(id)
     except ValueError as e:
         return JsonResponse({
@@ -993,7 +996,7 @@ def rsync_config_save(request):
         })
     result_info = {}
     # 校验
-    if not main_host_ip:
+    if main_host_ip == 0:
         result_info["ret"] = 0
         result_info["data"] = '主机不能为空。'
     else:
@@ -1004,96 +1007,48 @@ def rsync_config_save(request):
             # 拆分出备机
             selected_backup_host_list = selected_backup_host.split(",")
 
-            # 模块未填写则不添加
-            if rsync_model_num > 0:
-                hour, minute = "", ""
-                for key in request.POST.keys():
-                    model_name = request.POST.get(key, "")
-                    if "model_name_" in key and model_name == "":
-                        rsync_model_tag = True
-                        break
-                if rsync_model_tag:
-                    return JsonResponse({
-                        "ret": 0,
-                        "data": "模块名未填写。"
-                    })
-                for key in request.POST.keys():
-                    backup_path = request.POST.get(key, "")
-                    if "backup_path_" in key and backup_path == "":
-                        rsync_backup_path_tag = True
-                        break
-                if rsync_backup_path_tag:
-                    return JsonResponse({
-                        "ret": 0,
-                        "data": "文件路径未填写。"
-                    })
-                # 检测服务器链接情况；
-                # 检测文件路径，不存在则不添加；
-                # 1.主机
-                try:
-                    cur_main_host = RsyncHost.objects.get(id=main_host_ip)
-                except RsyncHost.DoesNotExist:
-                    return JsonResponse({
-                        "ret": 0,
-                        "data": "当前选中主机不存在，请联系管理员。"
-                    })
-                else:
-                    server = {
-                        'hostname': cur_main_host.ip_addr,
-                        'username': cur_main_host.username,
-                        'password': cur_main_host.password,
-                    }
-                    rsync_backup = RsyncBackup(server)
-                    if rsync_backup.msg == '远程连接失败。':
+            if str(main_host_ip) in selected_backup_host_list:
+                result_info["ret"] = 0
+                result_info["data"] = '一台机器无法同时设置成主从服务器。'
+            else:
+                # 模块未填写则不添加
+                if rsync_model_num > 0:
+                    hour, minute = "", ""
+                    for key in request.POST.keys():
+                        model_name = request.POST.get(key, "")
+                        if "model_name_" in key and model_name == "":
+                            rsync_model_tag = True
+                            break
+                    if rsync_model_tag:
                         return JsonResponse({
                             "ret": 0,
-                            "data": "当前主机未开启，请检查后再配置。"
+                            "data": "模块名未填写。"
                         })
-                    else:
-                        # 检测模块路径
-                        for temp_path in backup_path_list:
-                            result, info = rsync_backup.check_file_path_existed(temp_path)
-
-                            if result == 0:
-                                rsync_backup.close_rsync()
-
-                                return JsonResponse({
-                                    "ret": 0,
-                                    "data": "路径：{0} 在主服务器中不存在，请检查后再配置。".format(temp_path)
-                                })
-                        # 配置主机
-                        result, info = rsync_backup.set_rsync_server_config(model_list)
-                        if result == 0:
-                            rsync_backup.close_rsync()
-
-                            return JsonResponse({
-                                "ret": 0,
-                                "data": "主服务器{0} 配置失败, {1}".format(cur_main_host.ip_addr, info)
-                            })
-
-                # 2.备机
-                selected_backup_host_list_int = []
-                for backup_host in selected_backup_host_list:
-                    try:
-                        backup_host = int(backup_host)
-                    except ValueError as e:
+                    for key in request.POST.keys():
+                        backup_path = request.POST.get(key, "")
+                        if "backup_path_" in key and backup_path == "":
+                            rsync_backup_path_tag = True
+                            break
+                    if rsync_backup_path_tag:
                         return JsonResponse({
-                            'ret': 0,
-                            'data': '网络异常。'
+                            "ret": 0,
+                            "data": "文件路径未填写。"
                         })
-                    selected_backup_host_list_int.append(backup_host)
+                    # 检测服务器链接情况；
+                    # 检测文件路径，不存在则不添加；
+                    # 1.主机
                     try:
-                        cur_backup_host = RsyncHost.objects.get(id=backup_host)
+                        cur_main_host = RsyncHost.objects.get(id=main_host_ip)
                     except RsyncHost.DoesNotExist:
                         return JsonResponse({
                             "ret": 0,
-                            "data": "当前选中备不存在，请联系管理员。"
+                            "data": "当前选中主机不存在，请联系管理员。"
                         })
                     else:
                         server = {
-                            'hostname': cur_backup_host.ip_addr,
-                            'username': cur_backup_host.username,
-                            'password': cur_backup_host.password,
+                            'hostname': cur_main_host.ip_addr,
+                            'username': cur_main_host.username,
+                            'password': cur_main_host.password,
                         }
                         rsync_backup = RsyncBackup(server)
                         if rsync_backup.msg == '远程连接失败。':
@@ -1104,175 +1059,136 @@ def rsync_config_save(request):
                         else:
                             # 检测模块路径
                             for temp_path in backup_path_list:
-                                # 杜绝根目录下的文件夹备份
-                                if not temp_path.startswith("/"):
-                                    rsync_backup.close_rsync()
+                                result, info = rsync_backup.check_file_path_existed(temp_path)
 
-                                    return JsonResponse({
-                                        "ret": 0,
-                                        "data": "路径：{0} 不符合绝对路径条件。".format(temp_path)
-                                    })
-                                if temp_path == "/" or temp_path.count("/") == 2 and temp_path.endswith("/"):
-                                    rsync_backup.close_rsync()
-
-                                    return JsonResponse({
-                                        "ret": 0,
-                                        "data": "备份路径不能为根目录，或者根目录第一层文件夹。".format(temp_path)
-                                    })
-
-                                if len(temp_path) > 1 and temp_path.endswith("/"):
-                                    temp_path = temp_path[:-1]
-                                cur_path = temp_path.replace(temp_path.split("/")[-1], "")
-
-                                result, info = rsync_backup.check_file_path_existed(cur_path)
                                 if result == 0:
-                                    rsync_backup.close_rsync()
+                                    rsync_backup.close_connection()
 
                                     return JsonResponse({
                                         "ret": 0,
-                                        "data": "路径：{0} 在备份服务器中不存在，请检查后再配置。".format(temp_path[:-1])
+                                        "data": "路径：{0} 在主服务器中不存在，请检查后再配置。".format(temp_path)
                                     })
-                        # 配置备机
-                        result, info = rsync_backup.set_rsync_server_config(model_list)
-                        if result == 0:
-                            rsync_backup.close_rsync()
+                            # 配置主机
+                            result, info = rsync_backup.set_rsync_server_config(model_list)
+                            if result == 0:
+                                rsync_backup.close_connection()
 
-                            return JsonResponse({
-                                "ret": 0,
-                                "data": "备份服务器{0} 配置失败。".format(cur_backup_host.ip_addr)
-                            })
-                # 保存数据：RsyncConfig,RsyncModel,CrontabSchedule,Periodictask
-                if id == 0:
-                    try:
-                        cur_rsync_config = RsyncConfig()
-
-                        # 定时任务CrontabSchedule,Periodictask
-                        hour, minute = per_time.split(':')
-                        cur_crontab_schedule = CrontabSchedule()
-                        cur_crontab_schedule.hour = hour
-                        cur_crontab_schedule.minute = minute
-                        cur_crontab_schedule.day_of_week = per_week if per_week != "0" else "*"
-                        cur_crontab_schedule.month_of_year = per_month if per_month != "0" else "*"
-                        cur_crontab_schedule.save()
-                        # 启动定时任务
-                        cur_periodictask = PeriodicTask()
-                        cur_periodictask.crontab_id = cur_crontab_schedule.id
-                        cur_periodictask.name = uuid.uuid1()
-                        if status == "on":
-                            cur_periodictask.enabled = 1
-                        else:
-                            cur_periodictask.enabled = 0
-                        # 任务名称
-                        # dest_dir, auth_user, dest_server_list, model_name_list
-                        cur_periodictask.task = "dbom.tasks.remote_sync"
-                        cur_periodictask.save()
-                        cur_periodictask_id = cur_periodictask.id
-                        cur_periodictask.args = [main_host_ip, selected_backup_host_list_int, str(model_list), cur_periodictask_id]
-                        cur_periodictask.save()
-                        # RsyncConfig
-                        cur_rsync_config.main_host_id = main_host_ip
-                        cur_rsync_config.dj_periodictask_id = cur_periodictask_id
-                        cur_rsync_config.save()
-
-                        # cur_rsync_config关联backup_host对象
-                        backup_hosts = RsyncHost.objects.filter(id__in=selected_backup_host_list_int)
-                        if backup_hosts.exists():
-                            cur_rsync_config.backup_host.add(*backup_hosts)
-                        else:
-                            print("不存在")
-
-                        # 模型RsyncModel
-                        for i in range(0, rsync_model_num):
-                            model_name = request.POST.get('model_name_{0}'.format(i + 1), "")
-                            backup_path = request.POST.get('backup_path_{0}'.format(i + 1), "")
-                            if len(backup_path) > 1 and backup_path.endswith("/"):
-                                backup_path = backup_path[:-1]
-
-                            cur_rsync_model = RsyncModel()
-                            cur_rsync_model.model_name = model_name
-                            cur_rsync_model.rsync_path = backup_path
-                            cur_rsync_model.rsync_config_id = cur_rsync_config.id
-                            cur_rsync_model.save()
-                        result_info["ret"] = 1
-                        result_info["data"] = '配置成功。'
-                    except Exception as e:
-                        print(e)
-                        result_info["ret"] = 0
-                        result_info["data"] = '配置失败。'
-                else:
-                    # 修改
-                    try:
-                        cur_rsync_config = RsyncConfig.objects.get(id=id)
-                    except RsyncConfig.DoesNotExist as e:
-                        return JsonResponse({
-                            "ret": 0,
-                            "data": "当前主机不存在，请检查后再配置。"
-                        })
-                    else:
-                        # 定时任务CrontabSchedule,Periodictask
-                        if periodictask_id:
-                            periodictask_id = int(periodictask_id)
-                            try:
-                                cur_periodictask = PeriodicTask.objects.get(id=periodictask_id)
-                            except PeriodicTask.DoesNotExist as e:
                                 return JsonResponse({
                                     "ret": 0,
-                                    "data": "网络异常。"
+                                    "data": "主服务器{0} 配置失败, {1}".format(cur_main_host.ip_addr, info)
+                                })
+
+                    # 2.备机
+                    selected_backup_host_list_int = []
+                    for backup_host in selected_backup_host_list:
+                        try:
+                            backup_host = int(backup_host)
+                        except ValueError as e:
+                            return JsonResponse({
+                                'ret': 0,
+                                'data': '网络异常。'
+                            })
+                        selected_backup_host_list_int.append(backup_host)
+                        try:
+                            cur_backup_host = RsyncHost.objects.get(id=backup_host)
+                        except RsyncHost.DoesNotExist:
+                            return JsonResponse({
+                                "ret": 0,
+                                "data": "当前选中备不存在，请联系管理员。"
+                            })
+                        else:
+                            server = {
+                                'hostname': cur_backup_host.ip_addr,
+                                'username': cur_backup_host.username,
+                                'password': cur_backup_host.password,
+                            }
+                            rsync_backup = RsyncBackup(server)
+                            if rsync_backup.msg == '远程连接失败。':
+                                return JsonResponse({
+                                    "ret": 0,
+                                    "data": "当前主机未开启，请检查后再配置。"
                                 })
                             else:
-                                if status == "on":
-                                    cur_periodictask.enabled = 1
-                                else:
-                                    cur_periodictask.enabled = 0
+                                # 检测模块路径
+                                for temp_path in backup_path_list:
+                                    # 杜绝根目录下的文件夹备份
+                                    if not temp_path.startswith("/"):
+                                        rsync_backup.close_connection()
 
-                                # crontab修改
-                                hour, minute = per_time.split(':')
-                                cur_crontab_schedule = cur_periodictask.crontab
-                                cur_crontab_schedule.hour = hour
-                                cur_crontab_schedule.minute = minute
-                                cur_crontab_schedule.day_of_week = per_week if per_week != "0" else "*"
-                                cur_crontab_schedule.month_of_year = per_month if per_month != "0" else "*"
-                                cur_crontab_schedule.save()
-                                # 任务名称
-                                cur_periodictask.args = [main_host_ip, selected_backup_host_list_int, str(model_list), cur_periodictask.id]
-                                cur_periodictask.save()
-                        # RsyncConfig
-                        cur_rsync_config.main_host_id = main_host_ip
-                        cur_rsync_config.save()
+                                        return JsonResponse({
+                                            "ret": 0,
+                                            "data": "路径：{0} 不符合绝对路径条件。".format(temp_path)
+                                        })
+                                    if temp_path == "/" or temp_path.count("/") == 2 and temp_path.endswith("/"):
+                                        rsync_backup.close_connection()
 
-                        # cur_rsync_config关联backup_host对象
-                        cur_rsync_config.backup_host.clear()
-                        backup_hosts = RsyncHost.objects.filter(id__in=selected_backup_host_list_int)
-                        if backup_hosts.exists():
-                            cur_rsync_config.backup_host.add(*backup_hosts)
-                        else:
-                            print("不存在")
+                                        return JsonResponse({
+                                            "ret": 0,
+                                            "data": "备份路径不能为根目录，或者根目录第一层文件夹。".format(temp_path)
+                                        })
 
-                        # 模型RsyncModel
-                        cur_rsync_model_num = len(cur_rsync_config.rsyncmodel_set.all())
+                                    if len(temp_path) > 1 and temp_path.endswith("/"):
+                                        temp_path = temp_path[:-1]
+                                    cur_path = temp_path.replace(temp_path.split("/")[-1], "")
 
-                        if cur_rsync_model_num == rsync_model_num:
-                            # 直接修改
-                            for i in range(0, rsync_model_num):
-                                model_name = request.POST.get('model_name_{0}'.format(i + 1), "")
-                                backup_path = request.POST.get('backup_path_{0}'.format(i + 1), "")
-                                model_id = request.POST.get('model_id_{0}'.format(i + 1), "")
-                                if len(backup_path) > 1 and backup_path.endswith("/"):
-                                    backup_path = backup_path[:-1]
+                                    result, info = rsync_backup.check_file_path_existed(cur_path)
+                                    if result == 0:
+                                        rsync_backup.close_connection()
 
-                                try:
-                                    cur_rsync_model = RsyncModel.objects.get(id=int(model_id))
-                                except RsyncModel.DoesNotExist as e:
-                                    return JsonResponse({
-                                        "ret": 0,
-                                        "data": "网络异常。"
-                                    })
-                                else:
-                                    cur_rsync_model.model_name = model_name
-                                    cur_rsync_model.rsync_path = backup_path
-                                    cur_rsync_model.save()
-                        else:
-                            cur_rsync_config.rsyncmodel_set.all().update(state="9")
+                                        return JsonResponse({
+                                            "ret": 0,
+                                            "data": "路径：{0} 在备份服务器中不存在，请检查后再配置。".format(temp_path[:-1])
+                                        })
+                            # 配置备机
+                            result, info = rsync_backup.set_rsync_server_config(model_list)
+                            if result == 0:
+                                rsync_backup.close_connection()
+
+                                return JsonResponse({
+                                    "ret": 0,
+                                    "data": "备份服务器{0} 配置失败。".format(cur_backup_host.ip_addr)
+                                })
+                    # 保存数据：RsyncConfig,RsyncModel,CrontabSchedule,Periodictask
+                    if id == 0:
+                        try:
+                            cur_rsync_config = RsyncConfig()
+
+                            # 定时任务CrontabSchedule,Periodictask
+                            hour, minute = per_time.split(':')
+                            cur_crontab_schedule = CrontabSchedule()
+                            cur_crontab_schedule.hour = hour
+                            cur_crontab_schedule.minute = minute
+                            cur_crontab_schedule.day_of_week = per_week if per_week != "0" else "*"
+                            cur_crontab_schedule.month_of_year = per_month if per_month != "0" else "*"
+                            cur_crontab_schedule.save()
+                            # 启动定时任务
+                            cur_periodictask = PeriodicTask()
+                            cur_periodictask.crontab_id = cur_crontab_schedule.id
+                            cur_periodictask.name = uuid.uuid1()
+                            if status == "on":
+                                cur_periodictask.enabled = 1
+                            else:
+                                cur_periodictask.enabled = 0
+                            # 任务名称
+                            # dest_dir, auth_user, dest_server_list, model_name_list
+                            cur_periodictask.task = "dbom.tasks.remote_sync"
+                            cur_periodictask.save()
+                            cur_periodictask_id = cur_periodictask.id
+                            cur_periodictask.args = [main_host_ip, selected_backup_host_list_int, str(model_list), cur_periodictask_id]
+                            cur_periodictask.save()
+                            # RsyncConfig
+                            cur_rsync_config.main_host_id = main_host_ip
+                            cur_rsync_config.dj_periodictask_id = cur_periodictask_id
+                            cur_rsync_config.save()
+
+                            # cur_rsync_config关联backup_host对象
+                            backup_hosts = RsyncHost.objects.filter(id__in=selected_backup_host_list_int)
+                            if backup_hosts.exists():
+                                cur_rsync_config.backup_host.add(*backup_hosts)
+                            else:
+                                print("不存在")
+
+                            # 模型RsyncModel
                             for i in range(0, rsync_model_num):
                                 model_name = request.POST.get('model_name_{0}'.format(i + 1), "")
                                 backup_path = request.POST.get('backup_path_{0}'.format(i + 1), "")
@@ -1284,11 +1200,102 @@ def rsync_config_save(request):
                                 cur_rsync_model.rsync_path = backup_path
                                 cur_rsync_model.rsync_config_id = cur_rsync_config.id
                                 cur_rsync_model.save()
-                        result_info["ret"] = 1
-                        result_info["data"] = '配置成功。'
-            else:
-                result_info["ret"] = 0
-                result_info["data"] = '必须至少设置一个备份模块。'
+                            result_info["ret"] = 1
+                            result_info["data"] = '配置成功。'
+                        except Exception as e:
+                            print(e)
+                            result_info["ret"] = 0
+                            result_info["data"] = '配置失败。'
+                    else:
+                        # 修改
+                        try:
+                            cur_rsync_config = RsyncConfig.objects.get(id=id)
+                        except RsyncConfig.DoesNotExist as e:
+                            return JsonResponse({
+                                "ret": 0,
+                                "data": "当前主机不存在，请检查后再配置。"
+                            })
+                        else:
+                            # 定时任务CrontabSchedule,Periodictask
+                            if periodictask_id:
+                                periodictask_id = int(periodictask_id)
+                                try:
+                                    cur_periodictask = PeriodicTask.objects.get(id=periodictask_id)
+                                except PeriodicTask.DoesNotExist as e:
+                                    return JsonResponse({
+                                        "ret": 0,
+                                        "data": "网络异常。"
+                                    })
+                                else:
+                                    if status == "on":
+                                        cur_periodictask.enabled = 1
+                                    else:
+                                        cur_periodictask.enabled = 0
+
+                                    # crontab修改
+                                    hour, minute = per_time.split(':')
+                                    cur_crontab_schedule = cur_periodictask.crontab
+                                    cur_crontab_schedule.hour = hour
+                                    cur_crontab_schedule.minute = minute
+                                    cur_crontab_schedule.day_of_week = per_week if per_week != "0" else "*"
+                                    cur_crontab_schedule.month_of_year = per_month if per_month != "0" else "*"
+                                    cur_crontab_schedule.save()
+                                    # 任务名称
+                                    cur_periodictask.args = [main_host_ip, selected_backup_host_list_int, str(model_list), cur_periodictask.id]
+                                    cur_periodictask.save()
+                            # RsyncConfig
+                            cur_rsync_config.main_host_id = main_host_ip
+                            cur_rsync_config.save()
+
+                            # cur_rsync_config关联backup_host对象
+                            cur_rsync_config.backup_host.clear()
+                            backup_hosts = RsyncHost.objects.filter(id__in=selected_backup_host_list_int)
+                            if backup_hosts.exists():
+                                cur_rsync_config.backup_host.add(*backup_hosts)
+                            else:
+                                print("不存在")
+
+                            # 模型RsyncModel
+                            cur_rsync_model_num = len(cur_rsync_config.rsyncmodel_set.all())
+
+                            if cur_rsync_model_num == rsync_model_num:
+                                # 直接修改
+                                for i in range(0, rsync_model_num):
+                                    model_name = request.POST.get('model_name_{0}'.format(i + 1), "")
+                                    backup_path = request.POST.get('backup_path_{0}'.format(i + 1), "")
+                                    model_id = request.POST.get('model_id_{0}'.format(i + 1), "")
+                                    if len(backup_path) > 1 and backup_path.endswith("/"):
+                                        backup_path = backup_path[:-1]
+
+                                    try:
+                                        cur_rsync_model = RsyncModel.objects.get(id=int(model_id))
+                                    except RsyncModel.DoesNotExist as e:
+                                        return JsonResponse({
+                                            "ret": 0,
+                                            "data": "网络异常。"
+                                        })
+                                    else:
+                                        cur_rsync_model.model_name = model_name
+                                        cur_rsync_model.rsync_path = backup_path
+                                        cur_rsync_model.save()
+                            else:
+                                cur_rsync_config.rsyncmodel_set.all().update(state="9")
+                                for i in range(0, rsync_model_num):
+                                    model_name = request.POST.get('model_name_{0}'.format(i + 1), "")
+                                    backup_path = request.POST.get('backup_path_{0}'.format(i + 1), "")
+                                    if len(backup_path) > 1 and backup_path.endswith("/"):
+                                        backup_path = backup_path[:-1]
+
+                                    cur_rsync_model = RsyncModel()
+                                    cur_rsync_model.model_name = model_name
+                                    cur_rsync_model.rsync_path = backup_path
+                                    cur_rsync_model.rsync_config_id = cur_rsync_config.id
+                                    cur_rsync_model.save()
+                            result_info["ret"] = 1
+                            result_info["data"] = '配置成功。'
+                else:
+                    result_info["ret"] = 0
+                    result_info["data"] = '必须至少设置一个备份模块。'
     return JsonResponse(result_info)
 
 
@@ -1367,7 +1374,75 @@ def rsync_recover(request):
         else:
             ret = 0
             info = "模块不存在，请联系管理员。"
-    rsync_backup.close_rsync()
+        rsync_backup.close_connection()
+
+    return JsonResponse({
+        "ret": ret,
+        "info": info,
+    })
+
+
+@login_required
+def server_exchange(request):
+    """
+    服务交换
+    :param request:
+    :return:
+    """
+    id = request.POST.get("id")
+    main_host = request.POST.get("main_host")
+    backup_host = request.POST.get("backup_host")
+    ret = ""
+    info = ""
+    try:
+        id = int(id)
+        backup_host = int(backup_host)
+        cur_rsync_config = RsyncConfig.objects.get(id=id)
+    except RsyncConfig.DoesNotExist as e:
+        ret = 0
+        info = "网络异常"
+    else:
+        # 主从交替: 关闭/开启服务
+
+
+
+        pass
+        # model_list = cur_rsync_config.rsyncmodel_set.exclude(state="9")
+        # if model_list.exists():
+        #     try:
+        #         backup_host_obj = RsyncHost.objects.get(id=backup_host)
+        #     except RsyncHost.DoesNotExist as e:
+        #         ret = 0
+        #         info = "网络异常"
+        #     else:
+        #         server = {
+        #             'hostname': backup_host_obj.ip_addr,
+        #             'username': backup_host_obj.username,
+        #             'password': backup_host_obj.password,
+        #         }
+        #         rsync_backup = RsyncBackup(server)
+        #         if rsync_backup.msg == "远程连接成功。":
+        #             temp_info = ""
+        #             temp_tag = True
+        #             for cur_model in model_list:
+        #                 result, info = rsync_backup.rsync_exec_avz(cur_model.rsync_path, dest_main_host, cur_model.model_name, delete=True)
+        #                 if result == 1:
+        #                     temp_log = "备份成功。"
+        #                 else:
+        #                     temp_tag = False
+        #                     temp_log += info
+        #             info = temp_log
+        #             if temp_tag:
+        #                 ret = 1
+        #             else:
+        #                 ret = 0
+        #         else:
+        #             ret = 0
+        #             info = "远程连接失败。"
+        # else:
+        #     ret = 0
+        #     info = "模块不存在，请联系管理员。"
+        # rsync_backup.close_connection()
 
     return JsonResponse({
         "ret": ret,

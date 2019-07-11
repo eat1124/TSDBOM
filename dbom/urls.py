@@ -66,6 +66,7 @@ urlpatterns = [
     url(r'^rsync_history/$', rsync_history, {'funid': '99'}),
     url(r'^rsync_history_data/$', rsync_history_data),
     url(r'^rsync_history_del/$', rsync_history_del),
+    url(r'^server_exchange/$', server_exchange),
 
     # 运维记录
     url(r'^inspection/$', inspection_report, {'funid': 62}),  # 巡检报告

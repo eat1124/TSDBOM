@@ -151,6 +151,11 @@ class RsyncHost(models.Model):
     password = models.CharField("密码", max_length=256)
     log = models.CharField("安装错误日志", max_length=512, blank=True)
     state = models.CharField("逻辑删除:'9'", max_length=16, blank=True, default="")
+    status_choices = (
+        (1, "服务启动"),
+        (2, "服务关闭"),
+    )
+    status = models.IntegerField("Web服务状态", choices=status_choices, default=2)
 
 
 class RsyncConfig(models.Model):

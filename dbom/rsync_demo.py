@@ -338,7 +338,7 @@ if __name__ == '__main__':
     # result, info = rsync_backup.rsync_exec_avz(r'/temp_data', '192.168.85.138', 'temp_model', delete=True)
     # result, info = rsync_backup.tail_rsync_log()
     # result, info = rsync_backup.set_rsync_server_config([{"model_name": "temp_model", "backup_path": "/base_dir/temp_data"}])
-    rsync_backup.close_rsync()
+    rsync_backup.close_connection()
     # sudo sh -c 'echo "This is testPage." >/usr/local/nginx/html/index.html'
     # 将一个字串作为完整的命令来执行
     # sudo仅有root的部分权限
