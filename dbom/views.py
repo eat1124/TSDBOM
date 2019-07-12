@@ -40,7 +40,7 @@ from django.core.mail import send_mail
 from django.forms.models import model_to_dict
 from django.template.response import TemplateResponse
 from django.contrib.auth.decorators import login_required
-from djcelery.models import CrontabSchedule, PeriodicTask
+from djcelery.models import CrontabSchedule, PeriodicTask, IntervalSchedule
 
 from dbom.tasks import *
 from dbom.models import *
@@ -885,10 +885,13 @@ def rsync_host_del(request):
 def rsync_config(request, funid):
     all_rsync_hosts = RsyncHost.objects.exclude(state="9")
 
+    all_intervals = IntervalSchedule.objects.all()
+
     return render(request, 'rsync_config.html', {
         'username': request.user.userinfo.fullname,
         "pagefuns": getpagefuns(funid, request),
-        "all_rsync_hosts": all_rsync_hosts
+        "all_rsync_hosts": all_rsync_hosts,
+        "all_intervals": all_intervals,
     })
 
 
@@ -961,12 +964,14 @@ def rsync_config_save(request):
     per_week = request.POST.get('per_week', '')
     status = request.POST.get('status', '')
     periodictask_id = request.POST.get('periodictask_id', '')
+    # intervals = request.POST.get('intervals', '')
 
     id = request.POST.get('id', '')
     try:
         if main_host_ip:
             main_host_ip = int(main_host_ip)
         id = int(id)
+        # intervals = int(intervals)
     except ValueError as e:
         return JsonResponse({
             'ret': 0,
@@ -1175,6 +1180,7 @@ def rsync_config_save(request):
                             cur_periodictask.save()
                             cur_periodictask_id = cur_periodictask.id
                             cur_periodictask.args = [main_host_ip, selected_backup_host_list_int, str(model_list), cur_periodictask_id]
+                            # cur_periodictask.interval_id = intervals if intervals else None
                             cur_periodictask.save()
                             # RsyncConfig
                             cur_rsync_config.main_host_id = main_host_ip
@@ -1242,6 +1248,7 @@ def rsync_config_save(request):
                                     cur_crontab_schedule.save()
                                     # 任务名称
                                     cur_periodictask.args = [main_host_ip, selected_backup_host_list_int, str(model_list), cur_periodictask.id]
+                                    # cur_periodictask.interval_id = intervals if intervals else None
                                     cur_periodictask.save()
                             # RsyncConfig
                             cur_rsync_config.main_host_id = main_host_ip
@@ -1423,6 +1430,17 @@ def server_exchange(request):
 
             rsync_main = RsyncBackup(main_server)
             rsync_backup = RsyncBackup(backup_server)
+
+            if rsync_main.msg == '远程连接失败。':
+                return JsonResponse({
+                    "ret": 0,
+                    "info": "主机：{0} 远程连接失败".format(main_host.ip_addr),
+                })
+            if rsync_backup.msg == '远程连接失败。':
+                return JsonResponse({
+                    "ret": 0,
+                    "info": "备机：{0} 远程连接失败".format(backup_host.ip_addr),
+                })
 
             cur_main_host_status = main_host.status
             if cur_main_host_status == 1:

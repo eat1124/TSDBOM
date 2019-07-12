@@ -357,6 +357,7 @@ $(document).ready(function () {
         $("#per_time").val("00:00").timepicker("setTime", "00:00");
         $("#per_week").val("0").trigger("change");
         $("#per_month").val("0").trigger("change");
+        $("#intervals").val("0").trigger("change");
         $("#status").bootstrapSwitch("state", false);
     });
 

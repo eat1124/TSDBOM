@@ -349,6 +349,19 @@
                                     <div class="form-control-focus"></div>
                                 </div>
                             </div>
+{#                            <div class="form-group">#}
+{#                                <label class="col-md-2 control-label"><span#}
+{#                                        style="color:red; "></span>间隔</label>#}
+{#                                <div class="col-md-10">#}
+{#                                    <select name="intervals" id="intervals" class="form-control select2" placeholder="test">#}
+{#                                    <option value="0">默认</option>#}
+{#                                        {% for interval in all_intervals %}#}
+{#                                        <option value="{{ interval.id }}">{{ interval.every }} {% if interval.period == "minutes" %}分钟{% elif interval.period == "hours"%}小时{% elif interval.period == "days" %}天{% else %}毫秒{% endif %}</option>#}
+{#                                        {% endfor %}#}
+{#                                    </select>#}
+{#                                    <div class="form-control-focus"></div>#}
+{#                                </div>#}
+{#                            </div>#}
                             <div class="form-group">
                                 <label class="col-md-2 control-label"><span
                                         style="color:red; "></span>是否开启</label>
