@@ -8,9 +8,12 @@ $(document).ready(function () {
     $("#per_time").timepicker({
         showMeridian: false,
         minuteStep: 5,
-
+    }).on('show.timepicker', function () {
+        $('#static').removeAttr('tabindex');
+    }).on('hide.timepicker', function () {
+        $('#static').attr('tabindex', -1);
     });
-
+    
     // bootstrap-switch
     $("#status").bootstrapSwitch();
 
