@@ -21,6 +21,7 @@ $(document).ready(function () {
         "ajax": "../rsync_config_data/",
         "columns": [
             {"data": "id"},
+            {"data": "interval_id"},
             {"data": "periodictask_id"},
             {"data": "main_host_id"},
             {"data": "main_host"},
@@ -38,6 +39,9 @@ $(document).ready(function () {
         ],
 
         "columnDefs": [{
+            "targets": -13,
+            "visible": false
+        }, {
             "targets": -12,
             "visible": false
         }, {
@@ -95,10 +99,25 @@ $(document).ready(function () {
             "data": null,
             "targets": -3,
             "render": function (data, type, full) {
-                // 定时任务
-                var per_week = full.per_week && full.per_week != "*" ? '/ 周per_week/ '.replace("per_week", full.per_week) : "";
-                var per_month = full.per_month && full.per_month != "*" ? 'per_month月'.replace("per_month", full.per_month) : "";
-                return "<td>" + full.hours + ":" + full.minutes + per_week + per_month + "</td>"
+                if (full.interval_id) {
+                    var interval_period = ""
+                    if (full.interval_period == "minutes") {
+                        interval_period = "分钟";
+                    } else if (full.interval_period == "hours") {
+                        interval_period = "小时";
+                    } else if (full.interval_period == "days") {
+                        interval_period == "天";
+                    } else {
+                        interval_period == "毫秒";
+                    }
+                    // 间隔任务
+                    return "<td>" + full.interval_every + interval_period + "</td>"
+                } else {
+                    // 定时任务
+                    var per_week = full.per_week && full.per_week != "*" ? '/ 周per_week/ '.replace("per_week", full.per_week) : "";
+                    var per_month = full.per_month && full.per_month != "*" ? 'per_month月'.replace("per_month", full.per_month) : "";
+                    return "<td>" + full.hours + ":" + full.minutes + per_week + per_month + "</td>"
+                }
             },
         }, {
             "data": null,
@@ -203,6 +222,16 @@ $(document).ready(function () {
             );
         }
 
+        if (data.interval_id) {
+            $('#periodictask_tab a:last').tab('show');
+            $("#per_time").val("00:00").timepicker("setTime", "00:00");
+            $("#per_week").val("").trigger("change");
+            $("#per_month").val("").trigger("change");
+        } else {
+            $('#periodictask_tab a:first').tab('show');
+            $("#intervals").val("").trigger("change");
+        }
+
         // 设置定时器
         var per_time = data.hours + ":" + data.minutes;
         $("#per_time").val(per_time).timepicker("setTime", per_time);
@@ -213,6 +242,9 @@ $(document).ready(function () {
         } else {
             $("#status").bootstrapSwitch("state", false);
         }
+
+        // 间隔
+        $("#intervals").val(data.interval_id);
 
     });
     $('#sample_1 tbody').on('click', 'button#recover_btn', function () {
@@ -331,6 +363,9 @@ $(document).ready(function () {
         $("#recover_close").removeProp("disabled");
         $("#recover_modal_close").removeProp("disabled");
 
+        $("#intervals").val("0");
+        $('#periodictask_tab a:first').tab('show');
+
         $("#main_host_ip").val("0");
         $("#id").val("0");
         $("#main_host_ip").val("");
@@ -355,9 +390,9 @@ $(document).ready(function () {
             '    </span>\n' +
             '</div>');
         $("#per_time").val("00:00").timepicker("setTime", "00:00");
-        $("#per_week").val("0").trigger("change");
-        $("#per_month").val("0").trigger("change");
-        $("#intervals").val("0").trigger("change");
+        $("#per_week").val("").trigger("change");
+        $("#per_month").val("").trigger("change");
+        $("#intervals").val("").trigger("change");
         $("#status").bootstrapSwitch("state", false);
     });
 
@@ -373,6 +408,12 @@ $(document).ready(function () {
         for (var i = 0; i < selected.length; i++) {
             selected_backup_host_list.push(selected[i].id)
         }
+        if ($('#periodictask_tab li:first').hasClass("active")) {
+            $("#periodictask_type").val("crontabs");
+        } else {
+            $("#periodictask_type").val("intervals");
+        }
+
         $.ajax({
             type: "POST",
             dataType: 'json',

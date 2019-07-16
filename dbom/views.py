@@ -924,16 +924,22 @@ def rsync_config_data(request):
                 "rsync_path": rsync_model.rsync_path,
             })
         # 定时任务
-        status, minutes, hours, per_week, per_month = "", "", "", "", ""
+        status, minutes, hours, per_week, per_month, interval_id, interval_every, interval_period = "", "", "", "", "", "", "", ""
         periodictask = rsync_config.dj_periodictask
         if periodictask:
             status = periodictask.enabled
             cur_crontab_schedule = periodictask.crontab
+            cur_interval_schedule = periodictask.interval
             if cur_crontab_schedule:
                 minutes = cur_crontab_schedule.minute
                 hours = cur_crontab_schedule.hour
                 per_week = cur_crontab_schedule.day_of_week
                 per_month = cur_crontab_schedule.month_of_year
+            if cur_interval_schedule:
+                interval_id = cur_interval_schedule.id
+                interval_every = cur_interval_schedule.every
+                interval_period = cur_interval_schedule.period
+
         if status:
             status = "on"
         else:
@@ -950,6 +956,9 @@ def rsync_config_data(request):
             "hours": hours,
             "per_week": per_week,
             "per_month": per_month,
+            "interval_id": interval_id,
+            "interval_every": interval_every,
+            "interval_period": interval_period,
             "periodictask_id": periodictask.id if periodictask else "",
         })
     return JsonResponse({"data": result})
@@ -964,7 +973,14 @@ def rsync_config_save(request):
     per_week = request.POST.get('per_week', '')
     status = request.POST.get('status', '')
     periodictask_id = request.POST.get('periodictask_id', '')
-    # intervals = request.POST.get('intervals', '')
+    intervals = request.POST.get('intervals', '')
+    periodictask_type = request.POST.get('periodictask_type', '')
+
+    if periodictask_type == "":
+        return JsonResponse({
+            'ret': 0,
+            'data': '网络异常。'
+        })
 
     id = request.POST.get('id', '')
     try:
@@ -1158,17 +1174,33 @@ def rsync_config_save(request):
                         try:
                             cur_rsync_config = RsyncConfig()
 
-                            # 定时任务CrontabSchedule,Periodictask
-                            hour, minute = per_time.split(':')
-                            cur_crontab_schedule = CrontabSchedule()
-                            cur_crontab_schedule.hour = hour
-                            cur_crontab_schedule.minute = minute
-                            cur_crontab_schedule.day_of_week = per_week if per_week != "0" else "*"
-                            cur_crontab_schedule.month_of_year = per_month if per_month != "0" else "*"
-                            cur_crontab_schedule.save()
+                            if periodictask_type == "crontabs":
+                                # 定时任务CrontabSchedule,Periodictask
+                                hour, minute = per_time.split(':')
+                                cur_crontab_schedule = CrontabSchedule()
+                                cur_crontab_schedule.hour = hour
+                                cur_crontab_schedule.minute = minute
+                                cur_crontab_schedule.day_of_week = per_week if per_week != "" else "*"
+                                cur_crontab_schedule.month_of_year = per_month if per_month != "" else "*"
+                                cur_crontab_schedule.save()
+                                cur_crontab_schedule_id = cur_crontab_schedule.id
+                                cur_interval_schedule_id = ""
+                            else:
+                                cur_crontab_schedule_id = ""
+                                if not intervals:
+                                    return JsonResponse({
+                                        "ret": 0,
+                                        "data": "任务时间间隔未选择。"
+                                    })
+                                cur_interval_schedule_id = int(intervals)
+
                             # 启动定时任务
                             cur_periodictask = PeriodicTask()
-                            cur_periodictask.crontab_id = cur_crontab_schedule.id
+                            if cur_crontab_schedule_id:
+                                cur_periodictask.crontab_id = cur_crontab_schedule_id
+                            if cur_interval_schedule_id:
+                                cur_periodictask.interval_id = cur_interval_schedule_id
+
                             cur_periodictask.name = uuid.uuid1()
                             if status == "on":
                                 cur_periodictask.enabled = 1
@@ -1238,14 +1270,35 @@ def rsync_config_save(request):
                                     else:
                                         cur_periodictask.enabled = 0
 
-                                    # crontab修改
-                                    hour, minute = per_time.split(':')
-                                    cur_crontab_schedule = cur_periodictask.crontab
-                                    cur_crontab_schedule.hour = hour
-                                    cur_crontab_schedule.minute = minute
-                                    cur_crontab_schedule.day_of_week = per_week if per_week != "0" else "*"
-                                    cur_crontab_schedule.month_of_year = per_month if per_month != "0" else "*"
-                                    cur_crontab_schedule.save()
+                                    if periodictask_type == "crontabs":
+                                        # crontab修改
+                                        hour, minute = per_time.split(':')
+                                        if cur_periodictask.crontab:
+                                            cur_crontab_schedule = cur_periodictask.crontab
+                                        else:
+                                            if cur_periodictask.interval_id:
+                                                cur_periodictask.interval_id = None
+                                            else:
+                                                pass
+                                            cur_crontab_schedule = CrontabSchedule()
+                                        cur_crontab_schedule.hour = hour
+                                        cur_crontab_schedule.minute = minute
+                                        cur_crontab_schedule.day_of_week = per_week if per_week != "" else "*"
+                                        cur_crontab_schedule.month_of_year = per_month if per_month != "" else "*"
+                                        cur_crontab_schedule.save()
+                                        cur_periodictask.crontab_id = cur_crontab_schedule.id
+                                    else:
+                                        if cur_periodictask.crontab_id:
+                                            cur_periodictask.crontab_id = None
+                                        else:
+                                            pass
+                                        if not intervals:
+                                            return JsonResponse({
+                                                "ret": 0,
+                                                "data": "任务时间间隔未选择。"
+                                            })
+                                        cur_periodictask.interval_id = int(intervals)
+
                                     # 任务名称
                                     cur_periodictask.args = [main_host_ip, selected_backup_host_list_int, str(model_list), cur_periodictask.id]
                                     # cur_periodictask.interval_id = intervals if intervals else None

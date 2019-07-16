@@ -1,5 +1,4 @@
 {% extends "base1.html" %}
-
 {% block content %}
     <!-- 自定义的加载中 -->
     <style>
@@ -161,7 +160,6 @@
                 {% for error in errors %}
                     <div class="alert alert-danger ">{{ error }}</div>
                     <span> {% endfor %}</span>
-
             {% endif %}</div>
         <div class="row">
             <div class="col-md-6">
@@ -173,32 +171,27 @@
                 </div>
             </div>
         </div>
-
     </div>
-
     <table class="table table-striped table-bordered table-hover table-checkable order-column" id="sample_1">
         <thead>
         <tr>
             <th style="width:40px;"> 序号</th>
             <th> 主机id</th>
+            <th> 间隔id</th>
             <th> 定时id</th>
             <th> 主机</th>
             <th> 分</th>
             <th> 时</th>
             <th> 每周</th>
             <th> 每月</th>
-
-
             <th> 备机</th>
             <th> 模块</th>
-            <th> 定时</th>
+            <th> 任务模式</th>
             <th> 是否开启</th>
             <th style="width:50px;"> 操作</th>
         </tr>
         </thead>
-
         <tbody>
-
         </tbody>
     </table>
     <div id="static" class="modal fade" tabindex="-1" data-backdrop="static" data-keyboard="false">
@@ -209,7 +202,6 @@
                     <h4 class="modal-title">Rsync配置</h4>
                 </div>
                 <div class="panel-body">
-
                     <form class="bs-example form-horizontal activate-form" id="rsync_config_form">{% csrf_token %}
                         <input type="text" id="id" name="id" hidden>
                         <div class="form-body">
@@ -221,22 +213,18 @@
                                 <div class="rect5"></div>
                             </div>
                             <div class="form-group">
-                                <label class="col-md-2 control-label"><span
-                                        style="color:red; ">*</span>主机</label>
+                                <label class="col-md-2 control-label"><span style="color:red; ">*</span>主机</label>
                                 <div class="col-md-10">
                                     <select name="main_host_ip" id="main_host_ip" class="form-control">
                                         {% for rsync_host in all_rsync_hosts %}
                                             <option value="{{ rsync_host.id }}">{{ rsync_host.ip_addr }}</option>
                                         {% endfor %}
                                     </select>
-
                                     <div class="form-control-focus"></div>
-
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-md-2 control-label"><span
-                                        style="color:red; ">*</span>备机</label>
+                                <label class="col-md-2 control-label"><span style="color:red; ">*</span>备机</label>
                                 <div class="col-md-10">
                                     <select name="backup_host_ip" id="backup_host_ip" class="form-control select2" placeholder="test" multiple>
                                         {% for rsync_host in all_rsync_hosts %}
@@ -245,12 +233,10 @@
                                     </select>
                                 </div>
                                 <div class="form-control-focus"></div>
-
                             </div>
                             <!-- 备份模块 -->
                             <div class="form-group" style="margin-bottom:0;">
-                                <label class="col-md-2 control-label" for="form_control_1"
-                                       style="vertical-align: inherit;font-weight:bold;">备份模块
+                                <label class="col-md-2 control-label" for="form_control_1" style="vertical-align: inherit;font-weight:bold;">备份模块
                                 </label>
                                 <div class="col-md-10">
                                     <hr>
@@ -258,126 +244,136 @@
                             </div>
                             <div class="form-group">
                                 <label class="col-md-2 control-label row" style="padding-top:0;margin-left:0;">
-                                    <a href="javascript:;" class="btn btn-circle default blue-stripe btn-sm col-md-12"
-                                       style="vertical-align: inherit;" id="node_new">添加
+                                    <a href="javascript:;" class="btn btn-circle default blue-stripe btn-sm col-md-12" style="vertical-align: inherit;" id="node_new">添加
                                     </a>
-                                    <a href="javascript:;" class="btn btn-circle default red-stripe btn-sm col-md-12"
-                                       style="vertical-align: inherit;margin-top:11px;visibility:hidden;" id="node_del">删除
+                                    <a href="javascript:;" class="btn btn-circle default red-stripe btn-sm col-md-12" style="vertical-align: inherit;margin-top:11px;visibility:hidden;" id="node_del">删除
                                     </a>
                                 </label>
                                 <div class="col-md-10 row" id="model_info_div" style="margin-left:15px;">
                                     <div class="col-md-12" style="margin-bottom:9px;padding-left: 0px;padding-right: 0px;">
                                         <label class="col-md-2 control-label"><span style="color:red; ">*</span>模块名称:</label>
                                         <div class="col-md-4" style="padding-right:0px;">
-                                            <input type="text" class="form-control" name="model_name_1"
-                                                   placeholder="">
+                                            <input type="text" class="form-control" name="model_name_1" placeholder="">
                                             <div class="form-control-focus"></div>
                                         </div>
                                         <label class="col-md-2 control-label"><span style="color:red; ">*</span>备份路径:</label>
                                         <div class="col-md-4" style="padding-right:0px;">
-                                            <input type="text" class="form-control" name="backup_path_1"
-                                                   placeholder="">
+                                            <input type="text" class="form-control" name="backup_path_1" placeholder="">
                                             <div class="form-control-focus"></div>
                                         </div>
                                         <span hidden>
-                                            <input type="text" class="form-control" name="model_id_1" placeholder="">
-                                        </span>
+                                        <input type="text" class="form-control" name="model_id_1" placeholder="">
+                                    </span>
                                     </div>
                                 </div>
                             </div>
-
                             <!-- 定时任务 -->
                             <div class="form-group" style="margin-bottom:0;">
-                                <label class="col-md-2 control-label" for="form_control_1"
-                                       style="vertical-align: inherit;font-weight:bold;">定时任务
+                                <label class="col-md-2 control-label" for="form_control_1" style="vertical-align: inherit;font-weight:bold;">任务模式
                                 </label>
                                 <div class="col-md-10">
                                     <hr>
                                 </div>
                             </div>
                             <input type="text" id="periodictask_id" name="periodictask_id" hidden>
-                            <div class="form-group">
-                                <label class="col-md-2 control-label"><span
-                                        style="color:red; ">*</span>时间</label>
-                                <div class="col-md-10">
-                                    <div class="input-group">
-                                        <input type="text" class="form-control" id="per_time" name="per_time">
-                                        <span class="input-group-btn">
-                                            <button class="btn default" type="button">
-                                                <i class="fa fa-clock-o"></i>
-                                            </button>
-                                        </span>
+                            <input type="text" id="periodictask_type" name="periodictask_type" hidden>
+                            <ul class="nav nav-tabs" id="periodictask_tab">
+                                <li>
+                                    <a href="#tab_1_1" data-toggle="tab">
+                                        <font style="vertical-align: inherit;">
+                                            <font style="vertical-align: inherit;"> 定时 </font>
+                                        </font>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#tab_1_2" data-toggle="tab">
+                                        <font style="vertical-align: inherit;">
+                                            <font style="vertical-align: inherit;"> 间隔 </font>
+                                        </font>
+                                    </a>
+                                </li>
+                            </ul>
+                            <div class="tab-content">
+                                <div class="tab-pane" id="tab_1_1">
+                                    <div class="form-group">
+                                        <label class="col-md-2 control-label"><span style="color:red; ">*</span>时间</label>
+                                        <div class="col-md-10">
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" id="per_time" name="per_time">
+                                                <span class="input-group-btn">
+                                                <button class="btn default" type="button">
+                                                    <i class="fa fa-clock-o"></i>
+                                                </button>
+                                            </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-md-2 control-label"><span style="color:red; "></span>每周</label>
+                                        <div class="col-md-10">
+                                            <select name="per_week" id="per_week" class="form-control select2" placeholder="test">
+                                                <option value="1">周一</option>
+                                                <option value="2">周二</option>
+                                                <option value="3">周三</option>
+                                                <option value="4">周四</option>
+                                                <option value="5">周五</option>
+                                                <option value="6">周六</option>
+                                                <option value="7">周日</option>
+                                            </select>
+                                            <div class="form-control-focus"></div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-md-2 control-label"><span style="color:red; "></span>每月</label>
+                                        <div class="col-md-10">
+                                            <select name="per_month" id="per_month" class="form-control select2" placeholder="test">
+                                                <option value="1">一月</option>
+                                                <option value="2">二月</option>
+                                                <option value="3">三月</option>
+                                                <option value="4">四月</option>
+                                                <option value="5">五月</option>
+                                                <option value="6">六月</option>
+                                                <option value="7">七月</option>
+                                                <option value="8">八月</option>
+                                                <option value="9">九月</option>
+                                                <option value="10">十月</option>
+                                                <option value="11">十一月</option>
+                                                <option value="12">十二月</option>
+                                            </select>
+                                            <div class="form-control-focus"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane" id="tab_1_2">
+                                    <div class="form-group">
+                                        <label class="col-md-2 control-label">
+                                            <span style="color:red; ">*</span>间隔
+                                        </label>
+                                        <div class="col-md-10">
+                                            <select name="intervals" id="intervals" class="form-control select2" placeholder="test">
+                                                {% for interval in all_intervals %}
+                                                    <option value="{{ interval.id }}">{{ interval.every }} {% if interval.period == "minutes" %}分钟{% elif interval.period == "hours" %}小时{% elif interval.period == "days" %}天{% else %}毫秒{% endif %}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <div class="form-control-focus"></div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-md-2 control-label"><span
-                                        style="color:red; "></span>每周</label>
-                                <div class="col-md-10">
-                                    <select name="per_week" id="per_week" class="form-control select2" placeholder="test">
-                                        <option value="0">默认</option>
-                                        <option value="1">周一</option>
-                                        <option value="2">周二</option>
-                                        <option value="3">周三</option>
-                                        <option value="4">周四</option>
-                                        <option value="5">周五</option>
-                                        <option value="6">周六</option>
-                                        <option value="7">周日</option>
-                                    </select>
-                                    <div class="form-control-focus"></div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-md-2 control-label"><span
-                                        style="color:red; "></span>每月</label>
-                                <div class="col-md-10">
-                                    <select name="per_month" id="per_month" class="form-control select2" placeholder="test">
-                                        <option value="0">默认</option>
-                                        <option value="1">一月</option>
-                                        <option value="2">二月</option>
-                                        <option value="3">三月</option>
-                                        <option value="4">四月</option>
-                                        <option value="5">五月</option>
-                                        <option value="6">六月</option>
-                                        <option value="7">七月</option>
-                                        <option value="8">八月</option>
-                                        <option value="9">九月</option>
-                                        <option value="10">十月</option>
-                                        <option value="11">十一月</option>
-                                        <option value="12">十二月</option>
-                                    </select>
-                                    <div class="form-control-focus"></div>
-                                </div>
-                            </div>
-{#                            <div class="form-group">#}
-{#                                <label class="col-md-2 control-label"><span#}
-{#                                        style="color:red; "></span>间隔</label>#}
-{#                                <div class="col-md-10">#}
-{#                                    <select name="intervals" id="intervals" class="form-control select2" placeholder="test">#}
-{#                                    <option value="0">默认</option>#}
-{#                                        {% for interval in all_intervals %}#}
-{#                                        <option value="{{ interval.id }}">{{ interval.every }} {% if interval.period == "minutes" %}分钟{% elif interval.period == "hours"%}小时{% elif interval.period == "days" %}天{% else %}毫秒{% endif %}</option>#}
-{#                                        {% endfor %}#}
-{#                                    </select>#}
-{#                                    <div class="form-control-focus"></div>#}
-{#                                </div>#}
-{#                            </div>#}
-                            <div class="form-group">
-                                <label class="col-md-2 control-label"><span
-                                        style="color:red; "></span>是否开启</label>
+                                <label class="col-md-2 control-label"><span style="color:red; "></span>是否开启</label>
                                 <div class="col-md-10">
                                     <input type="checkbox" id="status" name="status">
                                     <div class="form-control-focus"></div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="form-actions ">
-                            <div class="modal-footer">
-                                <button type="button" id="close" data-dismiss="modal" class="btn dark btn-outline">关闭
-                                </button>
-                                <button type="button" id="save" name="save" class="btn green">保存</button>
+                            <div class="form-actions ">
+                                <div class="modal-footer">
+                                    <button type="button" id="close" data-dismiss="modal" class="btn dark btn-outline">关闭
+                                    </button>
+                                    <button type="button" id="save" name="save" class="btn green">保存</button>
+                                </div>
                             </div>
-                        </div>
                     </form>
                 </div>
             </div>
@@ -391,7 +387,6 @@
                     <h4 class="modal-title">Rsync恢复</h4>
                 </div>
                 <div class="panel-body">
-
                     <form class="bs-example form-horizontal activate-form" id="rsync_config_form">{% csrf_token %}
                         <input type="text" id="rsync_config_id" name="rsync_config_id" hidden>
                         <input type="text" id="recover_id" name="recover_id" hidden>
@@ -404,19 +399,15 @@
                                 <div class="rect5"></div>
                             </div>
                             <div class="form-group">
-                                <label class="col-md-2 control-label"><span
-                                        style="color:red; ">*</span>备机</label>
+                                <label class="col-md-2 control-label"><span style="color:red; ">*</span>备机</label>
                                 <div class="col-md-10">
                                     <select name="selected_backup_host" id="selected_backup_host" class="form-control">
-
                                     </select>
                                 </div>
                                 <div class="form-control-focus"></div>
-
                             </div>
                             <div class="form-group">
-                                <label class="col-md-2 control-label"><span
-                                        style="color:red; "></span>主机</label>
+                                <label class="col-md-2 control-label"><span style="color:red; "></span>主机</label>
                                 <div class="col-md-10">
                                     <input type="text" id="dest_main_host" name="dest_main_host" class="form-control" readonly>
                                 </div>
@@ -442,7 +433,6 @@
                     <h4 class="modal-title">服务切换</h4>
                 </div>
                 <div class="panel-body">
-
                     <form class="bs-example form-horizontal activate-form" id="exchange_config_form">{% csrf_token %}
                         <input type="text" id="rsync_config_id" name="rsync_config_id" hidden>
                         <input type="text" id="exchange_id" name="exchange_id" hidden>
@@ -455,19 +445,15 @@
                                 <div class="rect5"></div>
                             </div>
                             <div class="form-group">
-                                <label class="col-md-2 control-label"><span
-                                        style="color:red; ">*</span>备机</label>
+                                <label class="col-md-2 control-label"><span style="color:red; ">*</span>备机</label>
                                 <div class="col-md-10">
                                     <select name="exchange_backup_host" id="exchange_backup_host" class="form-control">
-
                                     </select>
                                 </div>
                                 <div class="form-control-focus"></div>
-
                             </div>
                             <div class="form-group">
-                                <label class="col-md-2 control-label"><span
-                                        style="color:red; "></span>主机</label>
+                                <label class="col-md-2 control-label"><span style="color:red; "></span>主机</label>
                                 <div class="col-md-10">
                                     <input type="text" id="exchange_main_host" name="exchange_main_host" class="form-control" readonly>
                                 </div>
@@ -486,7 +472,6 @@
         </div>
     </div>
 {% endblock %}
-
 {% block script %}
     <script>
         $.ajaxSetup({
@@ -495,33 +480,24 @@
     </script>
     <!-- dataTable-->
     <link href="/static/assets/global/plugins/datatables/datatables.min.css" rel="stylesheet" type="text/css"/>
-    <link href="/static/assets/global/plugins/datatables/plugins/bootstrap/datatables.bootstrap.css" rel="stylesheet"
-          type="text/css"/>
-
+    <link href="/static/assets/global/plugins/datatables/plugins/bootstrap/datatables.bootstrap.css" rel="stylesheet" type="text/css"/>
     <script src="/static/assets/global/plugins/datatables/datatables.min.js" type="text/javascript"></script>
-    <script src="/static/assets/global/plugins/datatables/plugins/bootstrap/datatables.bootstrap.js"
-            type="text/javascript"></script>
-
+    <script src="/static/assets/global/plugins/datatables/plugins/bootstrap/datatables.bootstrap.js" type="text/javascript"></script>
     <!-- select2+multiselect-->
     <link href="/static/assets/global/plugins/jquery-multi-select/css/multi-select.css" rel="stylesheet" type="text/css"/>
     <link href="/static/assets/global/plugins/select2/css/select2.min.css" rel="stylesheet" type="text/css"/>
     <link href="/static/assets/global/plugins/select2/css/select2-bootstrap.min.css" rel="stylesheet" type="text/css"/>
-
     <script src="/static/assets/global/scripts/app.min.js" type="text/javascript"></script>
     <script src="/static/assets/global/plugins/jquery-multi-select/js/jquery.multi-select.js" type="text/javascript"></script>
     <script src="/static/assets/global/plugins/jquery-multi-select/js/jquery.quicksearch.js" type="text/javascript"></script>
     <script src="/static/assets/global/plugins/select2/js/select2.full.min.js" type="text/javascript"></script>
     <script src="/static/assets/pages/scripts/components-select2.js" type="text/javascript"></script>
-
     <!-- timepicker -->
     <link rel="stylesheet" href="/static/assets/global/plugins/bootstrap-timepicker/css/bootstrap-timepicker.css">
     <link rel="stylesheet" href="/static/assets/global/css/plugins.min.css">
     <script src="/static/assets/global/plugins/bootstrap-timepicker/js/bootstrap-timepicker.min.js" type="text/javascript"></script>
-
     <!-- bootstrapswitch -->
     <link rel="stylesheet" href="/static/assets/global/plugins/bootstrap-switch/css/bootstrap-switch.min.css">
     <script src="/static/assets/global/plugins/bootstrap-switch/js/bootstrap-switch.min.js" type="text/javascript"></script>
     <script src="/static/assets/pages/scripts/components-bootstrap-switch.min.js" type="text/javascript"></script>
-
 {% endblock %}
-
