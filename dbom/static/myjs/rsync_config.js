@@ -245,9 +245,8 @@ $(document).ready(function () {
         } else {
             $("#status").bootstrapSwitch("state", false);
         }
-
         // 间隔
-        $("#intervals").val(data.interval_id);
+        $("#intervals").val(data.interval_id).trigger("change");;
 
     });
     $('#sample_1 tbody').on('click', 'button#recover_btn', function () {
