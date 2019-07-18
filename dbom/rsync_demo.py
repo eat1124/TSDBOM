@@ -61,8 +61,7 @@ class RsyncBackup(object):
             else:
                 stdout_init = stdout_init.replace('cmd_failed', '')
                 result = 0
-
-            info = stdout_init
+            info = stdout_init if self.server["username"] == "root" else stdout_init.split(":", maxsplit=1)[1]
         else:
             result = 0
             for data in stderr.readlines():
@@ -119,7 +118,13 @@ class RsyncBackup(object):
                               'pid file = /var/run/rsyncd.pid' + '\n' + \
                               'lock file = /var/run/rsyncd.lock ' + '\n' + \
                               'log file = /var/log/rsyncd.log' + '\n' + \
-                              'fake super = yes'
+                              'fake super = yes' + '\n' + \
+                              'ignore errors' + '\n' + \
+                              'read only = false' + '\n' + \
+                              'list = false' + '\n' + \
+                              'hosts allow = *' + '\n' + \
+                              'auth users = rsync_backup' + '\n' + \
+                              'secrets file = /etc/rsync_server.password'
 
                 for temp_model in model_list:
                     backup_path = temp_model['backup_path']
@@ -132,13 +137,7 @@ class RsyncBackup(object):
                         return mode_auth_ret, "备份路径权限配置失败:{0}".format(mode_auth_info)
                     base_config += '\n' + \
                                    '[{0}]'.format(temp_model['model_name']) + '\n' + \
-                                   'path = {0}'.format(cur_path) + '\n' + \
-                                   'ignore errors' + '\n' + \
-                                   'read only = false' + '\n' + \
-                                   'list = false' + '\n' + \
-                                   'hosts allow = *' + '\n' + \
-                                   'auth users = rsync_backup' + '\n' + \
-                                   'secrets file = /etc/rsync_server.password'
+                                   'path = {0}'.format(cur_path)
                 rsync_config_result, rsync_config_info = self.run_shell_cmd("""echo "{0}" > /etc/rsyncd.conf""".format(base_config))
                 if rsync_config_result == 0:
                     result = 0
@@ -165,7 +164,7 @@ class RsyncBackup(object):
         return result, info
 
     def set_rsync_virtual_auth(self):
-        result, info = self.run_shell_cmd('tail -l /etc/passwd')
+        result, info = self.run_shell_cmd('cat /etc/passwd')
         if result == 1 and 'rsync' not in info:
             result, info = self.run_shell_cmd('useradd rsync -s /sbin/nologin -M')
 
@@ -200,7 +199,6 @@ class RsyncBackup(object):
             result = 0
             info = "客户端Rsync密码设置失败：{0}".format(client_passwd_info)
         return result, info
-
 
         return result, info
 
@@ -328,11 +326,13 @@ if __name__ == '__main__':
         'password': 'tesunet123'
     }
     rsync_backup = RsyncBackup(server)
-    print(rsync_backup.msg)
+    result, info = rsync_backup.set_rsync_virtual_auth()
+    # print(rsync_backup.msg)
     # result, info = rsync_backup.start_rsync()
+    # result, info = rsync_backup.run_shell_cmd("ls /")
     # result, info = rsync_backup.stop_rsync()
     # result, info = rsync_backup.run_shell_cmd('ls')
-    result, info = rsync_backup.install_rsync_by_yum()
+    # result, info = rsync_backup.install_rsync_by_yum()
     # result, info = rsync_backup.check_ever_existed()
 
     # result, info = rsync_backup.rsync_exec_avz(r'/temp_data', '192.168.85.138', 'temp_model', delete=True)
@@ -343,3 +343,26 @@ if __name__ == '__main__':
     # 将一个字串作为完整的命令来执行
     # sudo仅有root的部分权限
     print(result, info)
+    #
+    # # ..... 获取目录
+    # info = [x.strip() for x in info.split(" ") if x.strip() != ""]
+    # import copy
+    #
+    # copy_info = copy.deepcopy(info)
+    # for i in info:
+    #     if "\t" in i:
+    #         copy_info.remove(i)
+    #
+    #         i = i.split("\t")
+    #     if "\r\n" in i:
+    #         copy_info.remove(i)
+    #
+    #         i = i.split("\r\n")
+    #     if len(i) > 1 and type(i) == list:
+    #         copy_info.extend(i)
+    # print(copy_info)
+
+    # temp_path = "\\a\\b\\"
+    # import os
+    # temp_path_now = os.path.join(temp_path, "bb")
+    # print(temp_path_now)

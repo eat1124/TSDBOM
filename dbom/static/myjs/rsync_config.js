@@ -1,4 +1,156 @@
 $(document).ready(function () {
+    // input-click
+    $("input[name^='origin_path']").click(function () {
+        $("#static_main_select").modal();
+        $("#main_plan").val($(this).prop("name"));
+    })
+    $("input[name^='dest_path']").click(function () {
+        $("#static_dest_select").modal();
+        $("#dest_plan").val($(this).prop("name"));
+    })
+
+    // Linux file tree
+    var mainData = [
+        {
+            text: 'base_dir',
+            href: '#base_dir',
+            tags: ['1'],
+            nodes: [
+                {
+                    text: 'backup',
+                    href: '#backup',
+                    tags: ['2'],
+                    nodes: [
+                        {
+                            text: 'a',
+                            href: '#a',
+                            tags: ['0']
+                        },
+                        {
+                            text: 'b',
+                            href: '#b',
+                            tags: ['0']
+                        }
+                    ]
+                },
+            ]
+        },
+        {
+            text: 'dev',
+            href: '#dev',
+            tags: ['0']
+        },
+        {
+            text: 'etc',
+            href: 'etc',
+            tags: ['0']
+        },
+        {
+            text: 'home',
+            href: '#home',
+            tags: ['0']
+        },
+        {
+            text: 'lib',
+            href: '#lib',
+            tags: ['0']
+        }
+    ];
+    var destData = [
+        {
+            text: 'base_dir',
+            href: '#base_dir',
+            tags: ['1'],
+            nodes: [
+                {
+                    text: 'backup',
+                    href: '#backup',
+                    tags: ['2'],
+                    nodes: [
+                        {
+                            text: 'a',
+                            href: '#a',
+                            tags: ['0']
+                        },
+                        {
+                            text: 'b',
+                            href: '#b',
+                            tags: ['0']
+                        }
+                    ]
+                },
+            ]
+        },
+        {
+            text: 'dev',
+            href: '#dev',
+            tags: ['0']
+        },
+        {
+            text: 'etc',
+            href: 'etc',
+            tags: ['0']
+        },
+        {
+            text: 'home',
+            href: '#home',
+            tags: ['0']
+        },
+        {
+            text: 'lib',
+            href: '#lib',
+            tags: ['0']
+        }
+    ];
+
+    var mainTree = $("#main_file_tree").treeview({
+        data: mainData,
+    }).on('nodeSelected', function (event, node) {
+        var filePath = "/" + node.text;
+        getParentNode(node);
+
+        function getParentNode(node) {
+            var parentNode = mainTree.treeview('getParent', node);
+            if (typeof (parentNode.nodeId) != "undefined") {
+                filePath = "/" + parentNode.text + filePath;
+                getParentNode(parentNode);
+            }
+        }
+
+        $("#main_select_path").val(filePath);
+    }).treeview("collapseAll");
+
+    var destTree = $("#dest_file_tree").treeview({
+        data: destData,
+    }).on('nodeSelected', function (event, node) {
+        var filePath = "/" + node.text;
+        getParentNode(node);
+
+        function getParentNode(node) {
+            var parentNode = destTree.treeview('getParent', node);
+            if (typeof (parentNode.nodeId) != "undefined") {
+                filePath = "/" + parentNode.text + filePath;
+                getParentNode(parentNode);
+            }
+        }
+
+        $("#dest_select_path").val(filePath);
+    }).treeview("collapseAll");
+
+    $("#main_ensure").click(function () {
+        var mainPlan = $("#main_plan").val();
+        var mainSelectPath = $("#main_select_path").val();
+        $("input[name='mainplan']".replace("mainplan", mainPlan)).val(mainSelectPath);
+        $("#static_main_select").modal("hide");
+    });
+
+    $("#dest_ensure").click(function () {
+        var destPlan = $("#dest_plan").val();
+        var destSelectPath = $("#dest_select_path").val();
+        $("input[name='destplan']".replace("destplan", destPlan)).val(destSelectPath);
+        $("#static_dest_select").modal("hide");
+    });
+
     // select2
     $(".select2").select2({
         width: null,
@@ -13,7 +165,7 @@ $(document).ready(function () {
     }).on('hide.timepicker', function () {
         $('#static').attr('tabindex', -1);
     });
-    
+
     // bootstrap-switch
     $("#status").bootstrapSwitch();
 
@@ -189,66 +341,66 @@ $(document).ready(function () {
 
         }
     });
-    $('#sample_1 tbody').on('click', 'button#edit', function () {
-        $("#rsync_loading").hide();
-        $("#save").removeProp("disabled");
-        $("#close").removeProp("disabled");
-        $("#rsync_modal_close").removeProp("disabled");
-
-        var table = $('#sample_1').DataTable();
-        var data = table.row($(this).parents('tr')).data();
-        $("#id").val(data.id);
-        $("#main_host_ip").val(data.main_host_id);
-        $("#periodictask_id").val(data.periodictask_id);
-        var backup_host_id_list = []
-        for (var i = 0; i < data.backup_host.length; i++) {
-            backup_host_id_list.push(data.backup_host[i].id);
-        }
-        $("#backup_host_ip").val(backup_host_id_list).trigger("change");
-        // 模块
-        $("#model_info_div").empty();
-        for (i = 0; i < data.model.length; i++) {
-            $("#model_info_div").append('<div class="col-md-12" style="margin-bottom:9px;padding-left: 0px;padding-right: 0px;">\n' +
-                '    <label class="col-md-2 control-label"><span style="color:red;">*</span>模块名称:</label>\n' +
-                '    <div class="col-md-4" style="padding-right:0px;">\n' +
-                '        <input type="text" class="form-control" name="model_name_' + (i + 1) + '" value="' + data.model[i].model_name + '" placeholder="">\n' +
-                '        <div class="form-control-focus"></div>\n' +
-                '    </div>\n' +
-                '    <label class="col-md-2 control-label"><span style="color:red;">*</span>备份路径:</label>\n' +
-                '    <div class="col-md-4" style="padding-right:0px;">\n' +
-                '        <input type="text" class="form-control" name="backup_path_' + (i + 1) + '" value="' + data.model[i].rsync_path + '" placeholder="">\n' +
-                '        <div class="form-control-focus"></div>\n' +
-                '<span hidden>\n' +
-                '    <input type="text" class="form-control" name="model_id_' + (i + 1) + '" value="' + data.model[i].id + '" placeholder="">\n' +
-                '</span>' +
-                '    </div>\n'
-            );
-        }
-
-        if (data.interval_id) {
-            $('#periodictask_tab a:last').tab('show');
-            $("#per_time").val("00:00").timepicker("setTime", "00:00");
-            $("#per_week").val("").trigger("change");
-            $("#per_month").val("").trigger("change");
-        } else {
-            $('#periodictask_tab a:first').tab('show');
-            $("#intervals").val("").trigger("change");
-        }
-
-        // 设置定时器
-        var per_time = data.hours + ":" + data.minutes;
-        $("#per_time").val(per_time).timepicker("setTime", per_time);
-        $("#per_week").val(data.per_week != "*" ? data.per_week : 0).trigger("change");
-        $("#per_month").val(data.per_month != "*" ? data.per_month : 0).trigger("change");
-        if (data.status === "on") {
-            $("#status").bootstrapSwitch("state", true);
-        } else {
-            $("#status").bootstrapSwitch("state", false);
-        }
-        // 间隔
-        $("#intervals").val(data.interval_id).trigger("change");;
-
-    });
+    // $('#sample_1 tbody').on('click', 'button#edit', function () {
+    //     $("#rsync_loading").hide();
+    //     $("#save").removeProp("disabled");
+    //     $("#close").removeProp("disabled");
+    //     $("#rsync_modal_close").removeProp("disabled");
+    //
+    //     var table = $('#sample_1').DataTable();
+    //     var data = table.row($(this).parents('tr')).data();
+    //     $("#id").val(data.id);
+    //     $("#main_host_ip").val(data.main_host_id);
+    //     $("#periodictask_id").val(data.periodictask_id);
+    //     var backup_host_id_list = []
+    //     for (var i = 0; i < data.backup_host.length; i++) {
+    //         backup_host_id_list.push(data.backup_host[i].id);
+    //     }
+    //     $("#backup_host_ip").val(backup_host_id_list).trigger("change");
+    //     // 模块
+    //     $("#model_info_div").empty();
+    //     for (i = 0; i < data.model.length; i++) {
+    //         $("#model_info_div").append('<div class="col-md-12" style="margin-bottom:9px;padding-left: 0px;padding-right: 0px;">\n' +
+    //             '    <label class="col-md-2 control-label"><span style="color:red;">*</span>模块名称:</label>\n' +
+    //             '    <div class="col-md-4" style="padding-right:0px;">\n' +
+    //             '        <input type="text" class="form-control" name="model_name_' + (i + 1) + '" value="' + data.model[i].model_name + '" placeholder="">\n' +
+    //             '        <div class="form-control-focus"></div>\n' +
+    //             '    </div>\n' +
+    //             '    <label class="col-md-2 control-label"><span style="color:red;">*</span>备份路径:</label>\n' +
+    //             '    <div class="col-md-4" style="padding-right:0px;">\n' +
+    //             '        <input type="text" class="form-control" name="backup_path_' + (i + 1) + '" value="' + data.model[i].rsync_path + '" placeholder="">\n' +
+    //             '        <div class="form-control-focus"></div>\n' +
+    //             '<span hidden>\n' +
+    //             '    <input type="text" class="form-control" name="model_id_' + (i + 1) + '" value="' + data.model[i].id + '" placeholder="">\n' +
+    //             '</span>' +
+    //             '    </div>\n'
+    //         );
+    //     }
+    //
+    //     if (data.interval_id) {
+    //         $('#periodictask_tab a:last').tab('show');
+    //         $("#per_time").val("00:00").timepicker("setTime", "00:00");
+    //         $("#per_week").val("").trigger("change");
+    //         $("#per_month").val("").trigger("change");
+    //     } else {
+    //         $('#periodictask_tab a:first').tab('show');
+    //         $("#intervals").val("").trigger("change");
+    //     }
+    //
+    //     // 设置定时器
+    //     var per_time = data.hours + ":" + data.minutes;
+    //     $("#per_time").val(per_time).timepicker("setTime", per_time);
+    //     $("#per_week").val(data.per_week != "*" ? data.per_week : 0).trigger("change");
+    //     $("#per_month").val(data.per_month != "*" ? data.per_month : 0).trigger("change");
+    //     if (data.status === "on") {
+    //         $("#status").bootstrapSwitch("state", true);
+    //     } else {
+    //         $("#status").bootstrapSwitch("state", false);
+    //     }
+    //     // 间隔
+    //     $("#intervals").val(data.interval_id).trigger("change");;
+    //
+    // });
     $('#sample_1 tbody').on('click', 'button#recover_btn', function () {
         $("#rsync_recover_loading").hide();
         $("#recover").removeProp("disabled");
@@ -354,49 +506,49 @@ $(document).ready(function () {
         })
     });
 
-    $("#new").click(function () {
-        $("#rsync_loading").hide();
-        $("#save").removeProp("disabled");
-        $("#close").removeProp("disabled");
-        $("#rsync_modal_close").removeProp("disabled");
-
-        $("#rsync_recover_loading").hide();
-        $("#recover").removeProp("disabled");
-        $("#recover_close").removeProp("disabled");
-        $("#recover_modal_close").removeProp("disabled");
-
-        $("#intervals").val("0");
-        $('#periodictask_tab a:first').tab('show');
-
-        $("#main_host_ip").val("0");
-        $("#id").val("0");
-        $("#main_host_ip").val("");
-        $("#backup_host_ip").val("").trigger("change");
-        // 模块，移除/新增
-        $("#model_info_div").empty();
-        $("#model_info_div").append('<div class="col-md-12" style="margin-bottom:9px;padding-left: 0px;padding-right: 0px;">\n' +
-            '    <label class="col-md-2 control-label"><span style="color:red; ">*</span>模块名称:</label>\n' +
-            '    <div class="col-md-4" style="padding-right:0px;">\n' +
-            '        <input type="text" class="form-control" name="model_name_1"\n' +
-            '               placeholder="">\n' +
-            '        <div class="form-control-focus"></div>\n' +
-            '    </div>\n' +
-            '    <label class="col-md-2 control-label"><span style="color:red; ">*</span>备份路径:</label>\n' +
-            '    <div class="col-md-4" style="padding-right:0px;">\n' +
-            '        <input type="text" class="form-control" name="backup_path_1"\n' +
-            '               placeholder="">\n' +
-            '        <div class="form-control-focus"></div>\n' +
-            '    </div>\n' +
-            '    <span hidden>\n' +
-            '        <input type="text" class="form-control" name="model_id_1" placeholder="">\n' +
-            '    </span>\n' +
-            '</div>');
-        $("#per_time").val("00:00").timepicker("setTime", "00:00");
-        $("#per_week").val("").trigger("change");
-        $("#per_month").val("").trigger("change");
-        $("#intervals").val("").trigger("change");
-        $("#status").bootstrapSwitch("state", false);
-    });
+    // $("#new").click(function () {
+    //     $("#rsync_loading").hide();
+    //     $("#save").removeProp("disabled");
+    //     $("#close").removeProp("disabled");
+    //     $("#rsync_modal_close").removeProp("disabled");
+    //
+    //     $("#rsync_recover_loading").hide();
+    //     $("#recover").removeProp("disabled");
+    //     $("#recover_close").removeProp("disabled");
+    //     $("#recover_modal_close").removeProp("disabled");
+    //
+    //     $("#intervals").val("0");
+    //     $('#periodictask_tab a:first').tab('show');
+    //
+    //     $("#main_host_ip").val("0");
+    //     $("#id").val("0");
+    //     $("#main_host_ip").val("");
+    //     $("#backup_host_ip").val("").trigger("change");
+    //     // 模块，移除/新增
+    //     $("#model_info_div").empty();
+    //     $("#model_info_div").append('<div class="col-md-12" style="margin-bottom:9px;padding-left: 0px;padding-right: 0px;">\n' +
+    //         '    <label class="col-md-2 control-label"><span style="color:red; ">*</span>模块名称:</label>\n' +
+    //         '    <div class="col-md-4" style="padding-right:0px;">\n' +
+    //         '        <input type="text" class="form-control" name="model_name_1"\n' +
+    //         '               placeholder="">\n' +
+    //         '        <div class="form-control-focus"></div>\n' +
+    //         '    </div>\n' +
+    //         '    <label class="col-md-2 control-label"><span style="color:red; ">*</span>备份路径:</label>\n' +
+    //         '    <div class="col-md-4" style="padding-right:0px;">\n' +
+    //         '        <input type="text" class="form-control" name="backup_path_1"\n' +
+    //         '               placeholder="">\n' +
+    //         '        <div class="form-control-focus"></div>\n' +
+    //         '    </div>\n' +
+    //         '    <span hidden>\n' +
+    //         '        <input type="text" class="form-control" name="model_id_1" placeholder="">\n' +
+    //         '    </span>\n' +
+    //         '</div>');
+    //     $("#per_time").val("00:00").timepicker("setTime", "00:00");
+    //     $("#per_week").val("").trigger("change");
+    //     $("#per_month").val("").trigger("change");
+    //     $("#intervals").val("").trigger("change");
+    //     $("#status").bootstrapSwitch("state", false);
+    // });
 
     $('#save').click(function () {
         $("#rsync_loading").show();
