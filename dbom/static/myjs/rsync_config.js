@@ -353,7 +353,7 @@ $(document).ready(function () {
             "render": function (data, type, full) {
                 var exec_tag = "<button  id='edit' title='编辑' data-toggle='modal'  data-target='#static'  class='btn btn-xs btn-primary' type='button'><i class='fa fa-edit'></i></button><button title='删除'  id='delrow' class='btn btn-xs btn-primary' type='button'><i class='fa fa-trash-o'></i></button>";
                 exec_tag += "<button title='切换' id='exchange_btn' data-toggle='modal'  data-target='#static_exchange'  class='btn btn-xs btn-info' type='button'><i class='fa fa-exchange'></i></button>";
-                exec_tag += "<button title='恢复' id='recover_btn' data-toggle='modal'  data-target='#static_recover'  class='btn btn-xs btn-warning' type='button'><i class='fa fa-reply-all'></i></button>";
+                exec_tag += "<button title='反向复制' id='recover_btn' data-toggle='modal'  data-target='#static_recover'  class='btn btn-xs btn-warning' type='button'><i class='fa fa-reply-all'></i></button>";
                 return "<td>" + exec_tag + "</td>";
             },
         }],
@@ -469,7 +469,7 @@ $(document).ready(function () {
         var data = table.row($(this).parents('tr')).data();
         $("#recover_id").val(data.main_host_id);
         $("#rsync_config_id").val(data.id);
-        // 恢复
+        // 反备
         $("#origin_host").val(data.main_host);
         $("#dest_host").val(data.backup_host);
         $("#dest_host_id").val(data.backup_host_id);
