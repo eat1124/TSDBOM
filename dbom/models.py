@@ -176,6 +176,7 @@ class RsyncModel(models.Model):
     rsync_config = models.ForeignKey(RsyncConfig, null=True, verbose_name="Rsync配置")
     main_path = models.CharField("源端路径", max_length=512, default="")
     dest_path = models.CharField("终端路径", max_length=512, default="")
+    model_name = models.CharField("模块名称", max_length=128, default="")
     state = models.CharField("逻辑删除:'9'", max_length=16, blank=True, default="")
 
 

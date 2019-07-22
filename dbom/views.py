@@ -1010,9 +1010,11 @@ def rsync_config_save(request):
     for i in range(0, rsync_model_num):
         origin_path = request.POST.get('origin_path_{0}'.format(i + 1), "")
         dest_path = request.POST.get('dest_path_{0}'.format(i + 1), "")
+        model_name = request.POST.get('model_id_{0}'.format(i + 1), "")
         model_list.append({
-            "origin_path_": origin_path,
+            "origin_path": origin_path,
             "dest_path": dest_path,
+            "model_name": model_name,
         })
     result_info = {}
     # 校验
@@ -1085,15 +1087,15 @@ def rsync_config_save(request):
                                         "ret": 0,
                                         "data": "路径：{0} 在主服务器中不存在，请检查后再配置。".format(temp_path)
                                     })
-                            # # 配置主机
-                            # result, info = rsync_backup.set_rsync_server_config(model_list)
-                            # if result == 0:
-                            #     rsync_backup.close_connection()
-                            #
-                            #     return JsonResponse({
-                            #         "ret": 0,
-                            #         "data": "主服务器{0} 配置失败, {1}".format(cur_main_host.ip_addr, info)
-                            #     })
+                            # 配置主机
+                            result, info = rsync_backup.set_rsync_server_config(model_list, "origin")
+                            if result == 0:
+                                rsync_backup.close_connection()
+
+                                return JsonResponse({
+                                    "ret": 0,
+                                    "data": "主服务器{0} 配置失败, {1}".format(cur_main_host.ip_addr, info)
+                                })
 
                     # 2.备机
                     try:
@@ -1146,15 +1148,15 @@ def rsync_config_save(request):
                                         "ret": 0,
                                         "data": "路径：{0} 在备份服务器中不存在，请检查后再配置。".format(temp_path[:-1])
                                     })
-                            # # 配置备机
-                            # result, info = rsync_backup.set_rsync_server_config(model_list)
-                            # if result == 0:
-                            #     rsync_backup.close_connection()
-                            #
-                            #     return JsonResponse({
-                            #         "ret": 0,
-                            #         "data": "备份服务器{0} 配置失败。".format(cur_backup_host.ip_addr)
-                            #     })
+                            # 配置备机
+                            result, info = rsync_backup.set_rsync_server_config(model_list, "dest")
+                            if result == 0:
+                                rsync_backup.close_connection()
+
+                                return JsonResponse({
+                                    "ret": 0,
+                                    "data": "备份服务器{0} 配置失败。".format(cur_backup_host.ip_addr)
+                                })
                     # 保存数据：RsyncConfig,RsyncModel,CrontabSchedule,Periodictask
                     if id == 0:
                         try:
@@ -1210,8 +1212,10 @@ def rsync_config_save(request):
                             for i in range(0, rsync_model_num):
                                 origin_path = request.POST.get('origin_path_{0}'.format(i + 1), "")
                                 dest_path = request.POST.get('dest_path_{0}'.format(i + 1), "")
+                                model_name = request.POST.get('model_id_{0}'.format(i + 1), "")
 
                                 cur_rsync_model = RsyncModel()
+                                cur_rsync_model.model_name = model_name
                                 cur_rsync_model.main_path = origin_path
                                 cur_rsync_model.dest_path = dest_path
                                 cur_rsync_model.rsync_config_id = cur_rsync_config.id
@@ -1294,7 +1298,7 @@ def rsync_config_save(request):
                                 for i in range(0, rsync_model_num):
                                     origin_path = request.POST.get('origin_path_{0}'.format(i + 1), "")
                                     dest_path = request.POST.get('dest_path_{0}'.format(i + 1), "")
-                                    model_id = request.POST.get('model_id_{0}'.format(i + 1), "")
+                                    model_name = request.POST.get('model_id_{0}'.format(i + 1), "")
 
                                     try:
                                         cur_rsync_model = RsyncModel.objects.get(id=int(model_id))
@@ -1306,16 +1310,19 @@ def rsync_config_save(request):
                                     else:
                                         cur_rsync_model.main_path = origin_path
                                         cur_rsync_model.dest_path = dest_path
+                                        cur_rsync_model.model_name = model_name
                                         cur_rsync_model.save()
                             else:
                                 cur_rsync_config.rsyncmodel_set.all().update(state="9")
                                 for i in range(0, rsync_model_num):
                                     origin_path = request.POST.get('origin_path_{0}'.format(i + 1), "")
                                     dest_path = request.POST.get('dest_path_{0}'.format(i + 1), "")
+                                    model_name = request.POST.get('model_id_{0}'.format(i + 1), "")
 
                                     cur_rsync_model = RsyncModel()
                                     cur_rsync_model.main_path = origin_path
                                     cur_rsync_model.dest_path = dest_path
+                                    cur_rsync_model.model_name = model_name
                                     cur_rsync_model.rsync_config_id = cur_rsync_config.id
                                     cur_rsync_model.save()
                             result_info["ret"] = 1

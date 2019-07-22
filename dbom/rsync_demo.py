@@ -90,11 +90,11 @@ class RsyncBackup(object):
         result, info = self.run_shell_cmd('rsync --help')
         return result, info
 
-    def set_rsync_server_config(self, model_list):
+    def set_rsync_server_config(self, model_list, server_type):
         """
         secrets file 默认/etc/rsync.password
         auth users  默认rsync_backup
-        :param model_list: [{"model_name": "", ""backup_path": ""}]
+        :param model_list: [{"origin_path": "", ""dest_path": ""}]
         :return:
         """
         result = 1
@@ -126,18 +126,29 @@ class RsyncBackup(object):
                               'auth users = rsync_backup' + '\n' + \
                               'secrets file = /etc/rsync_server.password'
 
-                for temp_model in model_list:
-                    backup_path = temp_model['backup_path']
-                    cur_path = backup_path.replace(backup_path.split("/")[-1], "")
-                    # self.run_shell_cmd('chown -R rsync.rsync {0}'.format(cur_path))
+                # 路径加入配置文件，并设置备份地址权限
+                if server_type == "origin":
+                    for temp_model in model_list:
+                        origin_path = temp_model['origin_path']
+                        cur_path = origin_path.replace(origin_path.split("/")[-1], "")
 
-                    # 设置备份地址权限
-                    mode_auth_ret, mode_auth_info = self.run_shell_cmd('chown -R rsync.rsync {0}'.format(cur_path))
-                    if mode_auth_ret == 0:
-                        return mode_auth_ret, "备份路径权限配置失败:{0}".format(mode_auth_info)
-                    base_config += '\n' + \
-                                   '[{0}]'.format(temp_model['model_name']) + '\n' + \
-                                   'path = {0}'.format(cur_path)
+                        mode_auth_ret, mode_auth_info = self.run_shell_cmd('chown -R rsync.rsync {0}'.format(cur_path))
+                        if mode_auth_ret == 0:
+                            return mode_auth_ret, "源端备份路径权限配置失败:{0}".format(mode_auth_info)
+                        base_config += '\n' + \
+                                       '[{0}]'.format(temp_model['model_name']) + '\n' + \
+                                       'path = {0}'.format(cur_path)
+                else:
+                    for temp_model in model_list:
+                        origin_path = temp_model['dest_path']
+                        cur_path = dest_path.replace(dest_path.split("/")[-1], "")
+
+                        mode_auth_ret, mode_auth_info = self.run_shell_cmd('chown -R rsync.rsync {0}'.format(cur_path))
+                        if mode_auth_ret == 0:
+                            return mode_auth_ret, "终端备份路径权限配置失败:{0}".format(mode_auth_info)
+                        base_config += '\n' + \
+                                       '[{0}]'.format(temp_model['model_name']) + '\n' + \
+                                       'path = {0}'.format(cur_path)
                 rsync_config_result, rsync_config_info = self.run_shell_cmd("""echo "{0}" > /etc/rsyncd.conf""".format(base_config))
                 if rsync_config_result == 0:
                     result = 0
