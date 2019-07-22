@@ -1501,7 +1501,11 @@ def rsync_recover(request):
                     temp_info = ""
                     temp_tag = True
                     for cur_model in model_list:
-                        result, info = rsync_backup.rsync_exec_avz(cur_model.main_path, origin_host, cur_model.model_name, delete=True)
+                        # 终端路径+源端文件
+                        origin_path = cur_model.main_path
+                        backup_doc = cur_model.main_path.split("/")[-1]
+                        dest_path = cur_model.dest_path + "/" + backup_doc
+                        result, info = rsync_backup.rsync_exec_avz(dest_path, origin_host, cur_model.model_name, delete=True)
                         if result == 1:
                             temp_info = "备份成功。"
                         else:

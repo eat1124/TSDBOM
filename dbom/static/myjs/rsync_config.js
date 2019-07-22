@@ -416,12 +416,12 @@ $(document).ready(function () {
         $("#path_info_div").empty();
         for (i = 0; i < data.model.length; i++) {
             $("#path_info_div").append('<div class="col-md-12" style="margin-bottom:9px;padding-left: 0px;padding-right: 0px;">\n' +
-                '    <label class="col-md-2 control-label"><span style="color:red;">*</span>模块名称:</label>\n' +
+                '    <label class="col-md-2 control-label"><span style="color:red;">*</span>源端路径:</label>\n' +
                 '    <div class="col-md-4" style="padding-right:0px;">\n' +
                 '        <input type="text" class="form-control" name="origin_path_' + (i + 1) + '" value="' + data.model[i].main_path + '" placeholder="">\n' +
                 '        <div class="form-control-focus"></div>\n' +
                 '    </div>\n' +
-                '    <label class="col-md-2 control-label"><span style="color:red;">*</span>备份路径:</label>\n' +
+                '    <label class="col-md-2 control-label"><span style="color:red;">*</span>终端路径:</label>\n' +
                 '    <div class="col-md-4" style="padding-right:0px;">\n' +
                 '        <input type="text" class="form-control" name="dest_path_' + (i + 1) + '" value="' + data.model[i].dest_path + '" placeholder="">\n' +
                 '        <div class="form-control-focus"></div>\n' +

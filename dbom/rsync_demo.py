@@ -141,7 +141,7 @@ class RsyncBackup(object):
                 else:
                     for temp_model in model_list:
                         dest_path = temp_model['dest_path']
-                        cur_path = dest_path.replace(dest_path.split("/")[-1], "")
+                        cur_path = dest_path
 
                         mode_auth_ret, mode_auth_info = self.run_shell_cmd('chown -R rsync.rsync {0}'.format(cur_path))
                         if mode_auth_ret == 0:
@@ -312,7 +312,7 @@ class RsyncBackup(object):
                 info = run_rsync_info
         return result, info
 
-    def rsync_exec_avz(self, dest_dir, dest_server, model_name, delete=False):
+    def rsync_exec_avz(self, local_dir, dest_server, model_name, delete=False):
         """
         -avz 方式备份
         :param dest_dir: 服务器备份路径
@@ -324,9 +324,9 @@ class RsyncBackup(object):
         """
         # 异常处理
         if delete:
-            result, info = self.run_shell_cmd(r'rsync -avz {0} rsync_backup@{1}::{2}/ --password-file=/etc/rsync.password --delete'.format(dest_dir, dest_server, model_name))
+            result, info = self.run_shell_cmd(r'rsync -avz {0} rsync_backup@{1}::{2}/ --password-file=/etc/rsync.password --delete'.format(local_dir, dest_server, model_name))
         else:
-            result, info = self.run_shell_cmd(r'rsync -avz {0} rsync_backup@{1}::{2}/ --password-file=/etc/rsync.password'.format(dest_dir, dest_server, model_name))
+            result, info = self.run_shell_cmd(r'rsync -avz {0} rsync_backup@{1}::{2}/ --password-file=/etc/rsync.password'.format(local_dir, dest_server, model_name))
         return result, info
 
 
@@ -346,7 +346,7 @@ if __name__ == '__main__':
     # result, info = rsync_backup.install_rsync_by_yum()
     # result, info = rsync_backup.check_ever_existed()
 
-    result, info = rsync_backup.rsync_exec_avz(r'/base_dir/', '192.168.85.102', '39', delete=True)
+    result, info = rsync_backup.rsync_exec_avz(r'/base_dir/temp_data/', '192.168.85.102', '39', delete=True)
     # result, info = rsync_backup.tail_rsync_log()
     # result, info = rsync_backup.set_rsync_server_config([{"model_name": "temp_model", "backup_path": "/base_dir/temp_data"}])
     rsync_backup.close_connection()
