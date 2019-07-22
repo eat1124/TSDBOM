@@ -21,6 +21,7 @@ from operator import itemgetter
 import operator
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from collections import OrderedDict
+import copy
 
 from django.utils.timezone import utc
 from django.utils.timezone import localtime
@@ -906,22 +907,17 @@ def rsync_config_data(request):
         main_host_id = rsync_config.main_host.id
         main_host = rsync_config.main_host.ip_addr
         # 备机
-        all_backup_host = rsync_config.backup_host.exclude(state="9")
-        all_backup_host_list = []
-        for backup_host in all_backup_host:
-            all_backup_host_list.append({
-                "id": backup_host.id,
-                "backup_host": backup_host.ip_addr,
-                "backup_host_status": backup_host.status,
-            })
+        backup_host_id = rsync_config.backup_host.id
+        backup_host = rsync_config.backup_host.ip_addr
+
         # 模块
         all_rsync_models = rsync_config.rsyncmodel_set.exclude(state="9")
         all_rsync_model_list = []
         for rsync_model in all_rsync_models:
             all_rsync_model_list.append({
                 "id": rsync_model.id,
-                "model_name": rsync_model.model_name,
-                "rsync_path": rsync_model.rsync_path,
+                "main_path": rsync_model.main_path,
+                "dest_path": rsync_model.dest_path,
             })
         # 定时任务
         status, minutes, hours, per_week, per_month, interval_id, interval_every, interval_period = "", "", "", "", "", "", "", ""
@@ -949,7 +945,9 @@ def rsync_config_data(request):
             "main_host_id": main_host_id,
             "main_host": main_host,
             "main_host_status": rsync_config.main_host.status,
-            "backup_host": all_backup_host_list,
+            "backup_host_id": backup_host_id,
+            "backup_host": backup_host,
+            "backup_host_status": rsync_config.backup_host.status,
             "model": all_rsync_model_list,
             "status": status,
             "minutes": minutes,
@@ -967,7 +965,7 @@ def rsync_config_data(request):
 @login_required
 def rsync_config_save(request):
     main_host_ip = request.POST.get('main_host_ip', '')
-    selected_backup_host = request.POST.get('selected_backup_host', '')
+    backup_host_ip = request.POST.get('backup_host_ip', '')
     per_time = request.POST.get('per_time', '')
     per_month = request.POST.get('per_month', '')
     per_week = request.POST.get('per_week', '')
@@ -986,8 +984,9 @@ def rsync_config_save(request):
     try:
         if main_host_ip:
             main_host_ip = int(main_host_ip)
+        if backup_host_ip:
+            backup_host_ip = int(backup_host_ip)
         id = int(id)
-        # intervals = int(intervals)
     except ValueError as e:
         return JsonResponse({
             'ret': 0,
@@ -1009,11 +1008,11 @@ def rsync_config_save(request):
     model_list = []
 
     for i in range(0, rsync_model_num):
-        model_name = request.POST.get('model_name_{0}'.format(i + 1), "")
-        backup_path = request.POST.get('backup_path_{0}'.format(i + 1), "")
+        origin_path = request.POST.get('origin_path_{0}'.format(i + 1), "")
+        dest_path = request.POST.get('dest_path_{0}'.format(i + 1), "")
         model_list.append({
-            "model_name": model_name,
-            "backup_path": backup_path,
+            "origin_path_": origin_path,
+            "dest_path": dest_path,
         })
     result_info = {}
     # 校验
@@ -1021,14 +1020,14 @@ def rsync_config_save(request):
         result_info["ret"] = 0
         result_info["data"] = '主机不能为空。'
     else:
-        if selected_backup_host.strip() == '':
+        if backup_host_ip == 0:
             result_info["ret"] = 0
             result_info["data"] = '备机不能为空。'
         else:
             # 拆分出备机
-            selected_backup_host_list = selected_backup_host.split(",")
+            # selected_backup_host_list = selected_backup_host.split(",")
 
-            if str(main_host_ip) in selected_backup_host_list:
+            if main_host_ip == backup_host_ip:
                 result_info["ret"] = 0
                 result_info["data"] = '一台机器无法同时设置成主从服务器。'
             else:
@@ -1089,86 +1088,76 @@ def rsync_config_save(request):
                                         "ret": 0,
                                         "data": "路径：{0} 在主服务器中不存在，请检查后再配置。".format(temp_path)
                                     })
-                            # 配置主机
-                            result, info = rsync_backup.set_rsync_server_config(model_list)
-                            if result == 0:
-                                rsync_backup.close_connection()
-
-                                return JsonResponse({
-                                    "ret": 0,
-                                    "data": "主服务器{0} 配置失败, {1}".format(cur_main_host.ip_addr, info)
-                                })
+                            # # 配置主机
+                            # result, info = rsync_backup.set_rsync_server_config(model_list)
+                            # if result == 0:
+                            #     rsync_backup.close_connection()
+                            #
+                            #     return JsonResponse({
+                            #         "ret": 0,
+                            #         "data": "主服务器{0} 配置失败, {1}".format(cur_main_host.ip_addr, info)
+                            #     })
 
                     # 2.备机
-                    selected_backup_host_list_int = []
-                    for backup_host in selected_backup_host_list:
-                        try:
-                            backup_host = int(backup_host)
-                        except ValueError as e:
-                            return JsonResponse({
-                                'ret': 0,
-                                'data': '网络异常。'
-                            })
-                        selected_backup_host_list_int.append(backup_host)
-                        try:
-                            cur_backup_host = RsyncHost.objects.get(id=backup_host)
-                        except RsyncHost.DoesNotExist:
+                    try:
+                        cur_backup_host = RsyncHost.objects.get(id=backup_host_ip)
+                    except RsyncHost.DoesNotExist:
+                        return JsonResponse({
+                            "ret": 0,
+                            "data": "当前选中备不存在，请联系管理员。"
+                        })
+                    else:
+                        server = {
+                            'hostname': cur_backup_host.ip_addr,
+                            'username': cur_backup_host.username,
+                            'password': cur_backup_host.password,
+                        }
+                        rsync_backup = RsyncBackup(server)
+                        if rsync_backup.msg == '远程连接失败。':
                             return JsonResponse({
                                 "ret": 0,
-                                "data": "当前选中备不存在，请联系管理员。"
+                                "data": "当前主机未开启，请检查后再配置。"
                             })
                         else:
-                            server = {
-                                'hostname': cur_backup_host.ip_addr,
-                                'username': cur_backup_host.username,
-                                'password': cur_backup_host.password,
-                            }
-                            rsync_backup = RsyncBackup(server)
-                            if rsync_backup.msg == '远程连接失败。':
-                                return JsonResponse({
-                                    "ret": 0,
-                                    "data": "当前主机未开启，请检查后再配置。"
-                                })
-                            else:
-                                # 检测模块路径
-                                for temp_path in backup_path_list:
-                                    # 杜绝根目录下的文件夹备份
-                                    if not temp_path.startswith("/"):
-                                        rsync_backup.close_connection()
+                            # 检测模块路径
+                            for temp_path in backup_path_list:
+                                # 杜绝根目录下的文件夹备份
+                                if not temp_path.startswith("/"):
+                                    rsync_backup.close_connection()
 
-                                        return JsonResponse({
-                                            "ret": 0,
-                                            "data": "路径：{0} 不符合绝对路径条件。".format(temp_path)
-                                        })
-                                    if temp_path == "/" or temp_path.count("/") == 2 and temp_path.endswith("/"):
-                                        rsync_backup.close_connection()
+                                    return JsonResponse({
+                                        "ret": 0,
+                                        "data": "路径：{0} 不符合绝对路径条件。".format(temp_path)
+                                    })
+                                if temp_path == "/" or temp_path.count("/") == 2 and temp_path.endswith("/"):
+                                    rsync_backup.close_connection()
 
-                                        return JsonResponse({
-                                            "ret": 0,
-                                            "data": "备份路径不能为根目录，或者根目录第一层文件夹。".format(temp_path)
-                                        })
+                                    return JsonResponse({
+                                        "ret": 0,
+                                        "data": "备份路径不能为根目录，或者根目录第一层文件夹。".format(temp_path)
+                                    })
 
-                                    if len(temp_path) > 1 and temp_path.endswith("/"):
-                                        temp_path = temp_path[:-1]
-                                    cur_path = temp_path.replace(temp_path.split("/")[-1], "")
+                                if len(temp_path) > 1 and temp_path.endswith("/"):
+                                    temp_path = temp_path[:-1]
+                                cur_path = temp_path.replace(temp_path.split("/")[-1], "")
 
-                                    result, info = rsync_backup.check_file_path_existed(cur_path)
-                                    if result == 0:
-                                        rsync_backup.close_connection()
+                                result, info = rsync_backup.check_file_path_existed(cur_path)
+                                if result == 0:
+                                    rsync_backup.close_connection()
 
-                                        return JsonResponse({
-                                            "ret": 0,
-                                            "data": "路径：{0} 在备份服务器中不存在，请检查后再配置。".format(temp_path[:-1])
-                                        })
-                            # 配置备机
-                            result, info = rsync_backup.set_rsync_server_config(model_list)
-                            if result == 0:
-                                rsync_backup.close_connection()
-
-                                return JsonResponse({
-                                    "ret": 0,
-                                    "data": "备份服务器{0} 配置失败。".format(cur_backup_host.ip_addr)
-                                })
+                                    return JsonResponse({
+                                        "ret": 0,
+                                        "data": "路径：{0} 在备份服务器中不存在，请检查后再配置。".format(temp_path[:-1])
+                                    })
+                            # # 配置备机
+                            # result, info = rsync_backup.set_rsync_server_config(model_list)
+                            # if result == 0:
+                            #     rsync_backup.close_connection()
+                            #
+                            #     return JsonResponse({
+                            #         "ret": 0,
+                            #         "data": "备份服务器{0} 配置失败。".format(cur_backup_host.ip_addr)
+                            #     })
                     # 保存数据：RsyncConfig,RsyncModel,CrontabSchedule,Periodictask
                     if id == 0:
                         try:
@@ -1211,31 +1200,23 @@ def rsync_config_save(request):
                             cur_periodictask.task = "dbom.tasks.remote_sync"
                             cur_periodictask.save()
                             cur_periodictask_id = cur_periodictask.id
-                            cur_periodictask.args = [main_host_ip, selected_backup_host_list_int, str(model_list), cur_periodictask_id]
-                            # cur_periodictask.interval_id = intervals if intervals else None
+                            cur_periodictask.args = [main_host_ip, backup_host_ip, str(model_list), cur_periodictask_id]
                             cur_periodictask.save()
+
                             # RsyncConfig
                             cur_rsync_config.main_host_id = main_host_ip
+                            cur_rsync_config.backup_host_id = backup_host_ip
                             cur_rsync_config.dj_periodictask_id = cur_periodictask_id
                             cur_rsync_config.save()
 
-                            # cur_rsync_config关联backup_host对象
-                            backup_hosts = RsyncHost.objects.filter(id__in=selected_backup_host_list_int)
-                            if backup_hosts.exists():
-                                cur_rsync_config.backup_host.add(*backup_hosts)
-                            else:
-                                print("不存在")
-
                             # 模型RsyncModel
                             for i in range(0, rsync_model_num):
-                                model_name = request.POST.get('model_name_{0}'.format(i + 1), "")
-                                backup_path = request.POST.get('backup_path_{0}'.format(i + 1), "")
-                                if len(backup_path) > 1 and backup_path.endswith("/"):
-                                    backup_path = backup_path[:-1]
+                                origin_path = request.POST.get('origin_path_{0}'.format(i + 1), "")
+                                dest_path = request.POST.get('dest_path_{0}'.format(i + 1), "")
 
                                 cur_rsync_model = RsyncModel()
-                                cur_rsync_model.model_name = model_name
-                                cur_rsync_model.rsync_path = backup_path
+                                cur_rsync_model.main_path = origin_path
+                                cur_rsync_model.dest_path = dest_path
                                 cur_rsync_model.rsync_config_id = cur_rsync_config.id
                                 cur_rsync_model.save()
                             result_info["ret"] = 1
@@ -1300,20 +1281,13 @@ def rsync_config_save(request):
                                         cur_periodictask.interval_id = int(intervals)
 
                                     # 任务名称
-                                    cur_periodictask.args = [main_host_ip, selected_backup_host_list_int, str(model_list), cur_periodictask.id]
-                                    # cur_periodictask.interval_id = intervals if intervals else None
+                                    cur_periodictask.args = [main_host_ip, backup_host_ip, str(model_list), cur_periodictask.id]
                                     cur_periodictask.save()
+
                             # RsyncConfig
                             cur_rsync_config.main_host_id = main_host_ip
+                            cur_rsync_config.backup_host_id = backup_host_ip
                             cur_rsync_config.save()
-
-                            # cur_rsync_config关联backup_host对象
-                            cur_rsync_config.backup_host.clear()
-                            backup_hosts = RsyncHost.objects.filter(id__in=selected_backup_host_list_int)
-                            if backup_hosts.exists():
-                                cur_rsync_config.backup_host.add(*backup_hosts)
-                            else:
-                                print("不存在")
 
                             # 模型RsyncModel
                             cur_rsync_model_num = len(cur_rsync_config.rsyncmodel_set.all())
@@ -1321,11 +1295,9 @@ def rsync_config_save(request):
                             if cur_rsync_model_num == rsync_model_num:
                                 # 直接修改
                                 for i in range(0, rsync_model_num):
-                                    model_name = request.POST.get('model_name_{0}'.format(i + 1), "")
-                                    backup_path = request.POST.get('backup_path_{0}'.format(i + 1), "")
+                                    origin_path = request.POST.get('origin_path_{0}'.format(i + 1), "")
+                                    dest_path = request.POST.get('dest_path_{0}'.format(i + 1), "")
                                     model_id = request.POST.get('model_id_{0}'.format(i + 1), "")
-                                    if len(backup_path) > 1 and backup_path.endswith("/"):
-                                        backup_path = backup_path[:-1]
 
                                     try:
                                         cur_rsync_model = RsyncModel.objects.get(id=int(model_id))
@@ -1335,20 +1307,18 @@ def rsync_config_save(request):
                                             "data": "网络异常。"
                                         })
                                     else:
-                                        cur_rsync_model.model_name = model_name
-                                        cur_rsync_model.rsync_path = backup_path
+                                        cur_rsync_model.main_path = origin_path
+                                        cur_rsync_model.dest_path = dest_path
                                         cur_rsync_model.save()
                             else:
                                 cur_rsync_config.rsyncmodel_set.all().update(state="9")
                                 for i in range(0, rsync_model_num):
-                                    model_name = request.POST.get('model_name_{0}'.format(i + 1), "")
-                                    backup_path = request.POST.get('backup_path_{0}'.format(i + 1), "")
-                                    if len(backup_path) > 1 and backup_path.endswith("/"):
-                                        backup_path = backup_path[:-1]
+                                    origin_path = request.POST.get('origin_path_{0}'.format(i + 1), "")
+                                    dest_path = request.POST.get('dest_path_{0}'.format(i + 1), "")
 
                                     cur_rsync_model = RsyncModel()
-                                    cur_rsync_model.model_name = model_name
-                                    cur_rsync_model.rsync_path = backup_path
+                                    cur_rsync_model.main_path = origin_path
+                                    cur_rsync_model.dest_path = dest_path
                                     cur_rsync_model.rsync_config_id = cur_rsync_config.id
                                     cur_rsync_model.save()
                             result_info["ret"] = 1
@@ -1383,6 +1353,116 @@ def rsync_config_del(request):
     else:
         return HttpResponse(0)
 
+
+@login_required
+def get_file_path(request):
+    host_id = request.POST.get("hostId", "")
+    pre_path = "/"
+    ret = 0
+    info = ""
+    try:
+        cur_host = RsyncHost.objects.get(id=host_id)
+        server = {
+            'hostname': cur_host.ip_addr,
+            'username': cur_host.username,
+            'password': cur_host.password,
+        }
+        rsync_backup = RsyncBackup(server)
+        if rsync_backup.msg == "远程连接成功。":
+            path_result, path_info = rsync_backup.run_shell_cmd("ls {0}".format(pre_path))
+            if path_result == 1:
+                the_whole_list = []
+                info = [x.strip() for x in path_info.split(" ") if x.strip() != ""]
+
+                copy_info = copy.deepcopy(info)
+                for i in info:
+                    if "\t" in i:
+                        copy_info.remove(i)
+
+                        i = i.split("\t")
+                    if "\r\n" in i:
+                        copy_info.remove(i)
+
+                        i = i.split("\r\n")
+                    if len(i) > 1 and type(i) == list:
+                        copy_info.extend(i)
+                main_tree_data = {
+                    'text': '/',
+                    'children': []
+                }
+                for c_info in copy_info:
+                    main_tree_data["children"].append({
+                        'text': c_info,
+                    })
+                ret = 1
+                info = main_tree_data
+            else:
+                ret = 1
+                info = []
+        else:
+            ret = 0
+            info = "路径获取失败。"
+    except RsyncHost.DoesNotExist as e:
+        ret = 0
+        info = "当前主机不存在。"
+    return JsonResponse({
+        "ret": ret,
+        "info": info,
+    })
+
+
+@login_required
+def get_child_file_path(request):
+    host_id = request.POST.get("hostId", "")
+    pre_path = request.POST.get("pre_path", "")
+    ret = 0
+    info = ""
+    try:
+        cur_host = RsyncHost.objects.get(id=host_id)
+        server = {
+            'hostname': cur_host.ip_addr,
+            'username': cur_host.username,
+            'password': cur_host.password,
+        }
+        rsync_backup = RsyncBackup(server)
+        if rsync_backup.msg == "远程连接成功。":
+            path_result, path_info = rsync_backup.run_shell_cmd("ls {0}".format(pre_path))
+            if path_result == 1:
+                the_whole_list = []
+                info = [x.strip() for x in path_info.split(" ") if x.strip() != ""]
+
+                copy_info = copy.deepcopy(info)
+                for i in info:
+                    if "\t" in i:
+                        copy_info.remove(i)
+
+                        i = i.split("\t")
+                    if "\r\n" in i:
+                        copy_info.remove(i)
+
+                        i = i.split("\r\n")
+
+                    if len(i) > 1 and type(i) == list:
+                        copy_info.extend(i)
+                for c_info in copy_info:
+                    if "/" in c_info:
+                        copy_info.remove(c_info)
+
+                ret = 1
+                info = copy_info
+            else:
+                ret = 1
+                info = []
+        else:
+            ret = 0
+            info = "路径获取失败。"
+    except RsyncHost.DoesNotExist as e:
+        ret = 0
+        info = "当前主机不存在。"
+    return JsonResponse({
+        "ret": ret,
+        "info": info,
+    })
 
 @login_required
 def rsync_recover(request):

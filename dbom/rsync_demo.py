@@ -326,10 +326,10 @@ if __name__ == '__main__':
         'password': 'tesunet123'
     }
     rsync_backup = RsyncBackup(server)
-    result, info = rsync_backup.set_rsync_virtual_auth()
+    # result, info = rsync_backup.set_rsync_virtual_auth()
     # print(rsync_backup.msg)
     # result, info = rsync_backup.start_rsync()
-    # result, info = rsync_backup.run_shell_cmd("ls /")
+    result, info = rsync_backup.run_shell_cmd("ls /")
     # result, info = rsync_backup.stop_rsync()
     # result, info = rsync_backup.run_shell_cmd('ls')
     # result, info = rsync_backup.install_rsync_by_yum()
@@ -338,31 +338,108 @@ if __name__ == '__main__':
     # result, info = rsync_backup.rsync_exec_avz(r'/temp_data', '192.168.85.138', 'temp_model', delete=True)
     # result, info = rsync_backup.tail_rsync_log()
     # result, info = rsync_backup.set_rsync_server_config([{"model_name": "temp_model", "backup_path": "/base_dir/temp_data"}])
-    rsync_backup.close_connection()
+    # rsync_backup.close_connection()
     # sudo sh -c 'echo "This is testPage." >/usr/local/nginx/html/index.html'
     # 将一个字串作为完整的命令来执行
     # sudo仅有root的部分权限
-    print(result, info)
-    #
-    # # ..... 获取目录
-    # info = [x.strip() for x in info.split(" ") if x.strip() != ""]
-    # import copy
-    #
-    # copy_info = copy.deepcopy(info)
-    # for i in info:
-    #     if "\t" in i:
-    #         copy_info.remove(i)
-    #
-    #         i = i.split("\t")
-    #     if "\r\n" in i:
-    #         copy_info.remove(i)
-    #
-    #         i = i.split("\r\n")
-    #     if len(i) > 1 and type(i) == list:
-    #         copy_info.extend(i)
-    # print(copy_info)
+    # print(result, info)
 
-    # temp_path = "\\a\\b\\"
-    # import os
-    # temp_path_now = os.path.join(temp_path, "bb")
-    # print(temp_path_now)
+    # 获取Linux所有目录
+    """
+    destData = [
+        {
+            text: 'base_dir',
+            href: '#base_dir',
+            tags: ['1'],
+            nodes: [
+                {
+                    text: 'backup',
+                    href: '#backup',
+                    tags: ['2'],
+                    nodes: [
+                        {
+                            text: 'a',
+                            href: '#a',
+                            tags: ['0']
+                        },
+                        {
+                            text: 'b',
+                            href: '#b',
+                            tags: ['0']
+                        }
+                    ]
+                },
+            ]
+        },
+        {
+            text: 'dev',
+            href: '#dev',
+            tags: ['0']
+        },
+        {
+            text: 'etc',
+            href: 'etc',
+            tags: ['0']
+        },
+        {
+            text: 'home',
+            href: '#home',
+            tags: ['0']
+        },
+        {
+            text: 'lib',
+            href: '#lib',
+            tags: ['0']
+        }
+    ]
+    """
+    import os
+    import copy
+
+
+    def get_linux_path(rsync_backup, pre_path="\\"):
+        temp_list = []
+
+        result, info = rsync_backup.run_shell_cmd("ls {0}".format(pre_path))
+        if result == 1:
+            info = [x.strip() for x in info.split(" ") if x.strip() != ""]
+            # 所有路径
+            copy_info = copy.deepcopy(info)
+            for i in info:
+                if "\t" in i:
+                    copy_info.remove(i)
+
+                    i = i.split("\t")
+                if "\r\n" in i:
+                    copy_info.remove(i)
+
+                    i = i.split("\r\n")
+                if len(i) > 1 and type(i) == list:
+                    copy_info.extend(i)
+
+            for i in copy_info:
+                # 构造后的路径
+                aft_path = os.path.join(pre_path, i)
+                result, info = rsync_backup.run_shell_cmd("ls {0}".format(aft_path))
+                if result == 1:
+                    temp_dict = {
+                        "text": i,
+                        "href": "#{0}".format(i),
+                        "tags": ['1'],
+                        "child": get_linux_path(rsync_backup, pre_path=aft_path),
+                    }
+                else:
+                    temp_dict = {
+                        "text": i,
+                        "href": "#{0}".format(i),
+                        "tags": ['0'],
+                        "child": [],
+                    }
+                temp_list.append(temp_dict)
+        print(temp_list)
+        return temp_list
+
+    temp_list = get_linux_path(rsync_backup)
+    # print(temp_list)
+    rsync_backup.close_connection()
+    from ftplib import FTP

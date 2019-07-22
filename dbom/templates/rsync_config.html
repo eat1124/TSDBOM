@@ -1,179 +1,175 @@
-{% extends "base1.html" %}
-{% block content %}
-    <!-- 自定义的加载中 -->
-    <style>
-        .rsync_recover_spinner {
-            margin: 60px auto;
-            width: 50px;
-            height: 60px;
-            text-align: center;
-            font-size: 10px;
-            z-index: 99999;
-            position: absolute;
-            text-align: center;
-            vertical-align: middle;
-            left: 350px;
+{% extends "base1.html" %} {% block content %}
+<!-- 自定义的加载中 -->
+<style>
+    .rsync_recover_spinner {
+        margin: 60px auto;
+        width: 50px;
+        height: 60px;
+        text-align: center;
+        font-size: 10px;
+        z-index: 99999;
+        position: absolute;
+        text-align: center;
+        vertical-align: middle;
+        left: 350px;
+    }
+    
+    .rsync_recover_spinner>div {
+        background-color: #67CF22;
+        height: 100%;
+        width: 6px;
+        display: inline-block;
+        -webkit-animation: stretchdelay 1.2s infinite ease-in-out;
+        animation: stretchdelay 1.2s infinite ease-in-out;
+    }
+    
+    .rsync_recover_spinner .rect2 {
+        -webkit-animation-delay: -1.1s;
+        animation-delay: -1.1s;
+    }
+    
+    .rsync_recover_spinner .rect3 {
+        -webkit-animation-delay: -1.0s;
+        animation-delay: -1.0s;
+    }
+    
+    .rsync_recover_spinner .rect4 {
+        -webkit-animation-delay: -0.9s;
+        animation-delay: -0.9s;
+    }
+    
+    .rsync_recover_spinner .rect5 {
+        -webkit-animation-delay: -0.8s;
+        animation-delay: -0.8s;
+    }
+    
+    .rsync_config_spinner {
+        margin: 200px auto;
+        width: 50px;
+        height: 60px;
+        text-align: center;
+        font-size: 10px;
+        z-index: 99999;
+        position: absolute;
+        text-align: center;
+        vertical-align: middle;
+        left: 350px;
+    }
+    
+    .rsync_config_spinner>div {
+        background-color: #67CF22;
+        height: 100%;
+        width: 6px;
+        display: inline-block;
+        -webkit-animation: stretchdelay 1.2s infinite ease-in-out;
+        animation: stretchdelay 1.2s infinite ease-in-out;
+    }
+    
+    .rsync_config_spinner .rect2 {
+        -webkit-animation-delay: -1.1s;
+        animation-delay: -1.1s;
+    }
+    
+    .rsync_config_spinner .rect3 {
+        -webkit-animation-delay: -1.0s;
+        animation-delay: -1.0s;
+    }
+    
+    .rsync_config_spinner .rect4 {
+        -webkit-animation-delay: -0.9s;
+        animation-delay: -0.9s;
+    }
+    
+    .rsync_config_spinner .rect5 {
+        -webkit-animation-delay: -0.8s;
+        animation-delay: -0.8s;
+    }
+    
+    .exchange_config_spinner {
+        margin: 60px auto;
+        width: 50px;
+        height: 60px;
+        text-align: center;
+        font-size: 10px;
+        z-index: 99999;
+        position: absolute;
+        text-align: center;
+        vertical-align: middle;
+        left: 350px;
+    }
+    
+    .exchange_config_spinner>div {
+        background-color: #67CF22;
+        height: 100%;
+        width: 6px;
+        display: inline-block;
+        -webkit-animation: stretchdelay 1.2s infinite ease-in-out;
+        animation: stretchdelay 1.2s infinite ease-in-out;
+    }
+    
+    .exchange_config_spinner .rect2 {
+        -webkit-animation-delay: -1.1s;
+        animation-delay: -1.1s;
+    }
+    
+    .exchange_config_spinner .rect3 {
+        -webkit-animation-delay: -1.0s;
+        animation-delay: -1.0s;
+    }
+    
+    .exchange_config_spinner .rect4 {
+        -webkit-animation-delay: -0.9s;
+        animation-delay: -0.9s;
+    }
+    
+    .exchange_config_spinner .rect5 {
+        -webkit-animation-delay: -0.8s;
+        animation-delay: -0.8s;
+    }
+    
+    @-webkit-keyframes stretchdelay {
+        0%,
+        40%,
+        100% {
+            -webkit-transform: scaleY(0.4)
         }
-
-        .rsync_recover_spinner > div {
-            background-color: #67CF22;
-            height: 100%;
-            width: 6px;
-            display: inline-block;
-
-            -webkit-animation: stretchdelay 1.2s infinite ease-in-out;
-            animation: stretchdelay 1.2s infinite ease-in-out;
+        20% {
+            -webkit-transform: scaleY(1.0)
         }
-
-        .rsync_recover_spinner .rect2 {
-            -webkit-animation-delay: -1.1s;
-            animation-delay: -1.1s;
+    }
+    
+    @keyframes stretchdelay {
+        0%,
+        40%,
+        100% {
+            transform: scaleY(0.4);
+            -webkit-transform: scaleY(0.4);
         }
-
-        .rsync_recover_spinner .rect3 {
-            -webkit-animation-delay: -1.0s;
-            animation-delay: -1.0s;
+        20% {
+            transform: scaleY(1.0);
+            -webkit-transform: scaleY(1.0);
         }
-
-        .rsync_recover_spinner .rect4 {
-            -webkit-animation-delay: -0.9s;
-            animation-delay: -0.9s;
-        }
-
-        .rsync_recover_spinner .rect5 {
-            -webkit-animation-delay: -0.8s;
-            animation-delay: -0.8s;
-        }
-
-
-        .rsync_config_spinner {
-            margin: 200px auto;
-            width: 50px;
-            height: 60px;
-            text-align: center;
-            font-size: 10px;
-            z-index: 99999;
-            position: absolute;
-            text-align: center;
-            vertical-align: middle;
-            left: 350px;
-        }
-
-        .rsync_config_spinner > div {
-            background-color: #67CF22;
-            height: 100%;
-            width: 6px;
-            display: inline-block;
-
-            -webkit-animation: stretchdelay 1.2s infinite ease-in-out;
-            animation: stretchdelay 1.2s infinite ease-in-out;
-        }
-
-        .rsync_config_spinner .rect2 {
-            -webkit-animation-delay: -1.1s;
-            animation-delay: -1.1s;
-        }
-
-        .rsync_config_spinner .rect3 {
-            -webkit-animation-delay: -1.0s;
-            animation-delay: -1.0s;
-        }
-
-        .rsync_config_spinner .rect4 {
-            -webkit-animation-delay: -0.9s;
-            animation-delay: -0.9s;
-        }
-
-        .rsync_config_spinner .rect5 {
-            -webkit-animation-delay: -0.8s;
-            animation-delay: -0.8s;
-        }
-
-
-        .exchange_config_spinner {
-            margin: 60px auto;
-            width: 50px;
-            height: 60px;
-            text-align: center;
-            font-size: 10px;
-            z-index: 99999;
-            position: absolute;
-            text-align: center;
-            vertical-align: middle;
-            left: 350px;
-        }
-
-        .exchange_config_spinner > div {
-            background-color: #67CF22;
-            height: 100%;
-            width: 6px;
-            display: inline-block;
-
-            -webkit-animation: stretchdelay 1.2s infinite ease-in-out;
-            animation: stretchdelay 1.2s infinite ease-in-out;
-        }
-
-        .exchange_config_spinner .rect2 {
-            -webkit-animation-delay: -1.1s;
-            animation-delay: -1.1s;
-        }
-
-        .exchange_config_spinner .rect3 {
-            -webkit-animation-delay: -1.0s;
-            animation-delay: -1.0s;
-        }
-
-        .exchange_config_spinner .rect4 {
-            -webkit-animation-delay: -0.9s;
-            animation-delay: -0.9s;
-        }
-
-        .exchange_config_spinner .rect5 {
-            -webkit-animation-delay: -0.8s;
-            animation-delay: -0.8s;
-        }
-
-        @-webkit-keyframes stretchdelay {
-            0%, 40%, 100% {
-                -webkit-transform: scaleY(0.4)
-            }
-            20% {
-                -webkit-transform: scaleY(1.0)
-            }
-        }
-
-        @keyframes stretchdelay {
-            0%, 40%, 100% {
-                transform: scaleY(0.4);
-                -webkit-transform: scaleY(0.4);
-            }
-            20% {
-                transform: scaleY(1.0);
-                -webkit-transform: scaleY(1.0);
-            }
-        }
-    </style>
-    <div style="height:10px"></div>
-    <div class="table-toolbar">
-        <div id="error">
-            {% if errors %}
-                {% for error in errors %}
-                    <div class="alert alert-danger ">{{ error }}</div>
-                    <span> {% endfor %}</span>
-            {% endif %}</div>
-        <div class="row">
-            <div class="col-md-6">
-                <div>
-                    <button id="new" type="button" data-toggle="modal" data-target="#static" class="btn green">
+    }
+</style>
+<div style="height:10px"></div>
+<div class="table-toolbar">
+    <div id="error">
+        {% if errors %} {% for error in errors %}
+        <div class="alert alert-danger ">{{ error }}</div>
+        <span> {% endfor %}</span> {% endif %}</div>
+    <div class="row">
+        <div class="col-md-6">
+            <div>
+                <button id="new" type="button" data-toggle="modal" data-target="#static" class="btn green">
                         配置Rsync
                         <i class="fa fa-plus"></i>
                     </button>
-                </div>
             </div>
         </div>
     </div>
-    <table class="table table-striped table-bordered table-hover table-checkable order-column" id="sample_1">
-        <thead>
+</div>
+<table class="table table-striped table-bordered table-hover table-checkable order-column" id="sample_1">
+    <thead>
         <tr>
             <th style="width:40px;"> 序号</th>
             <th> 源端id</th>
@@ -184,199 +180,134 @@
             <th> 时</th>
             <th> 每周</th>
             <th> 每月</th>
-            <th> 备机</th>
-            <th> 模块</th>
+            <th> 终端</th>
             <th> 任务模式</th>
             <th> 是否开启</th>
             <th style="width:50px;"> 操作</th>
         </tr>
-        </thead>
-        <tbody>
-        </tbody>
-    </table>
-    <div id="static" class="modal fade" tabindex="-1" data-backdrop="static" data-keyboard="false">
-        <div class="modal-dialog" style="width:720px;">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" id="rsync_modal_close" data-dismiss="modal" aria-hidden="true"></button>
-                    <h4 class="modal-title">Rsync配置</h4>
-                </div>
-                <div class="panel-body">
-                    <form class="bs-example form-horizontal activate-form" id="rsync_config_form">{% csrf_token %}
-                        <input type="text" id="id" name="id" hidden>
-                        <div class="form-body">
-                            <div class="rsync_config_spinner form-group" id="rsync_loading" hidden>
-                                <div class="rect1"></div>
-                                <div class="rect2"></div>
-                                <div class="rect3"></div>
-                                <div class="rect4"></div>
-                                <div class="rect5"></div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-md-2 control-label"><span style="color:red; ">*</span>源端</label>
-                                <div class="col-md-10">
-                                    <select name="main_host_ip" id="main_host_ip" class="form-control">
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+<div id="static" class="modal fade" tabindex="-1" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog" style="width:720px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" id="rsync_modal_close" data-dismiss="modal" aria-hidden="true"></button>
+                <h4 class="modal-title">Rsync配置</h4>
+            </div>
+            <div class="panel-body">
+                <form class="bs-example form-horizontal activate-form" id="rsync_config_form">{% csrf_token %}
+                    <input type="text" id="id" name="id" hidden>
+                    <div class="form-body">
+                        <div class="rsync_config_spinner form-group" id="rsync_loading" hidden>
+                            <div class="rect1"></div>
+                            <div class="rect2"></div>
+                            <div class="rect3"></div>
+                            <div class="rect4"></div>
+                            <div class="rect5"></div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-2 control-label"><span style="color:red; ">*</span>源端</label>
+                            <div class="col-md-10">
+                                <select name="main_host_ip" id="main_host_ip" class="form-control">
                                         {% for rsync_host in all_rsync_hosts %}
                                             <option value="{{ rsync_host.id }}">{{ rsync_host.ip_addr }}</option>
                                         {% endfor %}
                                     </select>
-                                    <div class="form-control-focus"></div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-md-2 control-label"><span style="color:red; ">*</span>终端</label>
-                                <div class="col-md-10">
-                                    <select name="backup_host_ip" id="backup_host_ip" class="form-control select2" placeholder="test" multiple>
-                                        {% for rsync_host in all_rsync_hosts %}
-                                            <option value="{{ rsync_host.id }}">{{ rsync_host.ip_addr }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
                                 <div class="form-control-focus"></div>
                             </div>
-                            <!-- 备份模块
-                            <div class="form-group" style="margin-bottom:0;">
-                                <label class="col-md-2 control-label" for="form_control_1" style="vertical-align: inherit;font-weight:bold;">备份模块
-                                </label>
-                                <div class="col-md-10">
-                                    <hr>
-                                </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-2 control-label"><span style="color:red; ">*</span>终端</label>
+                            <div class="col-md-10">
+                                <select name="backup_host_ip" id="backup_host_ip" class="form-control" placeholder="test">
+                                        {% for rsync_host in all_rsync_hosts %}
+                                            <option value="{{ rsync_host.id }}">{{ rsync_host.ip_addr }}</option>
+                                        {% endfor %}
+                                    </select>
                             </div>
-                            <div class="form-group">
-                                <label class="col-md-2 control-label row" style="padding-top:0;margin-left:0;">
-                                    <a href="javascript:;" class="btn btn-circle default blue-stripe btn-sm col-md-12" style="vertical-align: inherit;" id="node_new">添加
-                                    </a>
-                                    <a href="javascript:;" class="btn btn-circle default red-stripe btn-sm col-md-12" style="vertical-align: inherit;margin-top:11px;visibility:hidden;" id="node_del">删除
-                                    </a>
-                                </label>
-                                <div class="col-md-10 row" id="model_info_div" style="margin-left:15px;">
-                                    <div class="col-md-12" style="margin-bottom:9px;padding-left: 0px;padding-right: 0px;">
-                                        <label class="col-md-2 control-label"><span style="color:red; ">*</span>模块名称:</label>
-                                        <div class="col-md-4" style="padding-right:0px;">
-                                            <input type="text" class="form-control" name="model_name_1" placeholder="">
-                                            <div class="form-control-focus"></div>
-                                        </div>
-                                        <label class="col-md-2 control-label"><span style="color:red; ">*</span>备份路径:</label>
-                                        <div class="col-md-4" style="padding-right:0px;">
-                                            <input type="text" class="form-control" name="backup_path_1" placeholder="">
-                                            <div class="form-control-focus"></div>
-                                        </div>
-                                        <span hidden>
-                                        <input type="text" class="form-control" name="model_id_1" placeholder="">
-                                    </span>
-                                    </div>
-                                </div>
-                            </div>-->
-                            <div class="form-group" style="margin-bottom:0;">
-                                <label class="col-md-2 control-label" for="form_control_1" style="vertical-align: inherit;font-weight:bold;">复制路径
-                                </label>
-                                <div class="col-md-10">
-                                    <hr>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-md-2 control-label row" style="padding-top:0;margin-left:0;">
-                                    <a href="javascript:;" class="btn btn-circle default blue-stripe btn-sm col-md-12" style="vertical-align: inherit;" id="node_new">添加
-                                    </a>
-                                    <a href="javascript:;" class="btn btn-circle default red-stripe btn-sm col-md-12" style="vertical-align: inherit;margin-top:11px;visibility:hidden;" id="node_del">删除
-                                    </a>
-                                </label>
-                                <div class="col-md-10 row" id="model_info_div" style="margin-left:15px;">
-                                    <div class="col-md-12" style="margin-bottom:9px;padding-left: 0px;padding-right: 0px;">
-                                        <label class="col-md-2 control-label"><span style="color:red; ">*</span>源端路径:</label>
-                                        <div class="col-md-4" style="padding-right:0px;">
-                                            <input type="text" class="form-control" name="origin_path_1" placeholder="">
-                                            <div class="form-control-focus"></div>
-                                        </div>
-                                        <label class="col-md-2 control-label"><span style="color:red; ">*</span>终端路径:</label>
-                                        <div class="col-md-4" style="padding-right:0px;">
-                                            <input type="text" class="form-control" name="dest_path_1" placeholder="">
-                                            <div class="form-control-focus"></div>
-                                        </div>
-                                        <span hidden>
-                                        <input type="text" class="form-control" name="model_id_1" placeholder="">
-                                    </span>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- 备份路径
-                            <div class="form-group" style="margin-bottom:0;">
-                                <label class="col-md-2 control-label" for="form_control_1" style="vertical-align: inherit;font-weight:bold;">复制路径
-                                </label>
-                                <div class="col-md-10">
-                                    <hr>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-md-2 control-label row" style="padding-top:0;margin-left:0;">
-                                    <a href="javascript:;" class="btn btn-circle default blue-stripe btn-sm col-md-12" style="vertical-align: inherit;" id="node_new">添加
-                                    </a>
-                                    <a href="javascript:;" class="btn btn-circle default red-stripe btn-sm col-md-12" style="vertical-align: inherit;margin-top:11px;visibility:hidden;" id="node_del">删除
-                                    </a>
-                                </label>
-                                <div class="col-md-10 row" id="model_info_div" style="margin-left:15px;">
-                                    <div class="col-md-12" style="margin-bottom:9px;padding-left: 0px;padding-right: 0px;">
-                                        <label class="col-md-2 control-label"><span style="color:red; ">*</span>路径:</label>
-                                        <div class="col-md-4" style="padding-right:0px;">
-                                            <input type="text" class="form-control" name="model_name_1" placeholder="">
-                                            <div class="form-control-focus"></div>
-                                        </div>
-                                        <div class="col-md-6 treeview" style="padding-right:0px;" id="file_tree">
+                            <div class="form-control-focus"></div>
+                        </div>
 
-                                        </div>
-                                        <span hidden>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label class="col-md-2 control-label" for="form_control_1" style="vertical-align: inherit;font-weight:bold;">复制路径
+                                </label>
+                            <div class="col-md-10">
+                                <hr>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-2 control-label row" style="padding-top:0;margin-left:0;">
+                                    <a href="javascript:;" class="btn btn-circle default blue-stripe btn-sm col-md-12" style="vertical-align: inherit;" id="node_new">添加
+                                    </a>
+                                    <a href="javascript:;" class="btn btn-circle default red-stripe btn-sm col-md-12" style="vertical-align: inherit;margin-top:11px;visibility:hidden;" id="node_del">删除
+                                    </a>
+                                </label>
+                            <div class="col-md-10 row" id="path_info_div" style="margin-left:15px;">
+                                <div class="col-md-12" style="margin-bottom:9px;padding-left: 0px;padding-right: 0px;">
+                                    <label class="col-md-2 control-label"><span style="color:red; ">*</span>源端路径:</label>
+                                    <div class="col-md-4" style="padding-right:0px;">
+                                        <input type="text" class="form-control" name="origin_path_1" placeholder="">
+                                        <div class="form-control-focus"></div>
+                                    </div>
+                                    <label class="col-md-2 control-label"><span style="color:red; ">*</span>终端路径:</label>
+                                    <div class="col-md-4" style="padding-right:0px;">
+                                        <input type="text" class="form-control" name="dest_path_1" placeholder="">
+                                        <div class="form-control-focus"></div>
+                                    </div>
+                                    <span hidden>
                                         <input type="text" class="form-control" name="model_id_1" placeholder="">
                                     </span>
-                                    </div>
                                 </div>
                             </div>
-                            -->
+                        </div>
 
-                            <!-- 定时任务 -->
-                            <div class="form-group" style="margin-bottom:0;">
-                                <label class="col-md-2 control-label" for="form_control_1" style="vertical-align: inherit;font-weight:bold;">任务模式
+                        <!-- 定时任务 -->
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label class="col-md-2 control-label" for="form_control_1" style="vertical-align: inherit;font-weight:bold;">任务模式
                                 </label>
-                                <div class="col-md-10">
-                                    <hr>
-                                </div>
+                            <div class="col-md-10">
+                                <hr>
                             </div>
-                            <input type="text" id="periodictask_id" name="periodictask_id" hidden>
-                            <input type="text" id="periodictask_type" name="periodictask_type" hidden>
-                            <ul class="nav nav-tabs" id="periodictask_tab">
-                                <li>
-                                    <a href="#tab_1_1" data-toggle="tab">
-                                        <font style="vertical-align: inherit;">
-                                            <font style="vertical-align: inherit;"> 定时 </font>
-                                        </font>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="#tab_1_2" data-toggle="tab">
-                                        <font style="vertical-align: inherit;">
-                                            <font style="vertical-align: inherit;"> 间隔 </font>
-                                        </font>
-                                    </a>
-                                </li>
-                            </ul>
-                            <div class="tab-content">
-                                <div class="tab-pane" id="tab_1_1">
-                                    <div class="form-group">
-                                        <label class="col-md-2 control-label"><span style="color:red; ">*</span>时间</label>
-                                        <div class="col-md-10">
-                                            <div class="input-group">
-                                                <input type="text" class="form-control" id="per_time" name="per_time">
-                                                <span class="input-group-btn">
+                        </div>
+                        <input type="text" id="periodictask_id" name="periodictask_id" hidden>
+                        <input type="text" id="periodictask_type" name="periodictask_type" hidden>
+                        <ul class="nav nav-tabs" id="periodictask_tab">
+                            <li>
+                                <a href="#tab_1_1" data-toggle="tab">
+                                    <font style="vertical-align: inherit;">
+                                        <font style="vertical-align: inherit;"> 定时 </font>
+                                    </font>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#tab_1_2" data-toggle="tab">
+                                    <font style="vertical-align: inherit;">
+                                        <font style="vertical-align: inherit;"> 间隔 </font>
+                                    </font>
+                                </a>
+                            </li>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane" id="tab_1_1">
+                                <div class="form-group">
+                                    <label class="col-md-2 control-label"><span style="color:red; ">*</span>时间</label>
+                                    <div class="col-md-10">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="per_time" name="per_time">
+                                            <span class="input-group-btn">
                                                 <button class="btn default" type="button">
                                                     <i class="fa fa-clock-o"></i>
                                                 </button>
                                             </span>
-                                            </div>
                                         </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label class="col-md-2 control-label"><span style="color:red; "></span>每周</label>
-                                        <div class="col-md-10">
-                                            <select name="per_week" id="per_week" class="form-control select2" placeholder="test">
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-md-2 control-label"><span style="color:red; "></span>每周</label>
+                                    <div class="col-md-10">
+                                        <select name="per_week" id="per_week" class="form-control select2" placeholder="test">
                                                 <option value="1">周一</option>
                                                 <option value="2">周二</option>
                                                 <option value="3">周三</option>
@@ -385,13 +316,13 @@
                                                 <option value="6">周六</option>
                                                 <option value="7">周日</option>
                                             </select>
-                                            <div class="form-control-focus"></div>
-                                        </div>
+                                        <div class="form-control-focus"></div>
                                     </div>
-                                    <div class="form-group">
-                                        <label class="col-md-2 control-label"><span style="color:red; "></span>每月</label>
-                                        <div class="col-md-10">
-                                            <select name="per_month" id="per_month" class="form-control select2" placeholder="test">
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-md-2 control-label"><span style="color:red; "></span>每月</label>
+                                    <div class="col-md-10">
+                                        <select name="per_month" id="per_month" class="form-control select2" placeholder="test">
                                                 <option value="1">一月</option>
                                                 <option value="2">二月</option>
                                                 <option value="3">三月</option>
@@ -405,210 +336,218 @@
                                                 <option value="11">十一月</option>
                                                 <option value="12">十二月</option>
                                             </select>
-                                            <div class="form-control-focus"></div>
-                                        </div>
+                                        <div class="form-control-focus"></div>
                                     </div>
                                 </div>
-                                <div class="tab-pane" id="tab_1_2">
-                                    <div class="form-group">
-                                        <label class="col-md-2 control-label">
+                            </div>
+                            <div class="tab-pane" id="tab_1_2">
+                                <div class="form-group">
+                                    <label class="col-md-2 control-label">
                                             <span style="color:red; ">*</span>间隔
                                         </label>
-                                        <div class="col-md-10">
-                                            <select name="intervals" id="intervals" class="form-control select2" placeholder="test">
+                                    <div class="col-md-10">
+                                        <select name="intervals" id="intervals" class="form-control select2" placeholder="test">
                                                 {% for interval in all_intervals %}
                                                     <option value="{{ interval.id }}">{{ interval.every }} {% if interval.period == "minutes" %}分钟{% elif interval.period == "hours" %}小时{% elif interval.period == "days" %}天{% else %}毫秒{% endif %}</option>
                                                 {% endfor %}
                                             </select>
-                                            <div class="form-control-focus"></div>
-                                        </div>
+                                        <div class="form-control-focus"></div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="form-group">
-                                <label class="col-md-2 control-label"><span style="color:red; "></span>是否开启</label>
-                                <div class="col-md-10">
-                                    <input type="checkbox" id="status" name="status">
-                                    <div class="form-control-focus"></div>
-                                </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-2 control-label"><span style="color:red; "></span>是否开启</label>
+                            <div class="col-md-10">
+                                <input type="checkbox" id="status" name="status">
+                                <div class="form-control-focus"></div>
                             </div>
-                            <div class="form-actions ">
-                                <div class="modal-footer">
-                                    <button type="button" id="close" data-dismiss="modal" class="btn dark btn-outline">关闭
+                        </div>
+                        <div class="form-actions ">
+                            <div class="modal-footer">
+                                <button type="button" id="close" data-dismiss="modal" class="btn dark btn-outline">关闭
                                     </button>
-                                    <button type="button" id="save" name="save" class="btn green">保存</button>
-                                </div>
+                                <button type="button" id="save" name="save" class="btn green">保存</button>
                             </div>
                         </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div id="static_recover" class="modal fade" tabindex="-1" data-backdrop="static" data-keyboard="false">
-        <div class="modal-dialog" style="width:720px;">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" id="recover_modal_close" data-dismiss="modal" aria-hidden="true"></button>
-                    <h4 class="modal-title">Rsync恢复</h4>
-                </div>
-                <div class="panel-body">
-                    <form class="bs-example form-horizontal activate-form" id="rsync_config_form">{% csrf_token %}
-                        <input type="text" id="rsync_config_id" name="rsync_config_id" hidden>
-                        <input type="text" id="recover_id" name="recover_id" hidden>
-                        <div class="form-body">
-                            <div class="rsync_recover_spinner form-group" id="rsync_recover_loading" hidden>
-                                <div class="rect1"></div>
-                                <div class="rect2"></div>
-                                <div class="rect3"></div>
-                                <div class="rect4"></div>
-                                <div class="rect5"></div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-md-2 control-label"><span style="color:red; ">*</span>终端</label>
-                                <div class="col-md-10">
-                                    <select name="selected_backup_host" id="selected_backup_host" class="form-control">
-                                    </select>
-                                </div>
-                                <div class="form-control-focus"></div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-md-2 control-label"><span style="color:red; "></span>源端</label>
-                                <div class="col-md-10">
-                                    <input type="text" id="dest_main_host" name="dest_main_host" class="form-control" readonly>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-actions ">
-                            <div class="modal-footer">
-                                <button type="button" id="recover_close" data-dismiss="modal" class="btn dark btn-outline">关闭
-                                </button>
-                                <button type="button" id="recover" name="recover" class="btn green">恢复</button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div id="static_exchange" class="modal fade" tabindex="-1" data-backdrop="static" data-keyboard="false">
-        <div class="modal-dialog" style="width:720px;">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" id="exchange_modal_close" data-dismiss="modal" aria-hidden="true"></button>
-                    <h4 class="modal-title">服务切换</h4>
-                </div>
-                <div class="panel-body">
-                    <form class="bs-example form-horizontal activate-form" id="exchange_config_form">{% csrf_token %}
-                        <input type="text" id="rsync_config_id" name="rsync_config_id" hidden>
-                        <input type="text" id="exchange_id" name="exchange_id" hidden>
-                        <div class="form-body">
-                            <div class="exchange_config_spinner form-group" id="exchange_recover_loading" hidden>
-                                <div class="rect1"></div>
-                                <div class="rect2"></div>
-                                <div class="rect3"></div>
-                                <div class="rect4"></div>
-                                <div class="rect5"></div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-md-2 control-label"><span style="color:red; ">*</span>终端</label>
-                                <div class="col-md-10">
-                                    <select name="exchange_backup_host" id="exchange_backup_host" class="form-control">
-                                    </select>
-                                </div>
-                                <div class="form-control-focus"></div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-md-2 control-label"><span style="color:red; "></span>源端</label>
-                                <div class="col-md-10">
-                                    <input type="text" id="exchange_main_host" name="exchange_main_host" class="form-control" readonly>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-actions ">
-                            <div class="modal-footer">
-                                <button type="button" id="exchange_close" data-dismiss="modal" class="btn dark btn-outline">关闭
-                                </button>
-                                <button type="button" id="exchange" name="exchange" class="btn green">切换</button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div id="static_main_select" class="modal fade" tabindex="-1" data-backdrop="static" data-keyboard="false">
-        <div class="modal-dialog" style="width:600px;">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" id="recover_modal_close" data-dismiss="modal" aria-hidden="true"></button>
-                    <h4 class="modal-title">选择源端路径</h4>
-                    <input type="text" id="main_select_path" name="main_select_path" hidden>
-                    <input type="text" id="main_plan" name="main_plan" hidden>
-                </div>
-                <div class="panel-body">
-                    <div class="treeview" style="padding-right:0px;" id="main_file_tree"></div>
-                    <div class="modal-footer">
-                        <button type="button" id="close" data-dismiss="modal" class="btn dark btn-outline">关闭
-                        </button>
-                        <button type="button" id="main_ensure" name="select_path" class="btn green">确定</button>
                     </div>
-                </div>
+                </form>
             </div>
         </div>
     </div>
-    <div id="static_dest_select" class="modal fade" tabindex="-1" data-backdrop="static" data-keyboard="false">
-        <div class="modal-dialog" style="width:600px;">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" id="recover_modal_close" data-dismiss="modal" aria-hidden="true"></button>
-                    <h4 class="modal-title">选择终端路径</h4>
-                    <input type="text" id="dest_select_path" name="dest_select_path" hidden>
-                    <input type="text" id="dest_plan" name="dest_plan" hidden>
-                </div>
-                <div class="panel-body">
-                    <div class="treeview" style="padding-right:0px;" id="dest_file_tree"></div>
-                    <div class="modal-footer">
-                        <button type="button" id="recover_close" data-dismiss="modal" class="btn dark btn-outline">关闭
-                        </button>
-                        <button type="button" id="dest_ensure" name="select_path" class="btn green">确定</button>
+</div>
+<div id="static_recover" class="modal fade" tabindex="-1" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog" style="width:720px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" id="recover_modal_close" data-dismiss="modal" aria-hidden="true"></button>
+                <h4 class="modal-title">Rsync恢复</h4>
+            </div>
+            <div class="panel-body">
+                <form class="bs-example form-horizontal activate-form" id="rsync_config_form">{% csrf_token %}
+                    <input type="text" id="rsync_config_id" name="rsync_config_id" hidden>
+                    <input type="text" id="recover_id" name="recover_id" hidden>
+                    <div class="form-body">
+                        <div class="rsync_recover_spinner form-group" id="rsync_recover_loading" hidden>
+                            <div class="rect1"></div>
+                            <div class="rect2"></div>
+                            <div class="rect3"></div>
+                            <div class="rect4"></div>
+                            <div class="rect5"></div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-2 control-label"><span style="color:red; ">*</span>终端</label>
+                            <div class="col-md-10">
+                                <select name="selected_backup_host" id="selected_backup_host" class="form-control">
+                                    </select>
+                            </div>
+                            <div class="form-control-focus"></div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-2 control-label"><span style="color:red; "></span>源端</label>
+                            <div class="col-md-10">
+                                <input type="text" id="dest_main_host" name="dest_main_host" class="form-control" readonly>
+                            </div>
+                        </div>
                     </div>
+                    <div class="form-actions ">
+                        <div class="modal-footer">
+                            <button type="button" id="recover_close" data-dismiss="modal" class="btn dark btn-outline">关闭
+                                </button>
+                            <button type="button" id="recover" name="recover" class="btn green">恢复</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="static_exchange" class="modal fade" tabindex="-1" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog" style="width:720px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" id="exchange_modal_close" data-dismiss="modal" aria-hidden="true"></button>
+                <h4 class="modal-title">服务切换</h4>
+            </div>
+            <div class="panel-body">
+                <form class="bs-example form-horizontal activate-form" id="exchange_config_form">{% csrf_token %}
+                    <input type="text" id="rsync_config_id" name="rsync_config_id" hidden>
+                    <input type="text" id="exchange_id" name="exchange_id" hidden>
+                    <div class="form-body">
+                        <div class="exchange_config_spinner form-group" id="exchange_recover_loading" hidden>
+                            <div class="rect1"></div>
+                            <div class="rect2"></div>
+                            <div class="rect3"></div>
+                            <div class="rect4"></div>
+                            <div class="rect5"></div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-2 control-label"><span style="color:red; ">*</span>终端</label>
+                            <div class="col-md-10">
+                                <select name="exchange_backup_host" id="exchange_backup_host" class="form-control">
+                                    </select>
+                            </div>
+                            <div class="form-control-focus"></div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-2 control-label"><span style="color:red; "></span>源端</label>
+                            <div class="col-md-10">
+                                <input type="text" id="exchange_main_host" name="exchange_main_host" class="form-control" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-actions ">
+                        <div class="modal-footer">
+                            <button type="button" id="exchange_close" data-dismiss="modal" class="btn dark btn-outline">关闭
+                                </button>
+                            <button type="button" id="exchange" name="exchange" class="btn green">切换</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="static_main_select" class="modal fade" tabindex="-1" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog" style="width:600px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" id="recover_modal_close" data-dismiss="modal" aria-hidden="true"></button>
+                <h4 class="modal-title">选择源端路径</h4>
+                <input type="text" id="main_select_path" name="main_select_path" hidden>
+                <input type="text" id="main_plan" name="main_plan" hidden>
+            </div>
+            <div class="panel-body">
+                <div class="row">
+                    <div id="main_file_tree" class="col-md-4 tree-demo"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="close" data-dismiss="modal" class="btn dark btn-outline">关闭
+                        </button>
+                    <button type="button" id="main_ensure" name="select_path" class="btn green">确定</button>
                 </div>
             </div>
         </div>
     </div>
-{% endblock %}
-{% block script %}
-    <script>
-        $.ajaxSetup({
-            data: {csrfmiddlewaretoken: '{{ csrf_token }}'},
-        });
-    </script>
-    <!-- dataTable-->
-    <link href="/static/assets/global/plugins/datatables/datatables.min.css" rel="stylesheet" type="text/css"/>
-    <link href="/static/assets/global/plugins/datatables/plugins/bootstrap/datatables.bootstrap.css" rel="stylesheet" type="text/css"/>
-    <script src="/static/assets/global/plugins/datatables/datatables.min.js" type="text/javascript"></script>
-    <script src="/static/assets/global/plugins/datatables/plugins/bootstrap/datatables.bootstrap.js" type="text/javascript"></script>
-    <!-- select2+multiselect-->
-    <link href="/static/assets/global/plugins/jquery-multi-select/css/multi-select.css" rel="stylesheet" type="text/css"/>
-    <link href="/static/assets/global/plugins/select2/css/select2.min.css" rel="stylesheet" type="text/css"/>
-    <link href="/static/assets/global/plugins/select2/css/select2-bootstrap.min.css" rel="stylesheet" type="text/css"/>
-    <script src="/static/assets/global/scripts/app.min.js" type="text/javascript"></script>
-    <script src="/static/assets/global/plugins/jquery-multi-select/js/jquery.multi-select.js" type="text/javascript"></script>
-    <script src="/static/assets/global/plugins/jquery-multi-select/js/jquery.quicksearch.js" type="text/javascript"></script>
-    <script src="/static/assets/global/plugins/select2/js/select2.full.min.js" type="text/javascript"></script>
-    <script src="/static/assets/pages/scripts/components-select2.js" type="text/javascript"></script>
-    <!-- timepicker -->
-    <link rel="stylesheet" href="/static/assets/global/plugins/bootstrap-timepicker/css/bootstrap-timepicker.css">
-    <link rel="stylesheet" href="/static/assets/global/css/plugins.min.css">
-    <script src="/static/assets/global/plugins/bootstrap-timepicker/js/bootstrap-timepicker.min.js" type="text/javascript"></script>
-    <!-- bootstrapswitch -->
-    <link rel="stylesheet" href="/static/assets/global/plugins/bootstrap-switch/css/bootstrap-switch.min.css">
-    <script src="/static/assets/global/plugins/bootstrap-switch/js/bootstrap-switch.min.js" type="text/javascript"></script>
-    <script src="/static/assets/pages/scripts/components-bootstrap-switch.min.js" type="text/javascript"></script>
+</div>
+<div id="static_dest_select" class="modal fade" tabindex="-1" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog" style="width:600px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" id="recover_modal_close" data-dismiss="modal" aria-hidden="true"></button>
+                <h4 class="modal-title">选择终端路径</h4>
+                <input type="text" id="dest_select_path" name="dest_select_path" hidden>
+                <input type="text" id="dest_plan" name="dest_plan" hidden>
+            </div>
+            <div class="panel-body">
+                <div class="row">
+                    <div id="dest_file_tree" class="col-md-4 tree-demo"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="recover_close" data-dismiss="modal" class="btn dark btn-outline">关闭
+                        </button>
+                    <button type="button" id="dest_ensure" name="select_path" class="btn green">确定</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} {% block script %}
+<script>
+    $.ajaxSetup({
+        data: {
+            csrfmiddlewaretoken: '{{ csrf_token }}'
+        },
+    });
+</script>
+<!-- dataTable-->
+<link href="/static/assets/global/plugins/datatables/datatables.min.css" rel="stylesheet" type="text/css" />
+<link href="/static/assets/global/plugins/datatables/plugins/bootstrap/datatables.bootstrap.css" rel="stylesheet" type="text/css" />
+<script src="/static/assets/global/plugins/datatables/datatables.min.js" type="text/javascript"></script>
+<script src="/static/assets/global/plugins/datatables/plugins/bootstrap/datatables.bootstrap.js" type="text/javascript"></script>
+<!-- select2+multiselect-->
+<link href="/static/assets/global/plugins/jquery-multi-select/css/multi-select.css" rel="stylesheet" type="text/css" />
+<link href="/static/assets/global/plugins/select2/css/select2.min.css" rel="stylesheet" type="text/css" />
+<link href="/static/assets/global/plugins/select2/css/select2-bootstrap.min.css" rel="stylesheet" type="text/css" />
+<script src="/static/assets/global/scripts/app.min.js" type="text/javascript"></script>
+<script src="/static/assets/global/plugins/jquery-multi-select/js/jquery.multi-select.js" type="text/javascript"></script>
+<script src="/static/assets/global/plugins/jquery-multi-select/js/jquery.quicksearch.js" type="text/javascript"></script>
+<script src="/static/assets/global/plugins/select2/js/select2.full.min.js" type="text/javascript"></script>
+<script src="/static/assets/pages/scripts/components-select2.js" type="text/javascript"></script>
+<!-- timepicker -->
+<link rel="stylesheet" href="/static/assets/global/plugins/bootstrap-timepicker/css/bootstrap-timepicker.css">
+<link rel="stylesheet" href="/static/assets/global/css/plugins.min.css">
+<script src="/static/assets/global/plugins/bootstrap-timepicker/js/bootstrap-timepicker.min.js" type="text/javascript"></script>
+<!-- bootstrapswitch -->
+<link rel="stylesheet" href="/static/assets/global/plugins/bootstrap-switch/css/bootstrap-switch.min.css">
+<script src="/static/assets/global/plugins/bootstrap-switch/js/bootstrap-switch.min.js" type="text/javascript"></script>
+<script src="/static/assets/pages/scripts/components-bootstrap-switch.min.js" type="text/javascript"></script>
 
-    <!-- bootstraptreeview -->
-    <link rel="stylesheet" href="/static/assets/global/plugins/bootstrap-treeview/src/css/bootstrap-treeview.css">
-    <script src="/static/assets/global/plugins/bootstrap-treeview/src/js/bootstrap-treeview.js" type="text/javascript"></script>
+<!-- bootstraptreeview -->
+<link rel="stylesheet" href="/static/assets/global/plugins/bootstrap-treeview/src/css/bootstrap-treeview.css">
+<script src="/static/assets/global/plugins/bootstrap-treeview/src/js/bootstrap-treeview.js" type="text/javascript"></script>
 
+<!-- jstree -->
+<link href="/static/assets/global/plugins/jstree/dist/themes/default/style.min.css" rel="stylesheet" type="text/css" />
+<script src="/static/assets/global/plugins/jstree/dist/jstree.min.js" type="text/javascript"></script>
 {% endblock %}

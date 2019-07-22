@@ -162,8 +162,8 @@ class RsyncConfig(models.Model):
     """
     Rsync配置
     """
-    main_host = models.ForeignKey(RsyncHost, null=True, verbose_name="主机")
-    backup_host = models.ManyToManyField(RsyncHost, related_name="rsyncconfig_backup_host", verbose_name="备机")
+    main_host = models.ForeignKey(RsyncHost, null=True, related_name="main_host", verbose_name="源端")
+    backup_host = models.ForeignKey(RsyncHost, null=True, related_name="backup_host", verbose_name="终端")
     dj_periodictask = models.OneToOneField(djmodels.PeriodicTask, null=True, verbose_name="定时任务")
     log = models.CharField("配置失败日志", max_length=512, blank=True, default="")
     state = models.CharField("逻辑删除:'9'", max_length=16, blank=True, default="")
@@ -174,8 +174,8 @@ class RsyncModel(models.Model):
     Rsync模块>>备份路径
     """
     rsync_config = models.ForeignKey(RsyncConfig, null=True, verbose_name="Rsync配置")
-    model_name = models.CharField("模块名称", max_length=128)
-    rsync_path = models.CharField("Rsync的文件路径", max_length=512)
+    main_path = models.CharField("源端路径", max_length=512, default="")
+    dest_path = models.CharField("终端路径", max_length=512, default="")
     state = models.CharField("逻辑删除:'9'", max_length=16, blank=True, default="")
 
 
