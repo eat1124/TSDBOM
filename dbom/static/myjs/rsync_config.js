@@ -103,7 +103,6 @@ $(document).ready(function () {
         });
     }
 
-
     function destPathClick() {
         $("input[name^='dest_path']").click(function () {
             $("#static_dest_select").modal();
@@ -202,7 +201,6 @@ $(document).ready(function () {
             });
         });
     }
-
 
     $("#main_ensure").click(function () {
         var mainPlan = $("#main_plan").val();
@@ -472,11 +470,9 @@ $(document).ready(function () {
         $("#recover_id").val(data.main_host_id);
         $("#rsync_config_id").val(data.id);
         // 恢复
-        $("#dest_main_host").val(data.main_host);
-        $("#selected_backup_host").empty();
-        for (var i = 0; i < data.backup_host.length; i++) {
-            $("#selected_backup_host").append('<option value="' + data.backup_host[i]["id"] + '">' + data.backup_host[i]["backup_host"] + '</option>');
-        }
+        $("#origin_host").val(data.main_host);
+        $("#dest_host").val(data.backup_host);
+        $("#dest_host_id").val(data.backup_host_id);
     });
     $('#sample_1 tbody').on('click', 'button#exchange_btn', function () {
         $("#exchange_recover_loading").hide();
@@ -490,10 +486,8 @@ $(document).ready(function () {
         $("#rsync_config_id").val(data.id);
 
         $("#exchange_main_host").val(data.main_host);
-        $("#exchange_backup_host").empty();
-        for (var i = 0; i < data.backup_host.length; i++) {
-            $("#exchange_backup_host").append('<option value="' + data.backup_host[i]["id"] + '">' + data.backup_host[i]["backup_host"] + '</option>');
-        }
+        $("#exchange_backup_host").val(data.backup_host);
+        $("#exchange_backup_host_id").val(data.backup_host_id);
     });
     $("#recover").click(function () {
         $("#rsync_recover_loading").show();
@@ -506,8 +500,8 @@ $(document).ready(function () {
             url: "../rsync_recover/",
             data: {
                 "id": $("#rsync_config_id").val(),
-                "dest_main_host": $("#dest_main_host").val(),
-                "backup_host": $("#selected_backup_host").val(),
+                "origin_host": $("#origin_host").val(),
+                "backup_host": $("#dest_host_id").val(),
             },
             success: function (data) {
                 alert(data.info);
@@ -542,7 +536,7 @@ $(document).ready(function () {
             data: {
                 "id": $("#rsync_config_id").val(),
                 "main_host": $("#exchange_main_host").val(),
-                "backup_host": $("#exchange_backup_host").val(),
+                "backup_host": $("#exchange_backup_host_id").val(),
             },
             success: function (data) {
                 alert(data.info);

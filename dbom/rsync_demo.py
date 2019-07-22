@@ -140,7 +140,7 @@ class RsyncBackup(object):
                                        'path = {0}'.format(cur_path)
                 else:
                     for temp_model in model_list:
-                        origin_path = temp_model['dest_path']
+                        dest_path = temp_model['dest_path']
                         cur_path = dest_path.replace(dest_path.split("/")[-1], "")
 
                         mode_auth_ret, mode_auth_info = self.run_shell_cmd('chown -R rsync.rsync {0}'.format(cur_path))
@@ -340,19 +340,19 @@ if __name__ == '__main__':
     # result, info = rsync_backup.set_rsync_virtual_auth()
     # print(rsync_backup.msg)
     # result, info = rsync_backup.start_rsync()
-    result, info = rsync_backup.run_shell_cmd("ls /")
+    # result, info = rsync_backup.run_shell_cmd("ls /")
     # result, info = rsync_backup.stop_rsync()
     # result, info = rsync_backup.run_shell_cmd('ls')
     # result, info = rsync_backup.install_rsync_by_yum()
     # result, info = rsync_backup.check_ever_existed()
 
-    # result, info = rsync_backup.rsync_exec_avz(r'/temp_data', '192.168.85.138', 'temp_model', delete=True)
+    result, info = rsync_backup.rsync_exec_avz(r'/base_dir/', '192.168.85.102', '39', delete=True)
     # result, info = rsync_backup.tail_rsync_log()
     # result, info = rsync_backup.set_rsync_server_config([{"model_name": "temp_model", "backup_path": "/base_dir/temp_data"}])
-    # rsync_backup.close_connection()
+    rsync_backup.close_connection()
     # sudo sh -c 'echo "This is testPage." >/usr/local/nginx/html/index.html'
     # 将一个字串作为完整的命令来执行
     # sudo仅有root的部分权限
-    # print(result, info)
+    print(result, info)
 
 

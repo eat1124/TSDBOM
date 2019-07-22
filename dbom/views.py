@@ -993,8 +993,8 @@ def rsync_config_save(request):
             'data': '网络异常。'
         })
 
-    rsync_model_tag = False
-    rsync_backup_path_tag = False
+    origin_path_tag = False
+    dest_path_tag = False
     backup_path_list = []
     rsync_model_num = 0
     for key in request.POST.keys():
@@ -1301,7 +1301,7 @@ def rsync_config_save(request):
                                     model_name = request.POST.get('model_id_{0}'.format(i + 1), "")
 
                                     try:
-                                        cur_rsync_model = RsyncModel.objects.get(id=int(model_id))
+                                        cur_rsync_model = RsyncModel.objects.get(id=int(model_name))
                                     except RsyncModel.DoesNotExist as e:
                                         return JsonResponse({
                                             "ret": 0,
@@ -1471,7 +1471,7 @@ def get_child_file_path(request):
 @login_required
 def rsync_recover(request):
     id = request.POST.get("id")
-    dest_main_host = request.POST.get("dest_main_host")
+    origin_host = request.POST.get("origin_host")
     backup_host = request.POST.get("backup_host")
     ret = ""
     info = ""
@@ -1501,13 +1501,13 @@ def rsync_recover(request):
                     temp_info = ""
                     temp_tag = True
                     for cur_model in model_list:
-                        result, info = rsync_backup.rsync_exec_avz(cur_model.rsync_path, dest_main_host, cur_model.model_name, delete=True)
+                        result, info = rsync_backup.rsync_exec_avz(cur_model.main_path, origin_host, cur_model.model_name, delete=True)
                         if result == 1:
-                            temp_log = "备份成功。"
+                            temp_info = "备份成功。"
                         else:
                             temp_tag = False
-                            temp_log += info
-                    info = temp_log
+                            temp_info = info
+                    info = temp_info
                     if temp_tag:
                         ret = 1
                     else:
