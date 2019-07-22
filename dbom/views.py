@@ -1024,9 +1024,6 @@ def rsync_config_save(request):
             result_info["ret"] = 0
             result_info["data"] = '备机不能为空。'
         else:
-            # 拆分出备机
-            # selected_backup_host_list = selected_backup_host.split(",")
-
             if main_host_ip == backup_host_ip:
                 result_info["ret"] = 0
                 result_info["data"] = '一台机器无法同时设置成主从服务器。'
@@ -1035,24 +1032,24 @@ def rsync_config_save(request):
                 if rsync_model_num > 0:
                     hour, minute = "", ""
                     for key in request.POST.keys():
-                        model_name = request.POST.get(key, "")
-                        if "model_name_" in key and model_name == "":
-                            rsync_model_tag = True
+                        origin_path = request.POST.get(key, "")
+                        if "origin_path_" in key and origin_path == "":
+                            origin_path_tag = True
                             break
-                    if rsync_model_tag:
+                    if origin_path_tag:
                         return JsonResponse({
                             "ret": 0,
-                            "data": "模块名未填写。"
+                            "data": "源端路径未填写。"
                         })
                     for key in request.POST.keys():
-                        backup_path = request.POST.get(key, "")
-                        if "backup_path_" in key and backup_path == "":
-                            rsync_backup_path_tag = True
+                        dest_path = request.POST.get(key, "")
+                        if "dest_path_" in key and dest_path == "":
+                            dest_path_tag = True
                             break
-                    if rsync_backup_path_tag:
+                    if dest_path_tag:
                         return JsonResponse({
                             "ret": 0,
-                            "data": "文件路径未填写。"
+                            "data": "终端路径未填写。"
                         })
                     # 检测服务器链接情况；
                     # 检测文件路径，不存在则不添加；
