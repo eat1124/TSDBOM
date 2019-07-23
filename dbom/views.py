@@ -1758,11 +1758,8 @@ def rsync_history_data(request):
     all_rsync_history_list = []
     if all_rsync_history:
         for rsync_history in all_rsync_history:
-            main_host = rsync_history.rsync_config.main_host.ip_addr
-            backup_hosts = rsync_history.rsync_config.backup_host.exclude(state="9")
-            backup_host_init = ""
-            for backup_host in backup_hosts:
-                backup_host_init += backup_host.ip_addr + ","
+            main_host = rsync_history.main_host
+            backup_host = rsync_history.backup_host
 
             all_rsync_history_list.append({
                 "rsync_history_id": rsync_history.id,
