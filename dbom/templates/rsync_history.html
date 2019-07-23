@@ -61,46 +61,28 @@
         </table>
     </section>
 
-    <div id="static01" class="modal fade" tabindex="-1" data-backdrop="static" data-keyboard="false">
+    <div id="static" class="modal fade" tabindex="-1" data-backdrop="static" data-keyboard="false">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true"></button>
-                    <h4 class="modal-title">流程报表</h4>
+                    <h4 class="modal-title">Rsync复制日志</h4>
                     <input hidden id="id" type="text" name="id">
                 </div>
                 <div class="panel-body">
-                    <form class="bs-example form-horizontal activate-form" action="/custom_pdf_report/"
-                          method="post">{% csrf_token %}
-
+                    <form class="bs-example form-horizontal activate-form">
                         <div class="form-body">
                             <div class="form-group">
-                                <label class="col-md-2 control-label"><span
-                                        style="color:red; ">*</span>制表人</label>
-                                <div class="col-md-10">
-                                    <input id="run_person" type="text" name="run_person" class="form-control "
-                                           placeholder="" value="{{ request.user.userinfo.fullname }}" readonly>
-                                    <input type="text" id="processid" name="processid" hidden>
-                                    <input type="text" id="processrunid" name="processrunid" hidden>
-
+                                <div class="col-md-12">
+                                    <textarea name="" id="rsync_log" cols="30" rows="10" class="form-control" readonly></textarea>
                                     <div class="form-control-focus"></div>
-
                                 </div>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-md-2 control-label"><span
-                                    style="color:red; ">*</span>制表时间</label>
-                            <div class="col-md-10">
-                                <input id="run_time" type="text" name="run_time" class="form-control"
-                                       placeholder="" readonly>
-                                <div class="form-control-focus"></div>
-
                             </div>
                         </div>
                         <div class="form-actions ">
                             <div class="modal-footer">
-                                <button type="submit" class="btn green">确认</button>
+                                <button type="button" data-dismiss="modal" class="btn dark btn-outline">关闭
+                                </button>
                             </div>
                         </div>
                     </form>

@@ -2,6 +2,7 @@
     Rsync自动化备份
 """
 import paramiko
+import re
 
 
 class RsyncBackup(object):
@@ -213,8 +214,36 @@ class RsyncBackup(object):
 
         return result, info
 
-    def tail_rsync_log(self):
-        result, info = self.run_shell_cmd('tail /var/log/rsyncd.log')
+    def cat_rsync_log(self):
+        shell_cmd = 'cat /var/log/rsyncd.log'
+        result = 1
+        info = ''
+        print("本次执行命令: echo '{0}'|sudo -S sh -c '{1}'".format(self.server["password"], shell_cmd) if self.server["username"] != "root" else shell_cmd)
+        stdin, stdout, stderr = self.client.exec_command("echo '{0}'|sudo -S sh -c '{1}' {2}".format(self.server["password"], shell_cmd, self.verify_shell_cmd) if self.server["username"] != "root" else shell_cmd, get_pty=True)
+
+        stdout_init = ''
+        stderr_init = ''
+        if not stderr.readlines():
+            pre_task = ""
+            num = 0
+            for data in stdout.readlines()[::-1]:
+                com = re.compile('\[\d+\]')
+                task_list = com.findall(data)
+                if task_list:
+                    task_id = task_list[0][1:-1]
+                    if num > 0 and pre_task != task_id:
+                        break
+
+                    if task_id == pre_task or num == 0:
+                        stdout_init += data
+                    pre_task = task_id
+                    num += 1
+            info = stdout_init
+        else:
+            result = 0
+            for data in stderr.readlines():
+                stderr_init += data
+            info = stderr_init
         return result, info
 
     def start_rsync(self):
@@ -345,8 +374,8 @@ if __name__ == '__main__':
     # result, info = rsync_backup.run_shell_cmd('ls')
     # result, info = rsync_backup.install_rsync_by_yum()
     # result, info = rsync_backup.check_ever_existed()
-
-    result, info = rsync_backup.rsync_exec_avz(r'/base_dir/temp_data/', '192.168.85.102', '39', delete=True)
+    result, info = rsync_backup.cat_rsync_log()
+    # result, info = rsync_backup.rsync_exec_avz(r'/base_dir/temp_data/', '192.168.85.102', '39', delete=True)
     # result, info = rsync_backup.tail_rsync_log()
     # result, info = rsync_backup.set_rsync_server_config([{"model_name": "temp_model", "backup_path": "/base_dir/temp_data"}])
     rsync_backup.close_connection()
@@ -354,5 +383,3 @@ if __name__ == '__main__':
     # 将一个字串作为完整的命令来执行
     # sudo仅有root的部分权限
     print(result, info)
-
-

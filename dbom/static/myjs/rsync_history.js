@@ -15,10 +15,14 @@ $(document).ready(function () {
             {"data": null},
         ],
         "columnDefs": [{
+            "targets": -2,
+            "visible": false
+        }, {
             "targets": -1,  // 指定最后一列添加按钮；
             "data": null,
+            "width": "60px",
             "render": function (data, type, full) {
-                return "<button title='删除'  id='delrow' class='btn btn-xs btn-primary' type='button'><i class='fa fa-trash-o'></i></button></td>"
+                return "<td><button id='catlog' title='查看日志' data-toggle='modal' data-target='#static' class='btn btn-xs btn-primary' type='button'><i class='fa fa-eye'></i></button><button title='删除'  id='delrow' class='btn btn-xs btn-primary' type='button'><i class='fa fa-trash-o'></i></button></td>"
             }
         }],
 
@@ -63,6 +67,12 @@ $(document).ready(function () {
             });
 
         }
+    });
+
+    $('#sample_1 tbody').on('click', 'button#catlog', function () {
+        var table = $('#sample_1').DataTable();
+        var data = table.row($(this).parents('tr')).data();
+        $("#rsync_log").val(data.rsync_log?data.rsync_log:"无");
     });
 
     $('#startdate').datetimepicker({

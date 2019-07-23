@@ -1739,19 +1739,19 @@ def rsync_history_data(request):
     end_time = request.GET.get("enddate", "")
     all_rsync_history = ""
     if not start_time and not end_time:
-        all_rsync_history = RsyncRecord.objects.exclude(state="9")
+        all_rsync_history = RsyncRecord.objects.exclude(state="9").order_by("-starttime")
     if start_time and not end_time:
         start_time = datetime.datetime.strptime(start_time, '%Y-%m-%d').strftime('%Y-%m-%d %H:%M:%S')
-        all_rsync_history = RsyncRecord.objects.exclude(state="9").filter(starttime__gte=start_time)
+        all_rsync_history = RsyncRecord.objects.exclude(state="9").filter(starttime__gte=start_time).order_by("-starttime")
     if not start_time and end_time:
         end_time = (datetime.datetime.strptime(end_time, '%Y-%m-%d') + datetime.timedelta(days=1) - datetime.timedelta(
             seconds=1)).strftime('%Y-%m-%d %H:%M:%S')
-        all_rsync_history = RsyncRecord.objects.exclude(state="9").filter(starttime__lte=end_time)
+        all_rsync_history = RsyncRecord.objects.exclude(state="9").filter(starttime__lte=end_time).order_by("-starttime")
     if start_time and end_time:
         start_time = datetime.datetime.strptime(start_time, '%Y-%m-%d').strftime('%Y-%m-%d %H:%M:%S')
         end_time = (datetime.datetime.strptime(end_time, '%Y-%m-%d') + datetime.timedelta(days=1) - datetime.timedelta(
             seconds=1)).strftime('%Y-%m-%d %H:%M:%S')
-        all_rsync_history = RsyncRecord.objects.exclude(state="9").filter(starttime__range=(start_time, end_time))
+        all_rsync_history = RsyncRecord.objects.exclude(state="9").filter(starttime__range=(start_time, end_time)).order_by("-starttime")
         if end_time < start_time:
             JsonResponse({"date": []})
 

@@ -35,8 +35,6 @@ $(document).ready(function () {
 
                     // 报警客户端
                     for (var j = 0; j < agent_job_list.length; j++) {
-                        console.log(agent_job_list[j].job_backup_status)
-                        console.log(agent_job_list[j].job_backup_status.indexOf("失败"))
                         if (agent_job_list[j].job_backup_status.indexOf("失败") != -1) {
                             warning_client_num += 1;
                             break

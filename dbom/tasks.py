@@ -46,12 +46,12 @@ def remote_sync(main_host_ip, dest_host_ip, model_list, periodictask_id):
         except RsyncHost.DoesNotExist as e:
             pass
         else:
-            server = {
+            client = {
                 'hostname': cur_rsync_host.ip_addr,
                 'username': cur_rsync_host.username,
                 'password': cur_rsync_host.password,
             }
-            rsync_backup = RsyncBackup(server)
+            rsync_backup = RsyncBackup(client)
             if rsync_backup.msg == "远程连接成功。":
                 try:
                     cur_backup_host = RsyncHost.objects.get(id=int(dest_host_ip))
@@ -66,6 +66,7 @@ def remote_sync(main_host_ip, dest_host_ip, model_list, periodictask_id):
                     cur_rsync_record.save()
                     return
                 else:
+                    log_init = ""
                     for cur_model in model_list:
                         result, info = rsync_backup.rsync_exec_avz(cur_model["origin_path"], cur_backup_host.ip_addr, cur_model["model_name"], delete=True)
                         if result == 1:
@@ -80,7 +81,24 @@ def remote_sync(main_host_ip, dest_host_ip, model_list, periodictask_id):
                             cur_rsync_record.rsync_config_id = cur_rsync_config.id
                             cur_rsync_record.save()
                             return
+                # 对比日志保存
+                log_result, log_info = 1, ""
+                # 查看服务端日志
+                try:
+                    server_host = RsyncHost.objects.get(id=int(dest_host_ip))
+                except RsyncHost.DoesNotExist as e:
+                    pass
+                else:
+                    client = {
+                        'hostname': server_host.ip_addr,
+                        'username': server_host.username,
+                        'password': server_host.password,
+                    }
+                    server_rsync = RsyncBackup(client)
+                    if server_rsync.msg == "远程连接成功。":
+                        log_result, log_info = server_rsync.cat_rsync_log()
 
+                cur_rsync_record.log = log_info
                 cur_rsync_record.starttime = start_time
                 cur_rsync_record.endtime = datetime.datetime.now()
                 cur_rsync_record.status = 1
