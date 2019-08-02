@@ -68,7 +68,7 @@ def remote_sync(main_host_ip, dest_host_ip, model_list, periodictask_id):
                 else:
                     log_init = ""
                     for cur_model in model_list:
-                        result, info = rsync_backup.rsync_exec_avz(cur_model["origin_path"], cur_backup_host.ip_addr, cur_model["model_name"], delete=True)
+                        result, info = rsync_backup.rsync_pull(cur_model["origin_path"], cur_backup_host.ip_addr, cur_model["model_name"], delete=True)
                         if result == 1:
                             print("成功备份。")
                         else:

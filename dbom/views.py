@@ -1078,17 +1078,44 @@ def rsync_config_save(request):
                         else:
                             # 检测模块路径
                             for temp_path in backup_path_list:
-                                result, info = rsync_backup.check_file_path_existed(temp_path)
+                                # 杜绝根目录下的文件夹备份
+                                if not temp_path.startswith("/"):
+                                    rsync_backup.close_connection()
+
+                                    return JsonResponse({
+                                        "ret": 0,
+                                        "data": "路径：{0} 不符合绝对路径条件。".format(temp_path)
+                                    })
+                                if temp_path == "/" or temp_path.count("/") == 2 and temp_path.endswith("/"):
+                                    rsync_backup.close_connection()
+
+                                    return JsonResponse({
+                                        "ret": 0,
+                                        "data": "备份路径不能为根目录，或者根目录第一层文件夹。".format(temp_path)
+                                    })
+
+                                if len(temp_path) > 1 and temp_path.endswith("/"):
+                                    temp_path = temp_path[:-1]
+                                cur_path = temp_path.replace(temp_path.split("/")[-1], "")
+
+                                result, info = rsync_backup.check_file_path_existed(cur_path)
 
                                 if result == 0:
                                     rsync_backup.close_connection()
 
                                     return JsonResponse({
                                         "ret": 0,
-                                        "data": "路径：{0} 在主服务器中不存在，请检查后再配置。".format(temp_path)
+                                        "data": "路径：{0} 在主服务器中不存在，请检查后再配置。".format(cur_path)
+                                    })
+                                if result == 2:
+                                    rsync_backup.close_connection()
+
+                                    return JsonResponse({
+                                        "ret": 0,
+                                        "data": "不支持选择单文件复制，请重新选择路径。"
                                     })
                             # 配置主机
-                            result, info = rsync_backup.set_rsync_server_config(model_list, "origin")
+                            result, info = rsync_backup.set_rsync_server_config(model_list, backup_host_ip)
                             if result == 0:
                                 rsync_backup.close_connection()
 
@@ -1120,27 +1147,7 @@ def rsync_config_save(request):
                         else:
                             # 检测模块路径
                             for temp_path in backup_path_list:
-                                # 杜绝根目录下的文件夹备份
-                                if not temp_path.startswith("/"):
-                                    rsync_backup.close_connection()
-
-                                    return JsonResponse({
-                                        "ret": 0,
-                                        "data": "路径：{0} 不符合绝对路径条件。".format(temp_path)
-                                    })
-                                if temp_path == "/" or temp_path.count("/") == 2 and temp_path.endswith("/"):
-                                    rsync_backup.close_connection()
-
-                                    return JsonResponse({
-                                        "ret": 0,
-                                        "data": "备份路径不能为根目录，或者根目录第一层文件夹。".format(temp_path)
-                                    })
-
-                                if len(temp_path) > 1 and temp_path.endswith("/"):
-                                    temp_path = temp_path[:-1]
-                                cur_path = temp_path.replace(temp_path.split("/")[-1], "")
-
-                                result, info = rsync_backup.check_file_path_existed(cur_path)
+                                result, info = rsync_backup.check_file_path_existed(temp_path)
                                 if result == 0:
                                     rsync_backup.close_connection()
 
@@ -1148,14 +1155,21 @@ def rsync_config_save(request):
                                         "ret": 0,
                                         "data": "路径：{0} 在备份服务器中不存在，请检查后再配置。".format(temp_path[:-1])
                                     })
-                            # 配置备机
-                            result, info = rsync_backup.set_rsync_server_config(model_list, "dest")
+                                if result == 2:
+                                    rsync_backup.close_connection()
+
+                                    return JsonResponse({
+                                        "ret": 0,
+                                        "data": "不支持选择单文件复制，请重新选择路径。"
+                                    })
+                            # 配置备机密码
+                            result, info = rsync_backup.set_client_password()
                             if result == 0:
                                 rsync_backup.close_connection()
 
                                 return JsonResponse({
                                     "ret": 0,
-                                    "data": "备份服务器{0} 配置失败。".format(cur_backup_host.ip_addr)
+                                    "data": "备份服务器{0} 配置密码失败。".format(cur_backup_host.ip_addr)
                                 })
                     # 保存数据：RsyncConfig,RsyncModel,CrontabSchedule,Periodictask
                     if id == 0:
@@ -1468,6 +1482,7 @@ def get_child_file_path(request):
         "info": info,
     })
 
+
 @login_required
 def rsync_recover(request):
     id = request.POST.get("id")
@@ -1502,10 +1517,8 @@ def rsync_recover(request):
                     temp_tag = True
                     for cur_model in model_list:
                         # 终端路径+源端文件
-                        origin_path = cur_model.main_path
-                        backup_doc = cur_model.main_path.split("/")[-1]
-                        dest_path = cur_model.dest_path + "/" + backup_doc
-                        result, info = rsync_backup.rsync_exec_avz(dest_path, origin_host, cur_model.model_name, delete=True)
+                        dest_path = cur_model.dest_path
+                        result, info = rsync_backup.rsync_push(dest_path, origin_host, cur_model.model_name, delete=True)
                         if result == 1:
                             temp_info = "备份成功。"
                         else:
