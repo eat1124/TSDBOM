@@ -385,7 +385,7 @@ if __name__ == '__main__':
         'username': 'root',
         'password': 'password'
     }
-    
+
     # server = {
     #     'hostname': '192.168.85.123',
     #     'username': 'rsync_demo',
