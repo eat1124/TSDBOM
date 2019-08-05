@@ -143,7 +143,7 @@ class RsyncBackup(object):
                         return mode_auth_ret, "源端备份路径权限配置失败:{0}".format(mode_auth_info)
                     base_config += '\n' + \
                                    '[{0}]'.format(temp_model['model_name']) + '\n' + \
-                                   'path = {0}'.format(origin_path) + '\n' + \
+                                   'path = {0}'.format(origin_path if origin_path.endswith("/") else "{0}/".format(origin_path)) + '\n' + \
                                    'ignore errors' + '\n' + \
                                    'read only = false' + '\n' + \
                                    'list = false' + '\n' + \
@@ -156,14 +156,16 @@ class RsyncBackup(object):
                     result = 0
                     info = "Rsync配置文件写入失败:{0}".format(rsync_config_info)
                 else:
+                    result = 1
+                    info = "Rsync配置成功。"
                     # 设置防火墙开放端口
-                    port_result, port_info = self.open_873_port()
-                    if port_result == 0:
-                        result = 0
-                        info = "873端口设置失败:{0}".format(port_info)
-                    else:
-                        # 启动rsync
-                        start_rysnc_result, start_rsync_info = self.start_rsync()
+                    # port_result, port_info = self.open_873_port()
+                    # if port_result == 0:
+                    #     result = 0
+                    #     info = "873端口设置失败:{0}".format(port_info)
+                    # else:
+                    #     # 启动rsync
+                    #     start_rysnc_result, start_rsync_info = self.start_rsync()
                         # if start_rysnc_result == 0:
                         #     result = 0
                         #     info = "启动rsync失败:{0}".format(start_rsync_info)

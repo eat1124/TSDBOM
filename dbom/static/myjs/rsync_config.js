@@ -1,10 +1,10 @@
-$(document).ready(function () {
+$(document).ready(function() {
     // 1.获取整个路径
     // 2.新增子节点
     // 3.点击事件
     function originPathClick() {
         // input-click
-        $("input[name^='origin_path']").click(function () {
+        $("input[name^='origin_path']").click(function() {
             $("#static_main_select").modal();
             $("#main_plan").val($(this).prop("name"));
 
@@ -17,29 +17,29 @@ $(document).ready(function () {
                 data: {
                     hostId: mainHostId,
                 },
-                success: function (data) {
+                success: function(data) {
                     if (data.ret == 1) {
                         var mainTreeData = data.info;
                         $('#main_file_tree').jstree({
-                            'core': {
-                                "themes": {
-                                    "responsive": false
+                                'core': {
+                                    "themes": {
+                                        "responsive": false
+                                    },
+                                    "check_callback": true,
+                                    'data': mainTreeData
                                 },
-                                "check_callback": true,
-                                'data': mainTreeData
-                            },
 
-                            "types": {
-                                "node": {
-                                    "icon": "fa fa-folder icon-state-warning icon-lg"
+                                "types": {
+                                    "node": {
+                                        "icon": "fa fa-folder icon-state-warning icon-lg"
+                                    },
+                                    "fun": {
+                                        "icon": "fa fa-file icon-state-warning icon-lg"
+                                    }
                                 },
-                                "fun": {
-                                    "icon": "fa fa-file icon-state-warning icon-lg"
-                                }
-                            },
-                            "plugins": ["types", "role"]
-                        })
-                            .bind('select_node.jstree', function (event, data) {
+                                "plugins": ["types", "role"]
+                            })
+                            .bind('select_node.jstree', function(event, data) {
                                 if (data.node.text != "/") {
                                     // 清空子节点
                                     $('#main_file_tree').jstree(true).delete_node(data.node.children);
@@ -73,7 +73,7 @@ $(document).ready(function () {
                                             hostId: mainHostId,
                                             pre_path: prePath,
                                         },
-                                        success: function (data) {
+                                        success: function(data) {
                                             console.log(data.info)
                                             if (data.ret == 1) {
                                                 // 返回数组，循环新增子节点
@@ -85,7 +85,7 @@ $(document).ready(function () {
                                             } else
                                                 alert("源端子目录加载失败，请检查服务器是否开启。");
                                         },
-                                        error: function (e) {
+                                        error: function(e) {
                                             alert("源端子目录加载失败，请检查服务器是否已选择。");
                                         }
                                     });
@@ -96,7 +96,7 @@ $(document).ready(function () {
                     } else
                         alert("源端根目录加载失败，请检查服务器是否开启。");
                 },
-                error: function (e) {
+                error: function(e) {
                     alert("源端根目录加载失败，请检查服务器是否已选择。");
                 }
             });
@@ -104,7 +104,7 @@ $(document).ready(function () {
     }
 
     function destPathClick() {
-        $("input[name^='dest_path']").click(function () {
+        $("input[name^='dest_path']").click(function() {
             $("#static_dest_select").modal();
             $("#dest_plan").val($(this).prop("name"));
 
@@ -117,29 +117,29 @@ $(document).ready(function () {
                 data: {
                     hostId: destHostId,
                 },
-                success: function (data) {
+                success: function(data) {
                     if (data.ret == 1) {
                         var destTreeData = data.info;
                         $('#dest_file_tree').jstree({
-                            'core': {
-                                "themes": {
-                                    "responsive": false
+                                'core': {
+                                    "themes": {
+                                        "responsive": false
+                                    },
+                                    "check_callback": true,
+                                    'data': destTreeData
                                 },
-                                "check_callback": true,
-                                'data': destTreeData
-                            },
 
-                            "types": {
-                                "node": {
-                                    "icon": "fa fa-folder icon-state-warning icon-lg"
+                                "types": {
+                                    "node": {
+                                        "icon": "fa fa-folder icon-state-warning icon-lg"
+                                    },
+                                    "fun": {
+                                        "icon": "fa fa-file icon-state-warning icon-lg"
+                                    }
                                 },
-                                "fun": {
-                                    "icon": "fa fa-file icon-state-warning icon-lg"
-                                }
-                            },
-                            "plugins": ["types", "role"]
-                        })
-                            .bind('select_node.jstree', function (event, data) {
+                                "plugins": ["types", "role"]
+                            })
+                            .bind('select_node.jstree', function(event, data) {
                                 if (data.node.text != "/") {
                                     // 清空子节点
                                     $('#dest_file_tree').jstree(true).delete_node(data.node.children);
@@ -173,7 +173,7 @@ $(document).ready(function () {
                                             hostId: destHostId,
                                             pre_path: prePath,
                                         },
-                                        success: function (data) {
+                                        success: function(data) {
                                             if (data.ret == 1) {
                                                 // 返回数组，循环新增子节点
                                                 for (var i = 0; i < data.info.length; i++) {
@@ -184,7 +184,7 @@ $(document).ready(function () {
                                             } else
                                                 alert("终端子目录加载失败，请检查服务器是否开启。");
                                         },
-                                        error: function (e) {
+                                        error: function(e) {
                                             alert("终端子目录加载失败，请检查服务器是否已选择。");
                                         }
                                     });
@@ -195,14 +195,14 @@ $(document).ready(function () {
                     } else
                         alert("终端根目录加载失败，请检查服务器是否开启。");
                 },
-                error: function (e) {
+                error: function(e) {
                     alert("终端根目录加载失败，请检查服务器是否已选择。");
                 }
             });
         });
     }
 
-    $("#main_ensure").click(function () {
+    $("#main_ensure").click(function() {
         var mainPlan = $("#main_plan").val();
         var mainSelectPath = $("#main_select_path").val();
 
@@ -210,7 +210,7 @@ $(document).ready(function () {
         $("#static_main_select").modal("hide");
     });
 
-    $("#dest_ensure").click(function () {
+    $("#dest_ensure").click(function() {
         var destPlan = $("#dest_plan").val();
         var destSelectPath = $("#dest_select_path").val();
         $("input[name='destplan']".replace("destplan", destPlan)).val(destSelectPath);
@@ -226,9 +226,9 @@ $(document).ready(function () {
     $("#per_time").timepicker({
         showMeridian: false,
         minuteStep: 5,
-    }).on('show.timepicker', function () {
+    }).on('show.timepicker', function() {
         $('#static').removeAttr('tabindex');
-    }).on('hide.timepicker', function () {
+    }).on('hide.timepicker', function() {
         $('#static').attr('tabindex', -1);
     });
 
@@ -279,7 +279,7 @@ $(document).ready(function () {
         }, {
             "data": null,
             "targets": -9,
-            "render": function (data, type, full) {
+            "render": function(data, type, full) {
                 if (full.main_host_status == 1) {
                     return "<td>" + full.main_host + " <i class='fa fa-fire' style='color:#ff1c1c' title='服务已启动'></i></td>";
                 } else {
@@ -301,7 +301,7 @@ $(document).ready(function () {
         }, {
             "data": null,
             "targets": -4,
-            "render": function (data, type, full) {
+            "render": function(data, type, full) {
                 // 备机
                 if (full.backup_host_status == 1) {
                     return "<td>" + full.backup_host + " <i class='fa fa-fire' style='color:#ff1c1c' title='服务已启动'></i></td>";
@@ -312,7 +312,7 @@ $(document).ready(function () {
         }, {
             "data": null,
             "targets": -3,
-            "render": function (data, type, full) {
+            "render": function(data, type, full) {
                 if (full.interval_id) {
                     var interval_period = ""
                     if (full.interval_period == "minutes") {
@@ -336,7 +336,7 @@ $(document).ready(function () {
         }, {
             "data": null,
             "targets": -2,
-            "render": function (data, type, full) {
+            "render": function(data, type, full) {
                 var status = ""
                 if (full.status === "off") {
                     status = "关闭"
@@ -350,7 +350,7 @@ $(document).ready(function () {
             "data": null,
             "width": "120px",
             "targets": -1,
-            "render": function (data, type, full) {
+            "render": function(data, type, full) {
                 var exec_tag = "<button  id='edit' title='编辑' data-toggle='modal'  data-target='#static'  class='btn btn-xs btn-primary' type='button'><i class='fa fa-edit'></i></button><button title='删除'  id='delrow' class='btn btn-xs btn-primary' type='button'><i class='fa fa-trash-o'></i></button>";
                 exec_tag += "<button title='切换' id='exchange_btn' data-toggle='modal'  data-target='#static_exchange'  class='btn btn-xs btn-info' type='button'><i class='fa fa-exchange'></i></button>";
                 exec_tag += "<button title='反向复制' id='recover_btn' data-toggle='modal'  data-target='#static_recover'  class='btn btn-xs btn-warning' type='button'><i class='fa fa-reply-all'></i></button>";
@@ -375,7 +375,7 @@ $(document).ready(function () {
         }
     });
     // 行按钮
-    $('#sample_1 tbody').on('click', 'button#delrow', function () {
+    $('#sample_1 tbody').on('click', 'button#delrow', function() {
         if (confirm("确定要删除该条数据？")) {
             var table = $('#sample_1').DataTable();
             var data = table.row($(this).parents('tr')).data();
@@ -385,21 +385,21 @@ $(document).ready(function () {
                 data: {
                     id: data.id,
                 },
-                success: function (data) {
+                success: function(data) {
                     if (data == 1) {
                         table.ajax.reload();
                         alert("删除成功！");
                     } else
                         alert("删除失败，请于管理员联系。");
                 },
-                error: function (e) {
+                error: function(e) {
                     alert("删除失败，请于管理员联系。");
                 }
             });
 
         }
     });
-    $('#sample_1 tbody').on('click', 'button#edit', function () {
+    $('#sample_1 tbody').on('click', 'button#edit', function() {
         $("#rsync_loading").hide();
         $("#save").removeProp("disabled");
         $("#close").removeProp("disabled");
@@ -427,6 +427,7 @@ $(document).ready(function () {
                 '        <div class="form-control-focus"></div>\n' +
                 '<span hidden>\n' +
                 '    <input type="text" class="form-control" name="model_id_' + (i + 1) + '" value="' + data.model[i].id + '" placeholder="">\n' +
+                '    <input type="text" class="form-control" name="model_name_' + (i + 1) + '" value="' + data.model[i].model_name + '" placeholder="">\n' +
                 '</span>' +
                 '    </div>\n'
             );
@@ -459,7 +460,7 @@ $(document).ready(function () {
         destPathClick();
     });
 
-    $('#sample_1 tbody').on('click', 'button#recover_btn', function () {
+    $('#sample_1 tbody').on('click', 'button#recover_btn', function() {
         $("#rsync_recover_loading").hide();
         $("#recover").removeProp("disabled");
         $("#recover_close").removeProp("disabled");
@@ -474,7 +475,7 @@ $(document).ready(function () {
         $("#dest_host").val(data.backup_host);
         $("#dest_host_id").val(data.backup_host_id);
     });
-    $('#sample_1 tbody').on('click', 'button#exchange_btn', function () {
+    $('#sample_1 tbody').on('click', 'button#exchange_btn', function() {
         $("#exchange_recover_loading").hide();
         $("#exchange").removeProp("disabled");
         $("#exchange_close").removeProp("disabled");
@@ -489,7 +490,7 @@ $(document).ready(function () {
         $("#exchange_backup_host").val(data.backup_host);
         $("#exchange_backup_host_id").val(data.backup_host_id);
     });
-    $("#recover").click(function () {
+    $("#recover").click(function() {
         $("#rsync_recover_loading").show();
         $("#recover").prop("disabled", true);
         $("#recover_close").prop("disabled", true);
@@ -503,7 +504,7 @@ $(document).ready(function () {
                 "origin_host": $("#origin_host").val(),
                 "backup_host": $("#dest_host_id").val(),
             },
-            success: function (data) {
+            success: function(data) {
                 alert(data.info);
                 if (data.ret == 1) {
                     $("#static_recover").modal("hide");
@@ -514,7 +515,7 @@ $(document).ready(function () {
                     $("#recover_modal_close").removeProp("disabled");
                 }
             },
-            error: function (e) {
+            error: function(e) {
                 alert("页面出现错误，请于管理员联系。");
                 $("#rsync_recover_loading").hide();
                 $("#recover").removeProp("disabled");
@@ -523,7 +524,7 @@ $(document).ready(function () {
             }
         })
     });
-    $("#exchange").click(function () {
+    $("#exchange").click(function() {
         $("#exchange_recover_loading").show();
         $("#exchange").prop("disabled", true);
         $("#exchange_close").prop("disabled", true);
@@ -538,7 +539,7 @@ $(document).ready(function () {
                 "main_host": $("#exchange_main_host").val(),
                 "backup_host": $("#exchange_backup_host_id").val(),
             },
-            success: function (data) {
+            success: function(data) {
                 alert(data.info);
                 if (data.ret == 1) {
                     $("#static_exchange").modal("hide");
@@ -550,7 +551,7 @@ $(document).ready(function () {
                     $("#exchange_modal_close").removeProp("disabled");
                 }
             },
-            error: function (e) {
+            error: function(e) {
                 alert("页面出现错误，请于管理员联系。");
                 $("#exchange_recover_loading").hide();
                 $("#exchange").removeProp("disabled");
@@ -560,7 +561,7 @@ $(document).ready(function () {
         })
     });
 
-    $("#new").click(function () {
+    $("#new").click(function() {
         $("#rsync_loading").hide();
         $("#save").removeProp("disabled");
         $("#close").removeProp("disabled");
@@ -594,6 +595,7 @@ $(document).ready(function () {
             '    </div>\n' +
             '    <span hidden>\n' +
             '        <input type="text" class="form-control" name="model_id_1" placeholder="">\n' +
+            '        <input type="text" class="form-control" name="model_name_1" placeholder="" value="1">\n' +
             '    </span>\n' +
             '</div>');
         $("#per_time").val("00:00").timepicker("setTime", "00:00");
@@ -606,7 +608,7 @@ $(document).ready(function () {
         destPathClick();
     });
 
-    $('#save').click(function () {
+    $('#save').click(function() {
         $("#rsync_loading").show();
         $("#save").prop("disabled", true);
         $("#close").prop("disabled", true);
@@ -625,7 +627,7 @@ $(document).ready(function () {
             dataType: 'json',
             url: "../rsync_config_save/",
             data: $("#rsync_config_form").serialize(),
-            success: function (data) {
+            success: function(data) {
                 var myres = data.ret;
                 var mydata = data.data;
                 if (myres === 1) {
@@ -639,7 +641,7 @@ $(document).ready(function () {
                 }
                 alert(mydata);
             },
-            error: function (e) {
+            error: function(e) {
                 alert("页面出现错误，请于管理员联系。");
                 $("#rsync_loading").hide();
                 $("#save").removeProp("disabled");
@@ -649,11 +651,11 @@ $(document).ready(function () {
         });
     });
 
-    $('#error').click(function () {
+    $('#error').click(function() {
         $(this).hide()
     });
 
-    $("#node_new").click(function () {
+    $("#node_new").click(function() {
         var cNum = $("#path_info_div").children("div").length + 1;
         $("#path_info_div").append('<div class="col-md-12" style="margin-bottom:9px;padding-left: 0px;padding-right: 0px;">\n' +
             '    <label class="col-md-2 control-label"><span style="color:red;">*</span>源端路径:</label>\n' +
@@ -667,7 +669,8 @@ $(document).ready(function () {
             '        <div class="form-control-focus"></div>\n' +
             '    </div>\n' +
             '<span hidden>\n' +
-            '    <input type="text" class="form-control" name="path_id_' + cNum + '" placeholder="">\n' +
+            '    <input type="text" class="form-control" name="model_id_' + cNum + '" placeholder="">\n' +
+            '    <input type="text" class="form-control" name="model_name_' + cNum + '" placeholder="" value="' + cNum + '">\n' +
             '</span>' +
             '</div>'
         );
@@ -682,7 +685,7 @@ $(document).ready(function () {
         destPathClick();
     });
 
-    $("#node_del").click(function () {
+    $("#node_del").click(function() {
         // 删除最后一个子元素
         if ($("#path_info_div").children("div").length > 1) {
             $("#path_info_div").children("div:last-child").remove();
