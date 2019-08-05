@@ -166,9 +166,9 @@ class RsyncBackup(object):
                     # else:
                     #     # 启动rsync
                     #     start_rysnc_result, start_rsync_info = self.start_rsync()
-                        # if start_rysnc_result == 0:
-                        #     result = 0
-                        #     info = "启动rsync失败:{0}".format(start_rsync_info)
+                    # if start_rysnc_result == 0:
+                    #     result = 0
+                    #     info = "启动rsync失败:{0}".format(start_rsync_info)
 
         return result, info
 
@@ -385,6 +385,7 @@ if __name__ == '__main__':
         'username': 'root',
         'password': 'password'
     }
+    
     # server = {
     #     'hostname': '192.168.85.123',
     #     'username': 'rsync_demo',
