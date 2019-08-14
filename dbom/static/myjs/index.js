@@ -47,7 +47,7 @@ $(document).ready(function () {
                     $("#warning_client_num").css("color", "red");
                 }
 
-                $("tbody").append(content_el);
+                //$("tbody").append(content_el);
                 $("#loading").hide();
             }
         }

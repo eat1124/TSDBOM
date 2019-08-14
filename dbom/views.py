@@ -53,8 +53,7 @@ from .api import SQLApi
 from .rsync_demo import RsyncBackup
 
 funlist = []
-
-info = {"web_addr": "192.168.100.149", "port": "81", "username": "admin", "pass_wd": "Admin@2017", "token": "",
+info = {"web_addr": "192.168.100.149", "port": "81", "username": "admin", "pass_wd": "·", "token": "",
         "last_login": 0}
 
 
@@ -406,6 +405,69 @@ def get_server_time_very_second(request):
     if request.user.is_authenticated():
         current_time = datetime.datetime.now()
         return JsonResponse({"current_time": current_time.strftime('%Y-%m-%d %H:%M:%S')})
+
+def test_index(request, funid):
+    if request.user.is_authenticated():
+        # 左侧菜单栏
+        global funlist
+        funlist = []
+        if request.user.is_superuser == 1:
+            allfunlist = Fun.objects.all()
+            for fun in allfunlist:
+                funlist.append(fun)
+        else:
+            cursor = connection.cursor()
+            cursor.execute(
+                "select dbom_fun.id from dbom_group,dbom_fun,dbom_userinfo,dbom_userinfo_group,dbom_group_fun "
+                "where dbom_group.id=dbom_userinfo_group.group_id and dbom_group.id=dbom_group_fun.group_id and "
+                "dbom_group_fun.fun_id=dbom_fun.id and dbom_userinfo.id=dbom_userinfo_group.userinfo_id and userinfo_id= "
+                + str(request.user.userinfo.id) + " order by dbom_fun.sort"
+            )
+
+            rows = cursor.fetchall()
+            for row in rows:
+                try:
+                    fun = Fun.objects.get(id=row[0])
+                    funlist = getfun(funlist, fun)
+                except:
+                    pass
+        for index, value in enumerate(funlist):
+            if value.sort is None:
+                value.sort = 0
+        funlist = sorted(funlist, key=lambda fun: fun.sort)
+
+        dm = SQLApi.CustomFilter(settings.sql_credit)
+        if dm.msg == "链接数据库失败。":
+            service_status = "中断"
+            net_status = "中断"
+        else:
+            service_status = "正常"
+            net_status = "正常"
+
+        # 客户端列表
+        client_list = dm.get_all_install_clients()
+
+        # 报警客户端
+        warning_client_num = "loading..."
+
+        return render(request, "test_index.html", {
+            'username': request.user.userinfo.fullname,
+            "homepage": True,
+            "pagefuns": getpagefuns(funid, request),
+            "service_status": service_status,
+            "net_status": net_status,
+            "warning_client_num": warning_client_num,
+            "client_sum": len(client_list) if client_list else ""
+        })
+    else:
+        return HttpResponseRedirect("/login")
+def test_jobs(request,funid):
+    if request.user.is_authenticated() and request.session['isadmin']:
+        errors = []
+        return render(request, 'test_jobs.html',
+                      {'username': request.user.userinfo.fullname, "errors": errors})
+    else:
+        return HttpResponseRedirect("/login")
 
 
 def index(request, funid):
