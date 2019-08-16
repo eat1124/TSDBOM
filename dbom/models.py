@@ -68,8 +68,6 @@ class InspectionOperate(models.Model):
     """
     巡检操作
     """
-    startdate = models.DateField("开始时间", null=True)
-    enddate = models.DateField("结束时间", null=True)
     version = models.CharField("Commvault版本", max_length=128, blank=True, default="")
     host_name = models.CharField("主机名", max_length=128, blank=True, default="")
     os_platform = models.CharField("OS平台", max_length=128, blank=True, default="")
@@ -77,12 +75,15 @@ class InspectionOperate(models.Model):
     all_client = models.IntegerField("全部客户端", default=0)
     offline_client = models.IntegerField("脱机客户端", default=0)
     offline_client_content = models.CharField("脱机故障内容", max_length=512, blank=True, default="")
-    backup_time = models.IntegerField("备份次数", default=0)
-    fail_time = models.IntegerField("失败次数", default=0)
-    fail_log = models.CharField("失败日志", max_length=512, blank=True, default="")
-    total_capacity = models.DecimalField("存储总容量", null=True, max_digits=10, decimal_places=2)
-    used_capacity = models.DecimalField("已用容量", null=True, max_digits=10, decimal_places=2)
-    increase_capacity = models.DecimalField("平均每月增长量", null=True, max_digits=10, decimal_places=2)
+    # 介质服务器
+    library_server = models.CharField("介质服务器", max_length=2000, blank=True, default="")
+    # [{
+    #     "ma_name": "",
+    #     "ma_ip": "",
+    #     "total_capacity": 0,
+    #     "used_capacity": 0,
+    #     "per_month_add_rate": 0
+    # }...]
     state = models.CharField("状态", blank=True, max_length=20, default="")
 
 
@@ -97,49 +98,39 @@ class InspectionReport(models.Model):
     engineer = models.CharField("责任工程师", max_length=128, blank=True, default="")
     last_date = models.DateField("上次巡检日期", null=True)
     next_date = models.DateField("预计下次巡检日期", null=True)
-    first_choices = (
-        (1, "正常"),
-        (0, "异常"),
-    )
-    second_choices = (
-        (1, "是"),
-        (0, "否"),
-    )
-    third_choices = (
-        (1, "有"),
-        (0, "否"),
-    )
-    hardware_error = models.IntegerField("是否硬件故障", choices=first_choices, default=1)
-    hardware_error_content = models.CharField("硬件故障备注", max_length=512, blank=True, default="")
-    software_error = models.IntegerField("是否软件故障", choices=first_choices, default=1)
-    software_error_content = models.CharField("软件故障备注", max_length=512, blank=True, default="")
-    aging_plan_run = models.IntegerField("数据时效计划运行情况", choices=first_choices, default=1)
-    aging_plan_run_remark = models.CharField("时效计划运行备注", max_length=512, blank=True, default="")
-    backup_plan_run = models.IntegerField("数据备份计划运行情况", choices=first_choices, default=1)
-    backup_plan_run_remark = models.CharField("备份计划运行备注", max_length=512, blank=True, default="")
-    running_status = models.IntegerField("报告运行情况", choices=first_choices, default=1)
-    running_remark = models.CharField("运行情况备注", max_length=512, blank=True, default="")
-    client_add = models.IntegerField("最近是否打算要增加新的客户端", choices=second_choices, default=1)
-    client_add_remark = models.CharField("新增客户端备注", max_length=512, blank=True, default="")
-    backup_plan = models.IntegerField("备份计划", choices=first_choices, default=1)
-    backup_plan_remark = models.CharField("备份计划", max_length=512, blank=True, default="")
-    aging_plan = models.IntegerField("数据时效计划", choices=first_choices, default=1)
-    aging_plan_remark = models.CharField("时效计划备注", max_length=512, blank=True, default="")
-    error_send = models.IntegerField("有否发给cvadmin用户的错误报告", choices=third_choices, default=1)
-    error_send_remark = models.CharField("错误报告备注", max_length=512, blank=True, default="")
-    cdr_running = models.IntegerField("CDR运行情况", choices=first_choices, default=1)
-    cdr_running_remark = models.CharField("CDR运行备注", max_length=512, blank=True, default="")
-    media_run = models.IntegerField("备份介质运行状态", choices=first_choices, default=1)
-    media_run_remark = models.CharField("备份介质运行备注", max_length=512, blank=True, default="")
 
-    extra_error_content = models.CharField("其他错误报告内容", max_length=2000, blank=True, default="")
-    suggestion_and_summary = models.CharField("其他错误报告内容", max_length=2000, blank=True, default="")
+    hardware_error = models.CharField("硬件故障信息(json)", max_length=640, blank=True, default="")
+    software_error = models.CharField("软件故障信息", max_length=640, blank=True, default="")
+    aging_plan_run = models.CharField("数据时效计划运行情况", max_length=640, blank=True, default="")
+    backup_plan_run = models.CharField("数据备份计划运行情况", max_length=640, blank=True, default="")
+    running_status = models.CharField("报告运行情况", max_length=640, blank=True, default="")
+    client_add = models.CharField("增加新的客户端", max_length=640, blank=True, default="")
+    error_send = models.CharField("发给cvadmin用户的错误报告", max_length=640, blank=True, default="")
+    cdr_running = models.CharField("CDR运行情况", max_length=640, blank=True, default="")
+
+    extra_error_content = models.CharField("其他错误报告内容", max_length=640, blank=True, default="")
+    suggestion_and_summary = models.CharField("其他错误报告内容", max_length=640, blank=True, default="")
 
     client_sign = models.CharField("客户签字", max_length=512, blank=True, default="")
     client_sign_date = models.DateField("客户签字日期", null=True)
     engineer_sign = models.CharField("维修工程师签字", max_length=512, blank=True, default="")
     engineer_sign_date = models.DateField("维修工程师签字日期", null=True)
     state = models.CharField("状态", blank=True, max_length=20, default="")
+
+    # modify
+    commserver_status = models.CharField("CommServer灾难运行情况", max_length=640, blank=True, default="")
+
+    agent_backup_status = models.CharField("各类agent备份情况", max_length=2000, blank=True, default="")
+    # [{
+    #     "agent_name": "",
+    #     "status": 1/0,
+    #     "remark": ""
+    # },...]
+
+    period_capacity = models.CharField("一个周期数据大概容量:<=1000,>=1000", max_length=640, blank=True, default="")
+    auxiliary_copy = models.CharField("辅助拷贝", max_length=640, blank=True, default="")
+    library_status = models.CharField("备份介质运行状态", max_length=640, blank=True, default="")
+    recover_status = models.CharField("数据恢复演练情况", max_length=640, blank=True, default="")
 
 
 class RsyncHost(models.Model):

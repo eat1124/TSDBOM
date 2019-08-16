@@ -4,29 +4,24 @@ $('#sample_1').dataTable({
     "bSort": false,
     "bProcessing": true,
     "ajax": "../inspection_report_data/",
-    "columns": [{
-        "data": "inspection_id"
-    }, {
-        "data": "report_title"
-    }, {
-        "data": "inspection_date"
-    }, {
-        "data": "client_name"
-    }, {
-        "data": "engineer"
-    }, {
-        "data": "host_name"
-    }, {
-        "data": null
-    }
+    "columns": [
+        {"data": "inspection_id"},
+        {"data": "report_title"},
+        {"data": "inspection_date"},
+        {"data": "client_name"},
+        {"data": "engineer"},
+        {"data": "host_name"},
+        // 隐藏
+        {"data": null}
     ],
 
-    "columnDefs": [{
-        "targets": -1,
-        "data": null,
-        "width": "80px",
-        "defaultContent": "<button  id='edit' title='编辑' data-toggle='modal'  data-target='#static'  class='btn btn-xs btn-primary' type='button'><i class='fa fa-search'></i></button><button title='删除'  id='delrow' class='btn btn-xs btn-primary' type='button'><i class='fa fa-trash-o'></i></button>"
-    }],
+    "columnDefs": [
+        {
+            "targets": -1,
+            "data": null,
+            "width": "80px",
+            "defaultContent": "<button  id='edit' title='编辑' data-toggle='modal'  data-target='#static'  class='btn btn-xs btn-primary' type='button'><i class='fa fa-search'></i></button><button title='删除'  id='delrow' class='btn btn-xs btn-primary' type='button'><i class='fa fa-trash-o'></i></button>"
+        }],
     "oLanguage": {
         "sLengthMenu": "每页显示 _MENU_ 条记录",
         "sZeroRecords": "抱歉， 没有找到",
@@ -71,7 +66,6 @@ $('#sample_1 tbody').on('click', 'button#delrow', function () {
 $('#sample_1 tbody').on('click', 'button#edit', function () {
     var table = $('#sample_1').DataTable();
     var data = table.row($(this).parents('tr')).data();
-
     $("#inspection_id").val(data.inspection_id);
 
     $("#report_title").val(data.report_title);
@@ -81,38 +75,160 @@ $('#sample_1 tbody').on('click', 'button#edit', function () {
     $("#last_inspection_date").val(data.last_inspection_date);
     $("#next_inspection_date").val(data.next_inspection_date);
 
-    $("input[name='hardware']:radio[value='" + data.hardware + "']").prop('checked', 'true');
-    $("#hardware_error_content").val(data.hardware_error_content);
+    $("#address").val(data.address);
+    $("#contact").val(data.contact);
+    $("#position").val(data.position);
+    $("#tel").val(data.tel);
+    $("#fax").val(data.fax);
+    $("#email").val(data.email);
 
-    $("input[name='software']:radio[value='" + data.software + "']").prop('checked', 'true');
-    $("#software_error_content").val(data.software_error_content);
+    $("#version").val(data.version);
+    $("#host_name").val(data.host_name);
+    $("#os_platform").val(data.os_platform);
+    $("#patch").val(data.patch);
 
-    $("input[name='aging_plan_run']:radio[value='" + data.aging_plan_run + "']").prop('checked', 'true');
-    $("#aging_plan_run_remark").val(data.aging_plan_run_remark);
+    $("#all_client").val(data.all_client);
+    $("#offline_client").val(data.offline_client);
+    $("#offline_client_content").val(data.offline_client_content);
 
-    $("input[name='backup_plan_run']:radio[value='" + data.backup_plan_run + "']").prop('checked', 'true');
-    $("#backup_plan_run_remark").val(data.backup_plan_run_remark);
+    // 系统错误报告
+    var hardware_error = JSON.parse(data.hardware_error);
+    var software_error = JSON.parse(data.software_error);
+    var aging_plan_run = JSON.parse(data.aging_plan_run);
+    var backup_plan_run = JSON.parse(data.backup_plan_run);
+    var running_status = JSON.parse(data.running_status);
+    var client_add = JSON.parse(data.client_add);
+    var error_send = JSON.parse(data.error_send);
+    var cdr_running = JSON.parse(data.cdr_running);
 
-    $("input[name='running_status']:radio[value='" + data.running_status + "']").prop('checked', 'true');
-    $("#running_remark").val(data.running_remark);
+    var commserver_status = JSON.parse(data.commserver_status);
+    var agent_backup_status = JSON.parse(data.agent_backup_status);
+    var period_capacity = JSON.parse(data.period_capacity);
+    var auxiliary_copy = JSON.parse(data.auxiliary_copy);
+    var library_status = JSON.parse(data.library_status);
+    var recover_status = JSON.parse(data.recover_status);
 
-    $("input[name='client_add']:radio[value='" + data.client_add + "']").prop('checked', 'true');
-    $("#client_add_remark").val(data.client_add_remark);
+    // 清空agent_backup_status
+    for (var i = 0; i < agent_backup_status.length; i++) {
+        $("#form_body").children().eq(22).remove();
+    }
 
-    $("input[name='backup_plan']:radio[value='" + data.backup_plan + "']").prop('checked', 'true');
-    $("#backup_plan_remark").val(data.backup_plan_remark);
+    // 加载agent_backup_status
+    var pre_num = 21
+    var init_html = ""
+    for (index in agent_backup_status) {
+        index = parseInt(index)
+        for (index_inner in agent_backup_status) {
+            index_inner = parseInt(index_inner)
+            if (agent_backup_status[index_inner].tag == index + 1) {
+                if (agent_backup_status[index_inner].agent_name.indexOf("total_") != -1 && agent_backup_status[index_inner].agent_name.indexOf("_tag") == -1) {
+                    var pre_check = "";
+                    if (agent_backup_status[index_inner].status == 1) {
+                        pre_check = "checked";
+                    }
+                    // var pre_check = "";
+                    // if (agent_backup_status[index_inner].status == 1) {
+                    //     pre_check = "checked";
+                    // }
+                    init_html += '<div class="form-group">\n' +
+                        '<label class="col-md-3 control-label">' + agent_backup_status[index_inner].agent_name.replace("total_", "") + '最近二次全备份情况</label>\n' +
+                        '<div class="col-md-2">\n' +
+                        '    <div class="radio-list" style="margin-left: 20px;">\n' +
+                        '        <label class="radio-inline">\n' +
+                        '            <input type="radio"  value="1" name="total_' + agent_backup_status[index_inner].agent_name + '" id="total_' + agent_backup_status[index_inner].agent_name + '1"\n' +
+                        '                   checked>\n'.replace("checked", agent_backup_status[index_inner].status == 1 ? "checked" : "") +
+                        '            正常\n' +
+                        '        </label>\n' +
+                        '        <label class="radio-inline">\n' +
+                        '            <input type="radio" value="0" name="total_' + agent_backup_status[index_inner].agent_name + '" id="total_' + agent_backup_status[index_inner].agent_name + '2"\n' +
+                        '                   checked>\n'.replace("checked", agent_backup_status[index_inner].status == 0 ? "checked" : "") +
+                        '            异常\n' +
+                        '        </label>\n' +
+                        '    </div>\n' +
+                        '</div>\n' +
+                        '<label class="col-md-1 control-label">备注</label>\n' +
+                        '<div class="col-md-6">\n' +
+                        '    <input autocomplete="off" type="text" name="total_' + agent_backup_status[index_inner].agent_name + '_remark" id="total_' + agent_backup_status[index_inner].agent_name + '_remark"\n' +
+                        '            class="form-control" placeholder="" value="' + agent_backup_status[index_inner].remark + '">\n' +
+                        '    <input type="number" name="total_{{agent}}_tag" id="total_' + agent_backup_status[index_inner].agent_name + '_tag" value="' + index_inner + 1 + '" hidden>\n' +
+                        '    <div class="form-control-focus"></div>\n' +
+                        '</div>\n' +
+                        '</div>';
+                }
+                if (agent_backup_status[index_inner].agent_name.indexOf("part_") != -1 && agent_backup_status[index_inner].agent_name.indexOf("_tag") == -1) {
+                    var pre_check = "";
+                    if (agent_backup_status[index_inner].status == 1) {
+                        pre_check = "checked";
+                    }
+                    init_html += '<div class="form-group">\n' +
+                        '<label class="col-md-3 control-label">' + agent_backup_status[index_inner].agent_name.replace("part_", "") + '最近一周期增量/差异全备份情况</label>\n' +
+                        '<div class="col-md-2">\n' +
+                        '    <div class="radio-list" style="margin-left: 20px;">\n' +
+                        '        <label class="radio-inline">\n' +
+                        '            <input type="radio"  value="1" name="part_' + agent_backup_status[index_inner].agent_name + '" id="part_' + agent_backup_status[index_inner].agent_name + '1"\n' +
+                        '                   checked>\n'.replace("checked", agent_backup_status[index_inner].status == 1 ? "checked" : "") +
+                        '            正常\n' +
+                        '        </label>\n' +
+                        '        <label class="radio-inline">\n' +
+                        '            <input type="radio" value="0" name="part_' + agent_backup_status[index_inner].agent_name + '" id="part_' + agent_backup_status[index_inner].agent_name + '2"\n' +
+                        '                   checked>\n'.replace("checked", agent_backup_status[index_inner].status == 0 ? "checked" : "") +
+                        '            异常\n' +
+                        '        </label>\n' +
+                        '    </div>\n' +
+                        '</div>\n' +
+                        '<label class="col-md-1 control-label">备注</label>\n' +
+                        '<div class="col-md-6">\n' +
+                        '    <input autocomplete="off" type="text" name="part_' + agent_backup_status[index_inner].agent_name + '_remark" id="part_' + agent_backup_status[index_inner].agent_name + '_remark"\n' +
+                        '            class="form-control" placeholder="" value="' + agent_backup_status[index_inner].remark + '">\n' +
+                        '    <input type="number" name="part_{{agent}}_tag" id="part_' + agent_backup_status[index_inner].agent_name + '_tag" value="' + index_inner + 1 + '" hidden>\n' +
+                        '    <div class="form-control-focus"></div>\n' +
+                        '</div>\n' +
+                        '</div>';
+                }
+                pre_num++
+            }
+        }
+    }
+    $("#form_body").children().eq(21).after(init_html);
 
-    $("input[name='aging_plan']:radio[value='" + data.aging_plan + "']").prop('checked', 'true');
-    $("#aging_plan_remark").val(data.aging_plan_remark);
+    $("input[name='hardware']:radio[value='" + hardware_error.status + "']").prop('checked', 'true');
+    $("#hardware_error_content").val(hardware_error.remark);
 
-    $("input[name='error_send']:radio[value='" + data.error_send + "']").prop('checked', 'true');
-    $("#error_send_remark").val(data.error_send_remark);
+    $("input[name='software']:radio[value='" + software_error.status + "']").prop('checked', 'true');
+    $("#software_error_content").val(software_error.remark);
 
-    $("input[name='cdr_running']:radio[value='" + data.cdr_running + "']").prop('checked', 'true');
-    $("#cdr_running_remark").val(data.cdr_running_remark);
+    $("input[name='aging_plan_run']:radio[value='" + aging_plan_run.status + "']").prop('checked', 'true');
+    $("#aging_plan_run_remark").val(aging_plan_run.remark);
 
-    $("input[name='media_run']:radio[value='" + data.media_run + "']").prop('checked', 'true');
-    $("#media_run_remark").val(data.media_run_remark);
+    $("input[name='backup_plan_run']:radio[value='" + backup_plan_run.status + "']").prop('checked', 'true');
+    $("#backup_plan_run_remark").val(backup_plan_run.remark);
+
+    $("input[name='running_status']:radio[value='" + running_status.status + "']").prop('checked', 'true');
+    $("#running_remark").val(running_status.remark);
+
+    $("input[name='client_add']:radio[value='" + client_add.status + "']").prop('checked', 'true');
+    $("#client_add_remark").val(client_add.remark);
+
+    $("input[name='error_send']:radio[value='" + error_send.status + "']").prop('checked', 'true');
+    $("#error_send_remark").val(error_send.remark);
+
+    $("input[name='cdr_running']:radio[value='" + cdr_running.status + "']").prop('checked', 'true');
+    $("#cdr_running_remark").val(cdr_running.remark);
+
+    $("input[name='commserver_status']:radio[value='" + commserver_status.status + "']").prop('checked', 'true');
+    $("#commserver_status_remark").val(commserver_status.remark);
+
+    $("input[name='period_capacity']:radio[value='" + period_capacity.status + "']").prop('checked', 'true');
+    $("#period_capacity_remark").val(period_capacity.status);
+
+    $("input[name='auxiliary_copy']:radio[value='" + auxiliary_copy.status + "']").prop('checked', 'true');
+    $("#auxiliary_copy_remark").val(auxiliary_copy.remark);
+
+    $("input[name='library_status']:radio[value='" + library_status.status + "']").prop('checked', 'true');
+    $("#library_status_remark").val(library_status.remark);
+
+    $("input[name='recover_status']:radio[value='" + recover_status.status + "']").prop('checked', 'true');
+    $("#recover_remark").val(recover_status.remark);
 
     $("#extra_error_content").val(data.extra_error_content);
     $("#suggestion_and_summary").val(data.suggestion_and_summary);
@@ -121,136 +237,91 @@ $('#sample_1 tbody').on('click', 'button#edit', function () {
     $("#client_sign_date").val(data.client_sign_date);
     $("#engineer_sign_date").val(data.engineer_sign_date);
 
-    $("#address").val(data.address);
-    $("#contact").val(data.contact);
-    $("#position").val(data.position);
-    $("#tel").val(data.tel);
-    $("#fax").val(data.fax);
-    $("#email").val(data.email);
-
-    $("#startdate").val(data.startdate);
-    $("#enddate").val(data.enddate);
-    $("#version").val(data.version);
-    $("#host_name").val(data.host_name);
-    $("#os_platform").val(data.os_platform);
-    $("#patch").val(data.patch);
-    $("#all_client").val(data.all_client);
-    $("#offline_client").val(data.offline_client);
-    $("#offline_client_content").val(data.offline_client_content);
-    $("#backup_time").val(data.backup_time);
-    $("#fail_time").val(data.fail_time);
-    $("#fail_log").val(data.fail_log);
-    $("#total_capacity").val(data.total_capacity);
-    $("#used_capacity").val(data.used_capacity);
-    $("#increase_capacity").val(data.increase_capacity);
-
     // 隐藏
-    $('#report_title').prop("readonly", true);
-    $('#client_name').prop("disabled", true);
-    $('#inspection_date').prop("disabled", true);
-    $('#engineer').prop("readonly", true);
-    $('#next_inspection_date').prop("disabled", true);
-    $('#startdate').prop("disabled", true);
-    $('#enddate').prop("disabled", true);
-
-    $('#search_cv').css("cursor", "not-allowed");
-    $('#search_cv').unbind();
-
-    $('#offline_client_content').prop("readonly", true);
-    $('#fail_log').prop("readonly", true);
-
-    $('input[name="hardware"]').prop("disabled", true);
-    $('#hardware_error_content').prop("readonly", true);
-
-    $('input[name="software"]').prop("disabled", true);
-    $('#software_error_content').prop("readonly", true);
-
-    $('input[name="aging_plan_run"]').prop("disabled", true);
-    $('#aging_plan_run_remark').prop("readonly", true);
-
-    $('input[name="backup_plan_run"]').prop("disabled", true);
-    $('#backup_plan_run_remark').prop("readonly", true);
-
-    $('input[name="running_status"]').prop("disabled", true);
-    $('#running_remark').prop("readonly", true);
-
-    $('input[name="client_add"]').prop("disabled", true);
-    $('#client_add_remark').prop("readonly", true);
-
-    $('input[name="backup_plan"]').prop("disabled", true);
-    $('#backup_plan_remark').prop("readonly", true);
-
-    $('input[name="aging_plan"]').prop("disabled", true);
-    $('#aging_plan_remark').prop("readonly", true);
-
-    $('input[name="error_send"]').prop("disabled", true);
-    $('#error_send_remark').prop("readonly", true);
-
-    $('input[name="cdr_running"]').prop("disabled", true);
-    $('#cdr_running_remark').prop("readonly", true);
-
-    $('input[name="media_run"]').prop("disabled", true);
-    $('#media_run_remark').prop("readonly", true);
-
-
-    $('#extra_error_content').prop("readonly", true);
-    $('#suggestion_and_summary').prop("readonly", true);
-    $('#media_run_remark').prop("readonly", true);
-
-    $('#client_sign').prop("disabled", true);
-    $('#engineer_sign').prop("disabled", true);
-    $('#client_sign_date').prop("disabled", true);
-    $('#engineer_sign_date').prop("disabled", true);
+    // $('#report_title').prop("readonly", true);
+    // $('#client_name').prop("disabled", true);
+    // $('#inspection_date').prop("disabled", true);
+    // $('#engineer').prop("readonly", true);
+    // $('#next_inspection_date').prop("disabled", true);
+    // $('#startdate').prop("disabled", true);
+    // $('#enddate').prop("disabled", true);
+    //
+    // $('#search_cv').css("cursor", "not-allowed");
+    // $('#search_cv').unbind();
+    //
+    // $('#offline_client_content').prop("readonly", true);
+    // $('#fail_log').prop("readonly", true);
+    //
+    // $('input[name="hardware"]').prop("disabled", true);
+    // $('#hardware_error_content').prop("readonly", true);
+    //
+    // $('input[name="software"]').prop("disabled", true);
+    // $('#software_error_content').prop("readonly", true);
+    //
+    // $('input[name="aging_plan_run"]').prop("disabled", true);
+    // $('#aging_plan_run_remark').prop("readonly", true);
+    //
+    // $('input[name="backup_plan_run"]').prop("disabled", true);
+    // $('#backup_plan_run_remark').prop("readonly", true);
+    //
+    // $('input[name="running_status"]').prop("disabled", true);
+    // $('#running_remark').prop("readonly", true);
+    //
+    // $('input[name="client_add"]').prop("disabled", true);
+    // $('#client_add_remark').prop("readonly", true);
+    //
+    // $('input[name="backup_plan"]').prop("disabled", true);
+    // $('#backup_plan_remark').prop("readonly", true);
+    //
+    // $('input[name="aging_plan"]').prop("disabled", true);
+    // $('#aging_plan_remark').prop("readonly", true);
+    //
+    // $('input[name="error_send"]').prop("disabled", true);
+    // $('#error_send_remark').prop("readonly", true);
+    //
+    // $('input[name="cdr_running"]').prop("disabled", true);
+    // $('#cdr_running_remark').prop("readonly", true);
+    //
+    // $('input[name="media_run"]').prop("disabled", true);
+    // $('#media_run_remark').prop("readonly", true);
+    //
+    //
+    // $('#extra_error_content').prop("readonly", true);
+    // $('#suggestion_and_summary').prop("readonly", true);
+    // $('#media_run_remark').prop("readonly", true);
+    //
+    // $('#client_sign').prop("disabled", true);
+    // $('#engineer_sign').prop("disabled", true);
+    // $('#client_sign_date').prop("disabled", true);
+    // $('#engineer_sign_date').prop("disabled", true);
     $('#inspection_save').hide();
 });
-$("#new").click(function () {
-    $('#search_cv').html('查询<i class="fa fa-search"></i>').css("pointer-events", "auto");
-    // search
-    $('#search_cv').css("cursor", "pointer");
-    $('#search_cv').click(function () {
-        var start_date = $('#startdate').val();
-        var end_date = $('#enddate').val();
-        var start_date_sec = new Date(start_date);
-        var end_date_sec = new Date(end_date);
-        if (end_date_sec.getTime() < start_date_sec.getTime()) {
-            alert("结束时间不可小于开始时间，请重新选择。");
-            $('#enddate').val(start_date);
-        } else {
-            // 加载...
-            $(this).html('<span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true">\n' +
-                '</span>\n' + 'Loading...').css("pointer-events", "none");
-            $('#search_tag').val("load");
-            $.ajax({
-                type: "POST",
-                url: "../get_clients_info/",
-                data: {
-                    "start_date": start_date,
-                    "end_date": end_date,
-                    "csrfmiddlewaretoken": csrfToken,
-                },
-                success: function (data) {
-                    // 取消加载
-                    $('#search_cv').html('查询<i class="fa fa-search"></i>').css("pointer-events", "auto");
-                    $('#search_tag').val("");
-                    if (data.ret == 1) {
-                        $("#all_client").val(data.data.all_client);
-                        $("#backup_time").val(data.data.backup_time);
-                        $("#fail_time").val(data.data.fail_time);
-                        $("#total_capacity").val(data.data.total_capacity);
-                        $("#used_capacity").val(data.data.total_available_capacity);
-                        $("#version").val(data.data.version);
-                        $("#host_name").val(data.data.host_name);
-                        $("#patch").val(data.data.patch);
-                        $("#os_platform").val(data.data.os_platform);
-                        $("#offline_client").val(data.data.offline_client);
-                    } else {
-                        alert(data.data)
-                    }
-                }
-            })
-        }
-    });
 
+function search_cv() {
+    $.ajax({
+        type: "POST",
+        url: "../get_clients_info/",
+        data: {},
+        success: function (data) {
+            if (data.ret == 1) {
+                $("#all_client").val(data.data.all_client);
+                // $("#version").val(data.data.version);
+                // $("#host_name").val(data.data.host_name);
+                // $("#patch").val(data.data.patch);
+                // $("#os_platform").val(data.data.os_platform);
+                $("#offline_client").val(data.data.offline_client);
+
+
+            } else {
+                alert(data.data)
+            }
+        }
+    })
+}
+
+
+$("#new").click(function () {
+    search_cv();
     // radio重置
     $("input:radio[value='0']").prop('checked', false);
     $("input:radio[value='1']").prop('checked', true);
@@ -259,50 +330,7 @@ $("#new").click(function () {
     $('#report_title').prop("readonly", false);
     $('#client_name').prop("disabled", false);
     $('#inspection_date').prop("disabled", false);
-    $('#engineer').prop("readonly", false);
     $('#next_inspection_date').prop("disabled", false);
-    $('#startdate').prop("disabled", false);
-    $('#enddate').prop("disabled", false);
-
-    $('#offline_client_content').prop("readonly", false);
-    $('#fail_log').prop("readonly", false);
-
-    $('input[name="hardware"]').prop("disabled", false);
-    $('#hardware_error_content').prop("readonly", false);
-
-    $('input[name="software"]').prop("disabled", false);
-    $('#software_error_content').prop("readonly", false);
-
-    $('input[name="aging_plan_run"]').prop("disabled", false);
-    $('#aging_plan_run_remark').prop("readonly", false);
-
-    $('input[name="backup_plan_run"]').prop("disabled", false);
-    $('#backup_plan_run_remark').prop("readonly", false);
-
-    $('input[name="running_status"]').prop("disabled", false);
-    $('#running_remark').prop("readonly", false);
-
-    $('input[name="client_add"]').prop("disabled", false);
-    $('#client_add_remark').prop("readonly", false);
-
-    $('input[name="backup_plan"]').prop("disabled", false);
-    $('#backup_plan_remark').prop("readonly", false);
-
-    $('input[name="aging_plan"]').prop("disabled", false);
-    $('#aging_plan_remark').prop("readonly", false);
-
-    $('input[name="error_send"]').prop("disabled", false);
-    $('#error_send_remark').prop("readonly", false);
-
-    $('input[name="cdr_running"]').prop("disabled", false);
-    $('#cdr_running_remark').prop("readonly", false);
-
-    $('input[name="media_run"]').prop("disabled", false);
-    $('#media_run_remark').prop("readonly", false);
-
-    $('#extra_error_content').prop("readonly", false);
-    $('#suggestion_and_summary').prop("readonly", false);
-    $('#media_run_remark').prop("readonly", false);
 
     $('#client_sign').prop("disabled", false);
     $('#engineer_sign').prop("disabled", false);
@@ -311,68 +339,12 @@ $("#new").click(function () {
 
     $('#inspection_save').show();
 
+    $('input[type="text"]').val("")
     $('#inspection_id').val(0);
-    $("#report_title").val("");
-    $("#client_name").val("");
-    $("#inspection_date").val("");
-    $("#engineer").val("");
-    $("#last_inspection_date").val("");
-    $("#next_inspection_date").val("");
-
-    $("#hardware").val("");
-    $("#hardware_error_content").val("");
-    $("#software").val("");
-    $("#software_error_content").val("");
-    $("#aging_plan_run").val("");
-    $("#aging_plan_run_remark").val("");
-    $("#backup_plan_run").val("");
-    $("#backup_plan_run_remark").val("");
-    $("#running_status").val("");
-    $("#running_remark").val("");
-    $("#client_add").val("");
-    $("#client_add_remark").val("");
-    $("#backup_plan").val("");
-    $("#backup_plan_remark").val("");
-    $("#aging_plan").val("");
-    $("#aging_plan_remark").val("");
-    $("#error_send").val("");
-    $("#error_send_remark").val("");
-    $("#cdr_running").val("");
-    $("#cdr_running_remark").val("");
-    $("#media_run").val("");
-    $("#media_run_remark").val("");
-    $("#extra_error_content").val("");
-    $("#suggestion_and_summary").val("");
-    $("#client_sign").val("");
-    $("#engineer_sign").val("");
-    $('#client_sign_date').val("");
-    $('#engineer_sign_date').val("");
-
-    $("#address").val("");
-    $("#contact").val("");
-    $("#position").val("");
-    $("#tel").val("");
-    $("#fax").val("");
-    $("#email").val("");
-
-    $("#startdate").val("");
-    $("#enddate").val("");
-    $("#version").val("");
-    $("#host_name").val("");
-    $("#os_platform").val("");
-    $("#patch").val("");
-    $("#all_client").val("");
-    $("#offline_client").val("");
-    $("#offline_client_content").val("");
-    $("#backup_time").val("");
-    $("#fail_time").val("");
-    $("#fail_log").val("");
-    $("#total_capacity").val("");
-    $("#used_capacity").val("");
-    $("#increase_capacity").val("");
+    $('input[type="text"]').prop("readonly", false);
+    $('input[type="radio"]').prop("disabled", false);
 });
 
-// $('#client_name').select2();
 $('#client_name').change(function () {
     var client_id = $(this).val();
     $.ajax({
@@ -396,19 +368,6 @@ $('#client_name').change(function () {
             }
         }
     })
-});
-
-$('#startdate').datetimepicker({
-    format: 'yyyy-mm-dd',
-    autoclose: true,
-    startView: 2,
-    minView: 2,
-});
-$('#enddate').datetimepicker({
-    format: 'yyyy-mm-dd',
-    autoclose: true,
-    startView: 2,
-    minView: 2,
 });
 
 $('#inspection_date').datetimepicker({
@@ -442,19 +401,15 @@ $("#inspection_save").click(function () {
     var inspection_date_sec = new Date(inspection_date);
     var next_inspection_date_sec = new Date(next_inspection_date);
 
-    var search_tag = $('#search_tag').val();
     if (next_inspection_date_sec.getTime() < inspection_date_sec.getTime()) {
         alert("下次时间不可小于本次巡检时间，请重新选择。");
         $('#next_inspection_date').val(inspection_date);
-    } else if (search_tag == "load") {
-        alert("正在载入客户端数据，不可操作。");
     } else {
         var inspection_data = $('#inspection_form').serialize();
-
         $.ajax({
             type: "POST",
             url: "../save_inspection/",
-            data: $('#inspection_form').serialize(),
+            data: $('#inspection_form').serializeArray(),
             success: function (data) {
                 if (data.ret == 1) {
                     $('#static').modal('hide');

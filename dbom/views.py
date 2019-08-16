@@ -406,6 +406,7 @@ def get_server_time_very_second(request):
         current_time = datetime.datetime.now()
         return JsonResponse({"current_time": current_time.strftime('%Y-%m-%d %H:%M:%S')})
 
+
 def test_index(request, funid):
     if request.user.is_authenticated():
         # 左侧菜单栏
@@ -461,7 +462,9 @@ def test_index(request, funid):
         })
     else:
         return HttpResponseRedirect("/login")
-def test_jobs(request,funid):
+
+
+def test_jobs(request, funid):
     if request.user.is_authenticated() and request.session['isadmin']:
         errors = []
         return render(request, 'test_jobs.html',
@@ -1296,8 +1299,10 @@ def rsync_config_save(request):
 
                                 cur_rsync_model = RsyncModel()
                                 cur_rsync_model.model_name = model_name
-                                cur_rsync_model.main_path = origin_path if origin_path.endswith("/") else "{0}/".format(origin_path)
-                                cur_rsync_model.dest_path = dest_path if dest_path.endswith("/") else "{0}/".format(dest_path)
+                                cur_rsync_model.main_path = origin_path if origin_path.endswith("/") else "{0}/".format(
+                                    origin_path)
+                                cur_rsync_model.dest_path = dest_path if dest_path.endswith("/") else "{0}/".format(
+                                    dest_path)
                                 cur_rsync_model.rsync_config_id = cur_rsync_config.id
                                 cur_rsync_model.save()
                             result_info["ret"] = 1
@@ -1362,7 +1367,8 @@ def rsync_config_save(request):
                                         cur_periodictask.interval_id = int(intervals)
 
                                     # 任务名称
-                                    cur_periodictask.args = [main_host_ip, backup_host_ip, str(model_list), cur_periodictask.id]
+                                    cur_periodictask.args = [main_host_ip, backup_host_ip, str(model_list),
+                                                             cur_periodictask.id]
                                     cur_periodictask.save()
 
                             # RsyncConfig
@@ -1389,8 +1395,10 @@ def rsync_config_save(request):
                                             "data": "网络异常。"
                                         })
                                     else:
-                                        cur_rsync_model.main_path = origin_path if origin_path.endswith("/") else "{0}/".format(origin_path)
-                                        cur_rsync_model.dest_path = dest_path if dest_path.endswith("/") else "{0}/".format(dest_path)
+                                        cur_rsync_model.main_path = origin_path if origin_path.endswith(
+                                            "/") else "{0}/".format(origin_path)
+                                        cur_rsync_model.dest_path = dest_path if dest_path.endswith(
+                                            "/") else "{0}/".format(dest_path)
                                         cur_rsync_model.model_name = model_name
                                         cur_rsync_model.save()
                             else:
@@ -1401,8 +1409,10 @@ def rsync_config_save(request):
                                     model_name = request.POST.get('model_name_{0}'.format(i + 1), "")
 
                                     cur_rsync_model = RsyncModel()
-                                    cur_rsync_model.main_path = origin_path if origin_path.endswith("/") else "{0}/".format(origin_path)
-                                    cur_rsync_model.dest_path = dest_path if dest_path.endswith("/") else "{0}/".format(dest_path)
+                                    cur_rsync_model.main_path = origin_path if origin_path.endswith(
+                                        "/") else "{0}/".format(origin_path)
+                                    cur_rsync_model.dest_path = dest_path if dest_path.endswith("/") else "{0}/".format(
+                                        dest_path)
                                     cur_rsync_model.model_name = model_name
                                     cur_rsync_model.rsync_config_id = cur_rsync_config.id
                                     cur_rsync_model.save()
@@ -1585,7 +1595,8 @@ def rsync_recover(request):
                     for cur_model in model_list:
                         # 终端路径+源端文件
                         dest_path = cur_model.dest_path
-                        result, info = rsync_backup.rsync_push(dest_path, origin_host, cur_model.model_name, delete=True)
+                        result, info = rsync_backup.rsync_push(dest_path, origin_host, cur_model.model_name,
+                                                               delete=True)
                         if result == 1:
                             temp_info = "反向复制成功。"
                         else:
@@ -1697,15 +1708,19 @@ def server_exchange(request):
                 else:
                     check_nginx_result, check_nginx_info = rsync_backup.run_shell_cmd("ps -ef|grep nginx|grep -v grep")
                     if "nginx" in check_nginx_info:
-                        setup_nginx_result, setup_nginx_info = rsync_backup.run_shell_cmd("/usr/local/nginx/sbin/nginx -s reload")
+                        setup_nginx_result, setup_nginx_info = rsync_backup.run_shell_cmd(
+                            "/usr/local/nginx/sbin/nginx -s reload")
                     else:
                         setup_nginx_result, setup_nginx_info = rsync_backup.run_shell_cmd("/usr/local/nginx/sbin/nginx")
                         if setup_nginx_result == 1:
-                            check_uwsgi_result, check_uwsgi_info = rsync_backup.run_shell_cmd("ps -ef|grep uwsgi|grep -v grep")
+                            check_uwsgi_result, check_uwsgi_info = rsync_backup.run_shell_cmd(
+                                "ps -ef|grep uwsgi|grep -v grep")
                             if "uwsgi" in check_uwsgi_info:
-                                setup_uwsgi_result, setup_uwsgi_info = rsync_backup.run_shell_cmd("uwsgi --reload /var/www/html/TSDBOM/TSDBOM-master.pid")
+                                setup_uwsgi_result, setup_uwsgi_info = rsync_backup.run_shell_cmd(
+                                    "uwsgi --reload /var/www/html/TSDBOM/TSDBOM-master.pid")
                             else:
-                                setup_uwsgi_result, setup_uwsgi_info = rsync_backup.run_shell_cmd("uwsgi --ini /var/www/html/TSDBOM/uwsgi.ini")
+                                setup_uwsgi_result, setup_uwsgi_info = rsync_backup.run_shell_cmd(
+                                    "uwsgi --ini /var/www/html/TSDBOM/uwsgi.ini")
                                 if setup_uwsgi_result == 1:
                                     pass
                                 else:
@@ -1767,15 +1782,19 @@ def server_exchange(request):
                 else:
                     check_nginx_result, check_nginx_info = rsync_main.run_shell_cmd("ps -ef|grep nginx|grep -v grep")
                     if "nginx" in check_nginx_info:
-                        setup_nginx_result, setup_nginx_info = rsync_main.run_shell_cmd("/usr/local/nginx/sbin/nginx -s reload")
+                        setup_nginx_result, setup_nginx_info = rsync_main.run_shell_cmd(
+                            "/usr/local/nginx/sbin/nginx -s reload")
                     else:
                         setup_nginx_result, setup_nginx_info = rsync_main.run_shell_cmd("/usr/local/nginx/sbin/nginx")
                         if setup_nginx_result == 1:
-                            check_uwsgi_result, check_uwsgi_info = rsync_main.run_shell_cmd("ps -ef|grep uwsgi|grep -v grep")
+                            check_uwsgi_result, check_uwsgi_info = rsync_main.run_shell_cmd(
+                                "ps -ef|grep uwsgi|grep -v grep")
                             if "uwsgi" in check_uwsgi_info:
-                                setup_uwsgi_result, setup_uwsgi_info = rsync_main.run_shell_cmd("uwsgi --reload /var/www/html/TSDBOM/TSDBOM-master.pid")
+                                setup_uwsgi_result, setup_uwsgi_info = rsync_main.run_shell_cmd(
+                                    "uwsgi --reload /var/www/html/TSDBOM/TSDBOM-master.pid")
                             else:
-                                setup_uwsgi_result, setup_uwsgi_info = rsync_main.run_shell_cmd("uwsgi --ini /var/www/html/TSDBOM/uwsgi.ini")
+                                setup_uwsgi_result, setup_uwsgi_info = rsync_main.run_shell_cmd(
+                                    "uwsgi --ini /var/www/html/TSDBOM/uwsgi.ini")
                                 if setup_uwsgi_result == 1:
                                     pass
                                 else:
@@ -1822,16 +1841,19 @@ def rsync_history_data(request):
         all_rsync_history = RsyncRecord.objects.exclude(state="9").order_by("-starttime")
     if start_time and not end_time:
         start_time = datetime.datetime.strptime(start_time, '%Y-%m-%d').strftime('%Y-%m-%d %H:%M:%S')
-        all_rsync_history = RsyncRecord.objects.exclude(state="9").filter(starttime__gte=start_time).order_by("-starttime")
+        all_rsync_history = RsyncRecord.objects.exclude(state="9").filter(starttime__gte=start_time).order_by(
+            "-starttime")
     if not start_time and end_time:
         end_time = (datetime.datetime.strptime(end_time, '%Y-%m-%d') + datetime.timedelta(days=1) - datetime.timedelta(
             seconds=1)).strftime('%Y-%m-%d %H:%M:%S')
-        all_rsync_history = RsyncRecord.objects.exclude(state="9").filter(starttime__lte=end_time).order_by("-starttime")
+        all_rsync_history = RsyncRecord.objects.exclude(state="9").filter(starttime__lte=end_time).order_by(
+            "-starttime")
     if start_time and end_time:
         start_time = datetime.datetime.strptime(start_time, '%Y-%m-%d').strftime('%Y-%m-%d %H:%M:%S')
         end_time = (datetime.datetime.strptime(end_time, '%Y-%m-%d') + datetime.timedelta(days=1) - datetime.timedelta(
             seconds=1)).strftime('%Y-%m-%d %H:%M:%S')
-        all_rsync_history = RsyncRecord.objects.exclude(state="9").filter(starttime__range=(start_time, end_time)).order_by("-starttime")
+        all_rsync_history = RsyncRecord.objects.exclude(state="9").filter(
+            starttime__range=(start_time, end_time)).order_by("-starttime")
         if end_time < start_time:
             JsonResponse({"date": []})
 
@@ -1847,7 +1869,8 @@ def rsync_history_data(request):
                 "backup_host": rsync_history.backup_host,
                 "status": rsync_history.get_status_display(),
                 "rsync_log": rsync_history.log,
-                "start_time": "{0:%Y-%m-%d %H:%M:%S}".format(rsync_history.starttime) if rsync_history.starttime else "",
+                "start_time": "{0:%Y-%m-%d %H:%M:%S}".format(
+                    rsync_history.starttime) if rsync_history.starttime else "",
                 "end_time": "{0:%Y-%m-%d %H:%M:%S}".format(rsync_history.endtime) if rsync_history.endtime else "",
             })
     return JsonResponse({"data": all_rsync_history_list})
@@ -2011,10 +2034,25 @@ def inspection_report(request, funid):
                 "client_name": client.client_name,
             })
 
-        return render(request, "inspection.html", {
+        sql_api = SQLApi.CVApi(settings.sql_credit)
+
+        # 备份情况根据存在的agent生成
+        agent_list = []
+        all_sub_clients = sql_api.get_installed_sub_clients_for_status()
+
+        for sub_client in all_sub_clients:
+            cur_idataagent = ""
+            for x in sub_client["idataagent"].split(" "):
+                if x:
+                    cur_idataagent += x
+            if cur_idataagent not in agent_list:
+                agent_list.append(cur_idataagent)
+
+        return render(request, "inspection1.html", {
             'username': request.user.userinfo.fullname,
             "pagefuns": getpagefuns(funid, request),
             "client_data_list": client_data_list,
+            "agent_list": agent_list,
         })
     else:
         return HttpResponseRedirect("/login")
@@ -2039,10 +2077,6 @@ def inspection_report_data(request):
                 "fax": cur_client.fax,
                 "email": cur_client.email,
                 # 2.巡检操作
-                "startdate": cur_inspection_operate.startdate.strftime(
-                    "%Y-%m-%d") if cur_inspection_operate.startdate else "",
-                "enddate": cur_inspection_operate.enddate.strftime(
-                    "%Y-%m-%d") if cur_inspection_operate.enddate else "",
                 "version": cur_inspection_operate.version,
                 "host_name": cur_inspection_operate.host_name,
                 "os_platform": cur_inspection_operate.os_platform,
@@ -2050,12 +2084,6 @@ def inspection_report_data(request):
                 "all_client": cur_inspection_operate.all_client,
                 "offline_client": cur_inspection_operate.offline_client,
                 "offline_client_content": cur_inspection_operate.offline_client_content,
-                "backup_time": cur_inspection_operate.backup_time,
-                "fail_time": cur_inspection_operate.fail_time,
-                "fail_log": cur_inspection_operate.fail_log,
-                "total_capacity": cur_inspection_operate.total_capacity,
-                "used_capacity": cur_inspection_operate.used_capacity,
-                "increase_capacity": cur_inspection_operate.increase_capacity,
                 # 3.报告信息
                 "inspection_id": inspection_report.id,
                 "report_title": inspection_report.title,
@@ -2067,30 +2095,26 @@ def inspection_report_data(request):
                     "%Y-%m-%d") if inspection_report.last_date else "",
                 "next_inspection_date": inspection_report.next_date.strftime(
                     "%Y-%m-%d") if inspection_report.next_date else "",
-                "hardware": inspection_report.hardware_error,
-                "hardware_error_content": inspection_report.hardware_error_content,
-                "software": inspection_report.software_error,
-                "software_error_content": inspection_report.software_error_content,
+
+                "hardware_error": inspection_report.hardware_error,
+                "software_error": inspection_report.software_error,
                 "aging_plan_run": inspection_report.aging_plan_run,
-                "aging_plan_run_remark": inspection_report.aging_plan_run_remark,
                 "backup_plan_run": inspection_report.backup_plan_run,
-                "backup_plan_run_remark": inspection_report.backup_plan_run_remark,
                 "running_status": inspection_report.running_status,
-                "running_remark": inspection_report.running_remark,
                 "client_add": inspection_report.client_add,
-                "client_add_remark": inspection_report.client_add_remark,
-                "backup_plan": inspection_report.backup_plan,
-                "backup_plan_remark": inspection_report.backup_plan_remark,
-                "aging_plan": inspection_report.aging_plan,
-                "aging_plan_remark": inspection_report.aging_plan_remark,
                 "error_send": inspection_report.error_send,
-                "error_send_remark": inspection_report.error_send_remark,
                 "cdr_running": inspection_report.cdr_running,
-                "cdr_running_remark": inspection_report.cdr_running_remark,
-                "media_run": inspection_report.media_run,
-                "media_run_remark": inspection_report.media_run_remark,
+
+                "commserver_status": inspection_report.commserver_status,
+                "agent_backup_status": inspection_report.agent_backup_status,
+                "period_capacity": inspection_report.period_capacity,
+                "auxiliary_copy": inspection_report.auxiliary_copy,
+                "library_status": inspection_report.library_status,
+                "recover_status": inspection_report.recover_status,
+
                 "extra_error_content": inspection_report.extra_error_content,
                 "suggestion_and_summary": inspection_report.suggestion_and_summary,
+
                 "client_sign": inspection_report.client_sign,
                 "engineer_sign": inspection_report.engineer_sign,
                 "client_sign_date": inspection_report.client_sign_date.strftime(
@@ -2136,33 +2160,26 @@ def get_client_data(request):
 
 def get_clients_info(request):
     if request.user.is_authenticated():
-        start_date = request.POST.get("start_date", "")
-        end_date = request.POST.get("end_date", "")
-
-        if start_date and end_date:
-            start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d")
-            end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d")
-        else:
-            return JsonResponse({"ret": 0, "data": "时间选择有误。"})
-
         # 备份状态监控
-        cv_token = CVRestApiToken()
-        cv_token.login(info)
-        print("登录成功。。。")
-        cv_api = CVApiOperate(cv_token)
+        # cv_token = CVRestApiToken()
+        # cv_token.login(info)
+        # print("登录成功。。。")
+        # cv_api = CVApiOperate(cv_token)
+        #
+        # # 客户端版本/主机名/补丁
+        # host_client = cv_api.get_CS()
+        # try:
+        #     client_name = host_client["commCellName"]
+        #     cv_server_client_info = cv_api.get_client_info_by_name(client_name)
+        #     client_version = cv_server_client_info["GalaxyRelease"]
+        #     patch = cv_server_client_info["versionInfo"]
+        #     os_platform = cv_server_client_info["os_info"]
+        # except:
+        #     return JsonResponse({"ret": 0, "data": "获取客户端信息失败。"})
 
-        # 客户端版本/主机名/补丁
-        host_client = cv_api.get_CS()
-        try:
-            client_name = host_client["commCellName"]
-            cv_server_client_info = cv_api.get_client_info_by_name(client_name)
-            client_version = cv_server_client_info["GalaxyRelease"]
-            patch = cv_server_client_info["versionInfo"]
-            os_platform = cv_server_client_info["os_info"]
-        except:
-            return JsonResponse({"ret": 0, "data": "获取客户端信息失败。"})
+        sql_api = SQLApi.CVApi(settings.sql_credit)
         # 客户端列表
-        client_list = cv_api.get_client_list()
+        client_list = sql_api.get_all_install_clients()
 
         # 备份次数/失败次数
         backup_time = 0
@@ -2182,47 +2199,31 @@ def get_clients_info(request):
                 offline_client = cur.fetchone()
             except:
                 print("备份任务不存在!")
-            try:
-                cur.execute(
-                    """SELECT [jobid] FROM [commserv].[dbo].[CommCellBackupInfo] WHERE startdate>='{0}' AND enddate<='{1}'""".format(
-                        start_date, end_date))
-                backup_time = len(cur.fetchall())
-            except:
-                print("备份任务不存在!")
-            try:
-                cur.execute(
-                    """SELECT [jobid] FROM [commserv].[dbo].[CommCellBackupInfo] WHERE startdate>='{0}' AND enddate<='{1}' AND jobstatus!='Success'""".format(
-                        start_date, end_date))
-                fail_time = len(cur.fetchall())
-            except:
-                print("失败任务不存在!")
 
         # 存储总容量/已用容量/平均每月增长量
-        total_capacity = 0
-        total_available_capacity = 0
-        library_list = cv_api.get_library_list()
-        for library in library_list:
-            library_info = cv_api.get_library_info(library["library_id"])
-            cur_total_capacity = library_info["total_capacity"]
-            cur_total_available_capacity = library_info["total_available_capacity"]
-            if "GB" in cur_total_capacity:
-                cur_total_capacity = float(cur_total_capacity[:-3])
-                total_capacity += cur_total_capacity
-            if "GB" in cur_total_available_capacity:
-                cur_total_available_capacity = float(cur_total_available_capacity[:-3])
-                total_available_capacity += cur_total_available_capacity
+        # total_capacity = 0
+        # total_available_capacity = 0
+        # library_list = cv_api.get_library_list()
+        # for library in library_list:
+        #     library_info = cv_api.get_library_info(library["library_id"])
+        #     cur_total_capacity = library_info["total_capacity"]
+        #     cur_total_available_capacity = library_info["total_available_capacity"]
+        #     if "GB" in cur_total_capacity:
+        #         cur_total_capacity = float(cur_total_capacity[:-3])
+        #         total_capacity += cur_total_capacity
+        #     if "GB" in cur_total_available_capacity:
+        #         cur_total_available_capacity = float(cur_total_available_capacity[:-3])
+        #         total_available_capacity += cur_total_available_capacity
 
         # print(total_capacity, total_available_capacity)
         return JsonResponse({"ret": 1, "data": {
-            "host_name": client_name,
-            "version": client_version,
-            "patch": patch,
-            "os_platform": os_platform,
+            # "host_name": client_name,
+            # "version": client_version,
+            # "patch": patch,
+            # "os_platform": os_platform,
             "all_client": len(client_list),
-            "backup_time": backup_time,
-            "fail_time": fail_time,
-            "total_capacity": "%.2f" % total_capacity,
-            "total_available_capacity": "%.2f" % total_available_capacity,
+            # "total_capacity": "%.2f" % total_capacity,
+            # "total_available_capacity": "%.2f" % total_available_capacity,
             "offline_client": offline_client,
         }})
     else:
@@ -2244,8 +2245,6 @@ def save_inspection(request):
         inspection_date = request.POST.get("inspection_date", "")
         last_inspection_date = request.POST.get("last_inspection_date", "")
         next_inspection_date = request.POST.get("next_inspection_date", "")
-        startdate = request.POST.get("startdate", "")
-        enddate = request.POST.get("enddate", "")
         version = request.POST.get("version", "")
         host_name = request.POST.get("host_name", "")
         patch = request.POST.get("patch", "")
@@ -2255,19 +2254,45 @@ def save_inspection(request):
         all_client = request.POST.get("all_client", "")
         offline_client = request.POST.get("offline_client", "")
         offline_client_content = request.POST.get("offline_client_content", "")
-        backup_time = request.POST.get("backup_time", "")
-        fail_time = request.POST.get("fail_time", "")
-        fail_log = request.POST.get("fail_log", "")
-        total_capacity = request.POST.get("total_capacity", "")
-        used_capacity = request.POST.get("used_capacity", "")
-        increase_capacity = request.POST.get("increase_capacity", "")
 
-        # 3.系统错误报告
+        # 3.介质服务器
+
+        # 4.系统错误报告
         hardware = request.POST.get("hardware", "")
         hardware_error_content = request.POST.get("hardware_error_content", "")
 
         software = request.POST.get("software", "")
         software_error_content = request.POST.get("software_error_content", "")
+        total_keys = request.POST.keys()
+        agent_backup_info_list = []
+        for cur_key in total_keys:
+            cur_agent_info = {}
+            cur_key_mark = cur_key.split("_")
+            if "total_" in cur_key and len(cur_key_mark) == 2:
+                cur_agent_info["agent_name"] = cur_key
+                cur_agent_info["status"] = request.POST.get(cur_key, "")
+                for inner_key in total_keys:
+                    if cur_key in inner_key and cur_key != inner_key and "_tag" not in inner_key:
+                        cur_agent_info["remark"] = request.POST.get(inner_key, "")
+
+                    if cur_key in inner_key and cur_key != inner_key and "_tag" in inner_key:
+                        cur_agent_info["tag"] = request.POST.get(inner_key, "")
+
+                agent_backup_info_list.append(cur_agent_info)
+            if "part_" in cur_key and len(cur_key_mark) == 2:
+                cur_agent_info["agent_name"] = cur_key
+                cur_agent_info["status"] = request.POST.get(cur_key, "")
+                for inner_key in total_keys:
+                    if cur_key in inner_key and cur_key != inner_key and "_tag" not in inner_key:
+                        cur_agent_info["remark"] = request.POST.get(inner_key, "")
+
+                    if cur_key in inner_key and cur_key != inner_key and "_tag" in inner_key:
+                        cur_agent_info["tag"] = request.POST.get(inner_key, "")
+
+                agent_backup_info_list.append(cur_agent_info)
+
+        # 需要对这个数据做排序...
+        #...
 
         aging_plan_run = request.POST.get("aging_plan_run", "")
         aging_plan_run_remark = request.POST.get("aging_plan_run_remark", "")
@@ -2281,11 +2306,8 @@ def save_inspection(request):
         client_add = request.POST.get("client_add", "")
         client_add_remark = request.POST.get("client_add_remark", "")
 
-        backup_plan = request.POST.get("backup_plan", "")
-        backup_plan_remark = request.POST.get("backup_plan_remark", "")
-
-        aging_plan = request.POST.get("aging_plan", "")
-        aging_plan_remark = request.POST.get("aging_plan_remark", "")
+        period_capacity = request.POST.get("period_capacity", "")
+        period_capacity_remark = request.POST.get("period_capacity_remark", "")
 
         error_send = request.POST.get("error_send", "")
         error_send_remark = request.POST.get("error_send_remark", "")
@@ -2293,8 +2315,14 @@ def save_inspection(request):
         cdr_running = request.POST.get("cdr_running", "")
         cdr_running_remark = request.POST.get("cdr_running_remark", "")
 
-        media_run = request.POST.get("media_run", "")
-        media_run_remark = request.POST.get("media_run_remark", "")
+        auxiliary_copy = request.POST.get("auxiliary_copy", "")
+        auxiliary_copy_remark = request.POST.get("auxiliary_copy_remark", "")
+
+        library_status = request.POST.get("library_status", "")
+        library_status_remark = request.POST.get("library_status_remark", "")
+
+        recover = request.POST.get("recover", "")
+        recover_remark = request.POST.get("recover_remark", "")
 
         extra_error_content = request.POST.get("extra_error_content", "")
         suggestion_and_summary = request.POST.get("suggestion_and_summary", "")
@@ -2304,16 +2332,15 @@ def save_inspection(request):
         client_sign_date = request.POST.get("client_sign_date", "")
         engineer_sign_date = request.POST.get("engineer_sign_date", "")
 
+        commserver_status = request.POST.get("commserver_status", "")
+        commserver_status_remark = request.POST.get("commserver_status_remark", "")
+
         if report_title.strip() == "":
             return JsonResponse({"ret": 0, "data": "报告标题不能为空。"})
         if client_id.strip() == "":
             return JsonResponse({"ret": 0, "data": "客户名称不能为空。"})
         if engineer.strip() == "":
             return JsonResponse({"ret": 0, "data": "责任工程师不能为空。"})
-        if startdate.strip() == "":
-            return JsonResponse({"ret": 0, "data": "开始时间不能为空。"})
-        if enddate.strip() == "":
-            return JsonResponse({"ret": 0, "data": "结束时间不能为空。"})
         if client_sign.strip() == "":
             return JsonResponse({"ret": 0, "data": "客户必须签字。"})
         if engineer_sign.strip() == "":
@@ -2338,14 +2365,6 @@ def save_inspection(request):
             next_inspection_date = datetime.datetime.strptime(next_inspection_date, "%Y-%m-%d")
         else:
             next_inspection_date = None
-        if startdate:
-            startdate = datetime.datetime.strptime(startdate, "%Y-%m-%d")
-        else:
-            startdate = None
-        if enddate:
-            enddate = datetime.datetime.strptime(enddate, "%Y-%m-%d")
-        else:
-            enddate = None
 
         if all_client:
             all_client = int(all_client)
@@ -2355,26 +2374,7 @@ def save_inspection(request):
             offline_client = int(offline_client)
         else:
             offline_client = 0
-        if backup_time:
-            backup_time = int(backup_time)
-        else:
-            backup_time = 0
-        if fail_time:
-            fail_time = int(fail_time)
-        else:
-            fail_time = 0
-        if total_capacity:
-            total_capacity = float(total_capacity)
-        else:
-            total_capacity = 0
-        if used_capacity:
-            used_capacity = float(used_capacity)
-        else:
-            used_capacity = 0
-        if increase_capacity:
-            increase_capacity = float(increase_capacity)
-        else:
-            increase_capacity = 0
+
         if client_sign_date:
             client_sign_date = datetime.datetime.strptime(client_sign_date, "%Y-%m-%d")
         else:
@@ -2389,8 +2389,6 @@ def save_inspection(request):
             inspection_report = InspectionReport()
             inspection_operate = InspectionOperate()
             try:
-                inspection_operate.startdate = startdate
-                inspection_operate.enddate = enddate
                 inspection_operate.version = version
                 inspection_operate.host_name = host_name
                 inspection_operate.os_platform = os_platform
@@ -2398,13 +2396,8 @@ def save_inspection(request):
                 inspection_operate.all_client = all_client
                 inspection_operate.offline_client = offline_client
                 inspection_operate.offline_client_content = offline_client_content
-                inspection_operate.backup_time = backup_time
-                inspection_operate.fail_time = fail_time
-                inspection_operate.fail_log = fail_log
-                inspection_operate.total_capacity = total_capacity
-                inspection_operate.used_capacity = used_capacity
-                inspection_operate.increase_capacity = increase_capacity
                 inspection_operate.save()
+
                 inspection_report.inspection_operate = inspection_operate
                 inspection_report.client_data_id = client_id
 
@@ -2414,45 +2407,82 @@ def save_inspection(request):
                 inspection_report.last_date = last_inspection_date
                 inspection_report.next_date = next_inspection_date
 
-                inspection_report.hardware_error = int(hardware)
-                inspection_report.hardware_error_content = hardware_error_content
+                inspection_report.hardware_error = json.dumps({
+                    "status": int(hardware),
+                    "remark": hardware_error_content
+                })
 
-                inspection_report.software_error = int(software)
-                inspection_report.software_error_content = software_error_content
+                inspection_report.software_error = json.dumps({
+                    "status": int(software),
+                    "remark": software_error_content
+                })
 
-                inspection_report.aging_plan_run = int(aging_plan_run)
-                inspection_report.aging_plan_run_remark = aging_plan_run_remark
+                inspection_report.aging_plan_run = json.dumps({
+                    "status": int(aging_plan_run),
+                    "remark": aging_plan_run_remark
+                })
 
-                inspection_report.backup_plan_run = int(backup_plan_run)
-                inspection_report.backup_plan_run_remark = backup_plan_run_remark
+                inspection_report.backup_plan_run = json.dumps({
+                    "status": int(backup_plan_run),
+                    "remark": backup_plan_run_remark
+                })
 
-                inspection_report.running_status = int(running_status)
-                inspection_report.running_remark = running_remark
+                inspection_report.running_status = json.dumps({
+                    "status": int(running_status),
+                    "remark": running_remark
+                })
 
-                inspection_report.client_add = int(client_add)
-                inspection_report.client_add_remark = client_add_remark
+                inspection_report.client_add = json.dumps({
+                    "status": int(client_add),
+                    "remark": client_add_remark
+                })
 
-                inspection_report.backup_plan = int(backup_plan)
-                inspection_report.backup_plan_remark = backup_plan_remark
+                inspection_report.error_send = json.dumps({
+                    "status": int(error_send),
+                    "remark": error_send_remark
+                })
 
-                inspection_report.aging_plan = int(aging_plan)
-                inspection_report.aging_plan_remark = aging_plan_remark
-
-                inspection_report.error_send = int(error_send)
-                inspection_report.error_send_remark = error_send_remark
-
-                inspection_report.cdr_running = int(cdr_running)
-                inspection_report.cdr_running_remark = cdr_running_remark
-
-                inspection_report.media_run = int(media_run)
-                inspection_report.media_run_remark = media_run_remark
+                inspection_report.cdr_running = json.dumps({
+                    "status": int(cdr_running),
+                    "remark": cdr_running_remark
+                })
 
                 inspection_report.extra_error_content = extra_error_content
                 inspection_report.suggestion_and_summary = suggestion_and_summary
+
                 inspection_report.client_sign = client_sign
                 inspection_report.engineer_sign = engineer_sign
                 inspection_report.client_sign_date = client_sign_date
                 inspection_report.engineer_sign_date = engineer_sign_date
+
+                # modify
+                inspection_report.commserver_status = json.dumps({
+                    "status": int(commserver_status),
+                    "remark": commserver_status_remark,
+                })
+
+                inspection_report.agent_backup_status = json.dumps(agent_backup_info_list)
+
+                inspection_report.period_capacity = json.dumps({
+                    "status": int(period_capacity),
+                    "remark": period_capacity_remark,
+                })
+
+                inspection_report.auxiliary_copy = json.dumps({
+                    "status": int(auxiliary_copy),
+                    "remark": auxiliary_copy_remark,
+                })
+
+                inspection_report.library_status = json.dumps({
+                    "status": int(library_status),
+                    "remark": library_status_remark,
+                })
+
+                inspection_report.recover_status = json.dumps({
+                    "status": int(recover),
+                    "remark": recover_remark,
+                })
+
                 inspection_report.save()
             except Exception as e:
                 print(e)
@@ -2460,82 +2490,7 @@ def save_inspection(request):
             else:
                 return JsonResponse({"ret": 1, "data": "保存成功。"})
         else:
-            try:
-                inspection_report = InspectionReport.objects.get(id=inspection_id)
-                inspection_operate = inspection_report.inspection_operate
-            except Exception as e:
-                return JsonResponse({"ret": 0, "data": "该巡检报告不存在。"})
-            try:
-                inspection_operate.startdate = startdate
-                inspection_operate.enddate = enddate
-                inspection_operate.version = version
-                inspection_operate.host_name = host_name
-                inspection_operate.os_platform = os_platform
-                inspection_operate.patch = patch
-                inspection_operate.all_client = all_client
-                inspection_operate.offline_client = offline_client
-                inspection_operate.offline_client_content = offline_client_content
-                inspection_operate.backup_time = backup_time
-                inspection_operate.fail_time = fail_time
-                inspection_operate.fail_log = fail_log
-                inspection_operate.total_capacity = total_capacity
-                inspection_operate.used_capacity = used_capacity
-                inspection_operate.increase_capacity = increase_capacity
-                inspection_operate.save()
-
-                inspection_report.inspection_operate = inspection_operate
-                inspection_report.client_data_id = client_id
-
-                inspection_report.title = report_title
-                inspection_report.cur_date = inspection_date
-                inspection_report.engineer = engineer
-                inspection_report.last_date = last_inspection_date
-                inspection_report.next_date = next_inspection_date
-
-                inspection_report.hardware_error = int(hardware)
-                inspection_report.hardware_error_content = hardware_error_content
-
-                inspection_report.software_error = int(software)
-                inspection_report.software_error_content = software_error_content
-
-                inspection_report.aging_plan_run = int(aging_plan_run)
-                inspection_report.aging_plan_run_remark = aging_plan_run_remark
-
-                inspection_report.backup_plan_run = int(backup_plan_run)
-                inspection_report.backup_plan_run_remark = backup_plan_run_remark
-
-                inspection_report.running_status = int(running_status)
-                inspection_report.running_remark = running_remark
-
-                inspection_report.client_add = int(client_add)
-                inspection_report.client_add_remark = client_add_remark
-
-                inspection_report.backup_plan = int(backup_plan)
-                inspection_report.backup_plan_remark = backup_plan_remark
-
-                inspection_report.aging_plan = int(aging_plan)
-                inspection_report.aging_plan_remark = aging_plan_remark
-
-                inspection_report.error_send = int(error_send)
-                inspection_report.error_send_remark = error_send_remark
-
-                inspection_report.cdr_running = int(cdr_running)
-                inspection_report.cdr_running_remark = cdr_running_remark
-
-                inspection_report.media_run = int(media_run)
-                inspection_report.media_run_remark = media_run_remark
-
-                inspection_report.extra_error_content = extra_error_content
-                inspection_report.suggestion_and_summary = suggestion_and_summary
-                inspection_report.client_sign = client_sign
-                inspection_report.engineer_sign = engineer_sign
-                inspection_report.client_sign_date = client_sign_date
-                inspection_report.engineer_sign_date = engineer_sign_date
-                inspection_report.save()
-            except:
-                return JsonResponse({"ret": 0, "data": "数据存储失败。"})
-            else:
-                return JsonResponse({"ret": 1, "data": '修改成功。'})
+            return JsonResponse({"ret": 0, "data": "网络异常。"})
     else:
         return JsonResponse({"ret": 0, "data": "用户认证失败。"})
 

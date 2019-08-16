@@ -42,26 +42,26 @@ def remote_sync(main_host_ip, dest_host_ip, model_list, periodictask_id):
     else:
         cur_rsync_config = cur_periodictask.rsyncconfig
         try:
-            cur_rsync_host = RsyncHost.objects.get(id=int(main_host_ip))
+            cur_backup_host = RsyncHost.objects.get(id=int(dest_host_ip))
         except RsyncHost.DoesNotExist as e:
             pass
         else:
             client = {
-                'hostname': cur_rsync_host.ip_addr,
-                'username': cur_rsync_host.username,
-                'password': cur_rsync_host.password,
+                'hostname': cur_backup_host.ip_addr,
+                'username': cur_backup_host.username,
+                'password': cur_backup_host.password,
             }
             rsync_backup = RsyncBackup(client)
             if rsync_backup.msg == "远程连接成功。":
                 try:
-                    cur_backup_host = RsyncHost.objects.get(id=int(dest_host_ip))
+                    cur_rsync_host = RsyncHost.objects.get(id=int(main_host_ip))
                 except RsyncHost.DoesNotExist as e:
                     temp_log += info
                     result = 0
                     cur_rsync_record.starttime = start_time
                     cur_rsync_record.endtime = datetime.datetime.now()
                     cur_rsync_record.status = 2
-                    cur_rsync_record.log = "备份服务器不存在：%s" % temp_log
+                    cur_rsync_record.log = "源端服务器不存在：%s" % temp_log
                     cur_rsync_record.rsync_config_id = cur_rsync_config.id
                     cur_rsync_record.save()
                     return
@@ -81,31 +81,31 @@ def remote_sync(main_host_ip, dest_host_ip, model_list, periodictask_id):
                             cur_rsync_record.rsync_config_id = cur_rsync_config.id
                             cur_rsync_record.save()
                             return
-                # 对比日志保存
-                log_result, log_info = 1, ""
-                # 查看服务端日志
-                try:
-                    server_host = RsyncHost.objects.get(id=int(dest_host_ip))
-                except RsyncHost.DoesNotExist as e:
-                    pass
-                else:
-                    client = {
-                        'hostname': server_host.ip_addr,
-                        'username': server_host.username,
-                        'password': server_host.password,
-                    }
-                    server_rsync = RsyncBackup(client)
-                    if server_rsync.msg == "远程连接成功。":
-                        log_result, log_info = server_rsync.cat_rsync_log()
+                    # 对比日志保存
+                    log_result, log_info = 1, ""
+                    # 查看服务端日志
+                    try:
+                        server_host = RsyncHost.objects.get(id=int(main_host_ip))
+                    except RsyncHost.DoesNotExist as e:
+                        pass
+                    else:
+                        client = {
+                            'hostname': server_host.ip_addr,
+                            'username': server_host.username,
+                            'password': server_host.password,
+                        }
+                        server_rsync = RsyncBackup(client)
+                        if server_rsync.msg == "远程连接成功。":
+                            log_result, log_info = server_rsync.cat_rsync_log()
 
-                cur_rsync_record.log = log_info
-                cur_rsync_record.starttime = start_time
-                cur_rsync_record.endtime = datetime.datetime.now()
-                cur_rsync_record.status = 1
-                cur_rsync_record.main_host = cur_rsync_host.ip_addr
-                cur_rsync_record.backup_host = cur_backup_host.ip_addr
-                cur_rsync_record.rsync_config_id = cur_rsync_config.id
-                cur_rsync_record.save()
+                    cur_rsync_record.log = log_info
+                    cur_rsync_record.starttime = start_time
+                    cur_rsync_record.endtime = datetime.datetime.now()
+                    cur_rsync_record.status = 1
+                    cur_rsync_record.main_host = cur_rsync_host.ip_addr
+                    cur_rsync_record.backup_host = cur_backup_host.ip_addr
+                    cur_rsync_record.rsync_config_id = cur_rsync_config.id
+                    cur_rsync_record.save()
             else:
                 cur_rsync_record.starttime = start_time
                 cur_rsync_record.endtime = datetime.datetime.now()
