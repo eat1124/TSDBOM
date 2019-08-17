@@ -238,11 +238,11 @@ $('#sample_1 tbody').on('click', 'button#edit', function () {
     $("#engineer_sign_date").val(data.engineer_sign_date);
 
     // 隐藏
-    $('input[type="text"]').prop("readonly", true);
-    $('input[type="radio"]').prop("disabled", true);
-    $('input[type="datetime"]').prop("disabled", true);
-    $('textarea').prop("readonly", true);
-    $('select').prop("disabled", true);
+    $('#inspection_form').find('input[type="text"]').prop("readonly", true);
+    $('#inspection_form').find('input[type="radio"]').prop("disabled", true);
+    $('#inspection_form').find('input[type="datetime"]').prop("disabled", true);
+    $('#inspection_form').find('textarea').prop("readonly", true);
+    $('#inspection_form').find('select').prop("disabled", true);
 
     $('#inspection_save').hide();
 });
@@ -275,22 +275,20 @@ $("#new").click(function () {
 
 
     // 展示
-    $('input[type="text"]').prop("readonly", false);
-    $('input[type="number"]').prop("readonly", false);
-    $('input[type="radio"]').prop("disabled", false);
-    $('input[type="datetime"]').prop("disabled", false);
-    $('textarea').prop("readonly", false);
-    $('select').prop("disabled", false);
+    $('#inspection_form').find('input[type="text"]').prop("readonly", false).val("");
+    $('#inspection_form').find('input[type="number"]').prop("readonly", false).val("");
+    $('#inspection_form').find('input[type="radio"]').prop("disabled", false);
+    $('#inspection_form').find('input[type="datetime"]').prop("disabled", false).val("");
+    $('#inspection_form').find('textarea').prop("readonly", false).val("");
+    $('#inspection_form').find('select').prop("disabled", false).val("");
     $('#last_inspection_date').prop("readonly", true);
     // radio重置
-    $("input:radio[value='0']").prop('checked', false);
-    $("input:radio[value='1']").prop('checked', true);
+    $('#inspection_form').find("input:radio[value='0']").prop('checked', false);
+    $('#inspection_form').find("input:radio[value='1']").prop('checked', true);
 
     $('#inspection_save').show();
 
-    $('input[type="text"]').val("")
     $('#inspection_id').val(0);
-    $('select').val("")
 });
 
 $('#client_name').change(function () {
