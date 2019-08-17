@@ -238,62 +238,12 @@ $('#sample_1 tbody').on('click', 'button#edit', function () {
     $("#engineer_sign_date").val(data.engineer_sign_date);
 
     // 隐藏
-    // $('#report_title').prop("readonly", true);
-    // $('#client_name').prop("disabled", true);
-    // $('#inspection_date').prop("disabled", true);
-    // $('#engineer').prop("readonly", true);
-    // $('#next_inspection_date').prop("disabled", true);
-    // $('#startdate').prop("disabled", true);
-    // $('#enddate').prop("disabled", true);
-    //
-    // $('#search_cv').css("cursor", "not-allowed");
-    // $('#search_cv').unbind();
-    //
-    // $('#offline_client_content').prop("readonly", true);
-    // $('#fail_log').prop("readonly", true);
-    //
-    // $('input[name="hardware"]').prop("disabled", true);
-    // $('#hardware_error_content').prop("readonly", true);
-    //
-    // $('input[name="software"]').prop("disabled", true);
-    // $('#software_error_content').prop("readonly", true);
-    //
-    // $('input[name="aging_plan_run"]').prop("disabled", true);
-    // $('#aging_plan_run_remark').prop("readonly", true);
-    //
-    // $('input[name="backup_plan_run"]').prop("disabled", true);
-    // $('#backup_plan_run_remark').prop("readonly", true);
-    //
-    // $('input[name="running_status"]').prop("disabled", true);
-    // $('#running_remark').prop("readonly", true);
-    //
-    // $('input[name="client_add"]').prop("disabled", true);
-    // $('#client_add_remark').prop("readonly", true);
-    //
-    // $('input[name="backup_plan"]').prop("disabled", true);
-    // $('#backup_plan_remark').prop("readonly", true);
-    //
-    // $('input[name="aging_plan"]').prop("disabled", true);
-    // $('#aging_plan_remark').prop("readonly", true);
-    //
-    // $('input[name="error_send"]').prop("disabled", true);
-    // $('#error_send_remark').prop("readonly", true);
-    //
-    // $('input[name="cdr_running"]').prop("disabled", true);
-    // $('#cdr_running_remark').prop("readonly", true);
-    //
-    // $('input[name="media_run"]').prop("disabled", true);
-    // $('#media_run_remark').prop("readonly", true);
-    //
-    //
-    // $('#extra_error_content').prop("readonly", true);
-    // $('#suggestion_and_summary').prop("readonly", true);
-    // $('#media_run_remark').prop("readonly", true);
-    //
-    // $('#client_sign').prop("disabled", true);
-    // $('#engineer_sign').prop("disabled", true);
-    // $('#client_sign_date').prop("disabled", true);
-    // $('#engineer_sign_date').prop("disabled", true);
+    $('input[type="text"]').prop("readonly", true);
+    $('input[type="radio"]').prop("disabled", true);
+    $('input[type="datetime"]').prop("disabled", true);
+    $('textarea').prop("readonly", true);
+    $('select').prop("disabled", true);
+
     $('#inspection_save').hide();
 });
 
@@ -322,27 +272,25 @@ function search_cv() {
 
 $("#new").click(function () {
     search_cv();
+
+
+    // 展示
+    $('input[type="text"]').prop("readonly", false);
+    $('input[type="number"]').prop("readonly", false);
+    $('input[type="radio"]').prop("disabled", false);
+    $('input[type="datetime"]').prop("disabled", false);
+    $('textarea').prop("readonly", false);
+    $('select').prop("disabled", false);
+    $('#last_inspection_date').prop("readonly", true);
     // radio重置
     $("input:radio[value='0']").prop('checked', false);
     $("input:radio[value='1']").prop('checked', true);
-
-    // 展示
-    $('#report_title').prop("readonly", false);
-    $('#client_name').prop("disabled", false);
-    $('#inspection_date').prop("disabled", false);
-    $('#next_inspection_date').prop("disabled", false);
-
-    $('#client_sign').prop("disabled", false);
-    $('#engineer_sign').prop("disabled", false);
-    $('#client_sign_date').prop("disabled", false);
-    $('#engineer_sign_date').prop("disabled", false);
 
     $('#inspection_save').show();
 
     $('input[type="text"]').val("")
     $('#inspection_id').val(0);
-    $('input[type="text"]').prop("readonly", false);
-    $('input[type="radio"]').prop("disabled", false);
+    $('select').val("")
 });
 
 $('#client_name').change(function () {
