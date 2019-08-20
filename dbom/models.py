@@ -109,7 +109,7 @@ class InspectionReport(models.Model):
     cdr_running = models.CharField("CDR运行情况", max_length=640, blank=True, default="")
 
     extra_error_content = models.CharField("其他错误报告内容", max_length=640, blank=True, default="")
-    suggestion_and_summary = models.CharField("其他错误报告内容", max_length=640, blank=True, default="")
+    suggestion_and_summary = models.CharField("建议和总结", max_length=640, blank=True, default="")
 
     client_sign = models.CharField("客户签字", max_length=512, blank=True, default="")
     client_sign_date = models.DateField("客户签字日期", null=True)

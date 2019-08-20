@@ -20,6 +20,7 @@
             </div>
         </div>
     </div>
+
     <table class="table table-striped table-bordered table-hover table-checkable order-column" id="sample_1">
         <thead>
         <tr>
@@ -35,6 +36,8 @@
         <tbody>
         </tbody>
     </table>
+
+
     <div id="static" data-backdrop="static" data-keyboard="false" class="modal fade text-center" tabindex="-1"
          role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg text-left" style="display: inline-block; width: auto;">
@@ -165,14 +168,15 @@
                             <div class="form-group">
                                 <label class="col-md-2 control-label">CommVault版本</label>
                                 <div class="col-md-4">
-                                    <input id="version" autocomplete="off" type="text" name="version"
+                                    <input id="commv_version" autocomplete="off" type="text" name="commv_version"
                                            class="form-control" placeholder="" value="" readonly>
                                     <div class="form-control-focus"></div>
                                 </div>
 
                                 <label class="col-md-2 control-label">补丁</label>
                                 <div class="col-md-4">
-                                    <input id="patch" autocomplete="off" type="text" name="patch" class="form-control"
+                                    <input id="commv_patch" autocomplete="off" type="text" name="commv_patch"
+                                           class="form-control"
                                            placeholder="" value="" readonly>
                                     <div class="form-control-focus"></div>
                                 </div>
@@ -180,13 +184,14 @@
                             <div class="form-group">
                                 <label class="col-md-2 control-label">主机名</label>
                                 <div class="col-md-4">
-                                    <input id="host_name" autocomplete="off" type="text" name="host_name"
+                                    <input id="commv_host_name" autocomplete="off" type="text" name="commv_host_name"
                                            class="form-control" placeholder="" value="" readonly>
                                     <div class="form-control-focus"></div>
                                 </div>
                                 <label class="col-md-2 control-label">OS平台</label>
                                 <div class="col-md-4">
-                                    <input id="os_platform" autocomplete="off" type="text" name="os_platform"
+                                    <input id="commv_os_platform" autocomplete="off" type="text"
+                                           name="commv_os_platform"
                                            class="form-control" placeholder="" value="" readonly>
                                     <div class="form-control-focus"></div>
                                 </div>
@@ -228,488 +233,6 @@
                                     <hr>
                                     <div class="form-control-focus"></div>
                                 </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-md-2 control-label">bak-ma1</label>
-                                <div class="col-md-2">
-                                    <input  autocomplete="off" type="text" name="all_capacity"
-                                           class="form-control" placeholder="" value="192.168.100.101" readonly>
-                                    <div class="form-control-focus"></div>
-                                </div>
-                                <div class="col-md-8">
-                                    <label class="col-md-2 control-label">存储总容量</label>
-                                    <div class="col-md-2">
-                                        <input id="all_capacity" autocomplete="off" type="text" name="all_capacity"
-                                               class="form-control" placeholder="" value="" readonly>
-                                        <div class="form-control-focus"></div>
-                                    </div>
-                                    <label class="col-md-2 control-label">已用容量</label>
-                                    <div class="col-md-2">
-                                        <input id="used_capacity" autocomplete="off" type="text" name="used_capacity"
-                                               class="form-control" placeholder="" value="" readonly>
-                                        <div class="form-control-focus"></div>
-                                    </div>
-                                    <label class="col-md-2 control-label">月增长率</label>
-                                    <div class="col-md-2">
-                                        <input id="increase_capacity" autocomplete="off" type="text"
-                                               name="increase_capacity" class="form-control" placeholder="" value=""
-                                               readonly>
-                                        <div class="form-control-focus"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-md-2 control-label">bak-ma2</label>
-                                <div class="col-md-2">
-                                    <input  autocomplete="off" type="text" name="all_capacity"
-                                           class="form-control" placeholder="" value="192.168.100.102" readonly>
-                                    <div class="form-control-focus"></div>
-                                </div>
-                                <div class="col-md-8">
-                                    <label class="col-md-2 control-label">存储总容量</label>
-                                    <div class="col-md-2">
-                                        <input id="all_capacity" autocomplete="off" type="text" name="all_capacity"
-                                               class="form-control" placeholder="" value="" readonly>
-                                        <div class="form-control-focus"></div>
-                                    </div>
-                                    <label class="col-md-2 control-label">已用容量</label>
-                                    <div class="col-md-2">
-                                        <input id="used_capacity" autocomplete="off" type="text" name="used_capacity"
-                                               class="form-control" placeholder="" value="" readonly>
-                                        <div class="form-control-focus"></div>
-                                    </div>
-                                    <label class="col-md-2 control-label">月增长率</label>
-                                    <div class="col-md-2">
-                                        <input id="increase_capacity" autocomplete="off" type="text"
-                                               name="increase_capacity" class="form-control" placeholder="" value=""
-                                               readonly>
-                                        <div class="form-control-focus"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-md-2 control-label">bak-ma3</label>
-                                <div class="col-md-2">
-                                    <input  autocomplete="off" type="text" name="all_capacity"
-                                           class="form-control" placeholder="" value="192.168.100.103" readonly>
-                                    <div class="form-control-focus"></div>
-                                </div>
-                                <div class="col-md-8">
-                                    <label class="col-md-2 control-label">存储总容量</label>
-                                    <div class="col-md-2">
-                                        <input id="all_capacity" autocomplete="off" type="text" name="all_capacity"
-                                               class="form-control" placeholder="" value="" readonly>
-                                        <div class="form-control-focus"></div>
-                                    </div>
-                                    <label class="col-md-2 control-label">已用容量</label>
-                                    <div class="col-md-2">
-                                        <input id="used_capacity" autocomplete="off" type="text" name="used_capacity"
-                                               class="form-control" placeholder="" value="" readonly>
-                                        <div class="form-control-focus"></div>
-                                    </div>
-                                    <label class="col-md-2 control-label">月增长率</label>
-                                    <div class="col-md-2">
-                                        <input id="increase_capacity" autocomplete="off" type="text"
-                                               name="increase_capacity" class="form-control" placeholder="" value=""
-                                               readonly>
-                                        <div class="form-control-focus"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-md-2 control-label"
-                                       style="font-weight:bold;font-size:15px;">系统错误报告</label>
-                                <div class="col-md-10">
-                                    <hr>
-                                    <div class="form-control-focus"></div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-md-3 control-label">有否硬件故障</label>
-                                <div class="col-md-2">
-                                    <div class="radio-list" style="margin-left: 20px;">
-                                        <label class="radio-inline">
-                                            <input type="radio" name="hardware" id="hardware1" value="1" checked>
-                                            正常
-                                        </label>
-                                        <label class="radio-inline">
-                                            <input type="radio" name="hardware" id="hardware2" value="0">
-                                            异常
-                                        </label>
-                                    </div>
-                                </div>
-                                <label class="col-md-1 control-label">故障内容</label>
-                                <div class="col-md-6">
-                                    <input id="hardware_error_content" autocomplete="off" type="text"
-                                           name="hardware_error_content" class="form-control" placeholder="" value="">
-                                    <div class="form-control-focus"></div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-md-3 control-label">有否软件故障</label>
-                                <div class="col-md-2">
-                                    <div class="radio-list" style="margin-left: 20px;">
-                                        <label class="radio-inline">
-                                            <input type="radio" name="software" id="software1" value="1" checked>
-                                            正常
-                                        </label>
-                                        <label class="radio-inline">
-                                            <input type="radio" name="software" id="software2" value="0">
-                                            异常
-                                        </label>
-                                    </div>
-                                </div>
-                                <label class="col-md-1 control-label">故障内容</label>
-                                <div class="col-md-6">
-                                    <input id="software_error_content" autocomplete="off" type="text"
-                                           name="software_error_content" class="form-control" placeholder="" value="">
-                                    <div class="form-control-focus"></div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-md-3 control-label">CommServer灾难运行情况</label>
-                                <div class="col-md-2">
-                                    <div class="radio-list" style="margin-left: 20px;">
-                                        <label class="radio-inline">
-                                            <input type="radio"  value="1" name="commserver_status" id="commserver_status1"
-                                                   checked>
-                                            正常
-                                        </label>
-                                        <label class="radio-inline">
-                                            <input type="radio" value="0" name="commserver_status" id="commserver_status2">
-                                            异常
-                                        </label>
-                                    </div>
-                                </div>
-                                <label class="col-md-1 control-label">备注</label>
-                                <div class="col-md-6">
-                                    <input autocomplete="off" type="text" id="commserver_status_remark" name="commserver_status_remark"
-                                            class="form-control" placeholder="" value="">
-                                    <div class="form-control-focus"></div>
-                                </div>
-                            </div>
-
-                            <!-- 应用备份情况 -->
-                            {% for agent in agent_list %}
-                            <div class="form-group">
-                                <label class="col-md-3 control-label">{{agent}}最近二次全备份情况</label>
-                                <div class="col-md-2">
-                                    <div class="radio-list" style="margin-left: 20px;">
-                                        <label class="radio-inline">
-                                            <input type="radio"  value="1" name="total_{{agent}}" id="total_{{agent}}1"
-                                                   checked>
-                                            正常
-                                        </label>
-                                        <label class="radio-inline">
-                                            <input type="radio" value="0" name="total_{{agent}}" id="total_{{agent}}2">
-                                            异常
-                                        </label>
-                                    </div>
-                                </div>
-                                <label class="col-md-1 control-label">备注</label>
-                                <div class="col-md-6">
-                                    <input autocomplete="off" type="text" name="total_{{agent}}_remark" id="total_{{agent}}_remark"
-                                            class="form-control" placeholder="" value="">
-                                    <input type="number" name="total_{{agent}}_tag" id="total_{{agent}}_tag" value="{{ forloop.counter }}" hidden>
-                                    <div class="form-control-focus"></div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-md-3 control-label">{{agent}}最近一周期增量/差异全备份情况</label>
-                                <div class="col-md-2">
-                                    <div class="radio-list" style="margin-left: 20px;">
-                                        <label class="radio-inline">
-                                            <input type="radio"  value="1" name="part_{{agent}}" id="part_{{agent}}1"
-                                                   checked>
-                                            正常
-                                        </label>
-                                        <label class="radio-inline">
-                                            <input type="radio" value="0" name="part_{{agent}}" id="part_{{agent}}2">
-                                            异常
-                                        </label>
-                                    </div>
-                                </div>
-                                <label class="col-md-1 control-label">备注</label>
-                                <div class="col-md-6">
-                                    <input autocomplete="off" type="text" name="part_{{agent}}_remark" id="part_{{agent}}_remark"
-                                            class="form-control" placeholder="" value="">
-                                    <input type="number" name="part_{{agent}}_tag" id="part_{{agent}}_tag" value="{{ forloop.counter }}" hidden>
-                                    <div class="form-control-focus"></div>
-                                </div>
-                            </div>
-                            {% endfor %}
-
-
-                            <div class="form-group">
-                                <label class="col-md-3 control-label">数据时效计划运行情况</label>
-                                <div class="col-md-2">
-                                    <div class="radio-list" style="margin-left: 20px;">
-                                        <label class="radio-inline">
-                                            <input type="radio" name="aging_plan_run" id="aging_plan_run1" value="1"
-                                                   checked>
-                                            正常
-                                        </label>
-                                        <label class="radio-inline">
-                                            <input type="radio" name="aging_plan_run" id="aging_plan_run2" value="0">
-                                            异常
-                                        </label>
-                                    </div>
-                                </div>
-                                <label class="col-md-1 control-label">备注</label>
-                                <div class="col-md-6">
-                                    <input id="aging_plan_run_remark" autocomplete="off" type="text"
-                                           name="aging_plan_run_remark" class="form-control" placeholder="" value="">
-                                    <div class="form-control-focus"></div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-md-3 control-label">数据备份计划运行情况</label>
-                                <div class="col-md-2">
-                                    <div class="radio-list" style="margin-left: 20px;">
-                                        <label class="radio-inline">
-                                            <input type="radio" name="backup_plan_run" id="backup_plan_run1" value="1"
-                                                   checked>
-                                            正常
-                                        </label>
-                                        <label class="radio-inline">
-                                            <input type="radio" name="backup_plan_run" id="backup_plan_run2" value="0">
-                                            异常
-                                        </label>
-                                    </div>
-                                </div>
-                                <label class="col-md-1 control-label">备注</label>
-                                <div class="col-md-6">
-                                    <input id="backup_plan_run_remark" autocomplete="off" type="text"
-                                           name="backup_plan_run_remark" class="form-control" placeholder="" value="">
-                                    <div class="form-control-focus"></div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-md-3 control-label">报告计划运行情况</label>
-                                <div class="col-md-2">
-                                    <div class="radio-list" style="margin-left: 20px;">
-                                        <label class="radio-inline">
-                                            <input type="radio" name="running_status" id="running_status1" value="1"
-                                                   checked>
-                                            正常
-                                        </label>
-                                        <label class="radio-inline">
-                                            <input type="radio" name="running_status" id="running_status2" value="0">
-                                            异常
-                                        </label>
-                                    </div>
-                                </div>
-                                <label class="col-md-1 control-label">备注</label>
-                                <div class="col-md-6">
-                                    <input id="running_remark" autocomplete="off" type="text" name="running_remark"
-                                           class="form-control" placeholder="" value="">
-                                    <div class="form-control-focus"></div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-md-3 control-label">最近是否打算要增加新的客户端</label>
-                                <div class="col-md-2">
-                                    <div class="radio-list" style="margin-left: 20px;">
-                                        <label class="radio-inline">
-                                            <input type="radio" name="client_add" id="client_add1" value="1" checked>
-                                            是
-                                        </label>
-                                        <label class="radio-inline">
-                                            <input type="radio" name="client_add" id="client_add2" value="0">
-                                            否
-                                        </label>
-                                    </div>
-                                </div>
-                                <label class="col-md-1 control-label">备注</label>
-                                <div class="col-md-6">
-                                    <input id="client_add_remark" autocomplete="off" type="text"
-                                           name="client_add_remark" class="form-control" placeholder="" value="">
-                                    <div class="form-control-focus"></div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-md-3 control-label">一个周期数据大概容量</label>
-                                <div class="col-md-2">
-                                    <div class="radio-list" style="margin-left: 20px;">
-                                        <label class="radio-inline">
-                                            <input type="radio" name="period_capacity" id="period_capacity1" value="1" checked>
-                                            ≤1000G
-                                        </label>
-                                        <label class="radio-inline">
-                                            <input type="radio" name="period_capacity" id="period_capacity2" value="0">
-                                            >1000G
-                                        </label>
-                                    </div>
-                                </div>
-                                <label class="col-md-1 control-label">备注</label>
-                                <div class="col-md-6">
-                                    <input id="period_capacity_remark" autocomplete="off" type="text"
-                                           name="period_capacity_remark" class="form-control" placeholder="" value="">
-                                    <div class="form-control-focus"></div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-md-3 control-label">有否发给cvadmin用户的错误报告</label>
-                                <div class="col-md-2">
-                                    <div class="radio-list" style="margin-left: 20px;">
-                                        <label class="radio-inline">
-                                            <input type="radio" name="error_send" id="error_send1" value="1" checked>
-                                            有
-                                        </label>
-                                        <label class="radio-inline">
-                                            <input type="radio" name="error_send" id="error_send2" value="0">
-                                            否
-                                        </label>
-                                    </div>
-                                </div>
-                                <label class="col-md-1 control-label">备注</label>
-                                <div class="col-md-6">
-                                    <input id="error_send_remark" autocomplete="off" type="text"
-                                           name="error_send_remark" class="form-control" placeholder="" value="">
-                                    <div class="form-control-focus"></div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-md-3 control-label">CDR运行情况</label>
-                                <div class="col-md-2">
-                                    <div class="radio-list" style="margin-left: 20px;">
-                                        <label class="radio-inline">
-                                            <input type="radio" name="cdr_running" id="cdr_running1" value="1" checked>
-                                            正常
-                                        </label>
-                                        <label class="radio-inline">
-                                            <input type="radio" name="cdr_running" id="cdr_running2" value="0">
-                                            异常
-                                        </label>
-                                    </div>
-                                </div>
-                                <label class="col-md-1 control-label">备注</label>
-                                <div class="col-md-6">
-                                    <input id="cdr_running_remark" autocomplete="off" type="text"
-                                           name="cdr_running_remark" class="form-control" placeholder="" value="">
-                                    <div class="form-control-focus"></div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-md-3 control-label">辅助拷贝运行情况</label>
-                                <div class="col-md-2">
-                                    <div class="radio-list" style="margin-left: 20px;">
-                                        <label class="radio-inline">
-                                            <input type="radio" value="1" name="auxiliary_copy" id="auxiliary_copy1" checked>
-                                            正常
-                                        </label>
-                                        <label class="radio-inline">
-                                            <input type="radio" value="0"name="auxiliary_copy" id="auxiliary_copy2">
-                                            异常
-                                        </label>
-                                    </div>
-                                </div>
-                                <label class="col-md-1 control-label">备注</label>
-                                <div class="col-md-6">
-                                    <input id="auxiliary_copy_remark" autocomplete="off" type="text" name="auxiliary_copy_remark"
-                                           class="form-control" placeholder="" value="">
-                                    <div class="form-control-focus"></div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-md-3 control-label">备份介质运行状态</label>
-                                <div class="col-md-2">
-                                    <div class="radio-list" style="margin-left: 20px;">
-                                        <label class="radio-inline">
-                                            <input type="radio" name="library_status" id="media_run1" value="1" checked>
-                                            正常
-                                        </label>
-                                        <label class="radio-inline">
-                                            <input type="radio" name="library_status" id="media_run2" value="0">
-                                            异常
-                                        </label>
-                                    </div>
-                                </div>
-                                <label class="col-md-1 control-label">备注</label>
-                                <div class="col-md-6">
-                                    <input id="library_status_remark" autocomplete="off" type="text" name="library_status_remark"
-                                           class="form-control" placeholder="" value="">
-                                    <div class="form-control-focus"></div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-md-3 control-label">数据恢复演练情况</label>
-                                <div class="col-md-2">
-                                    <div class="radio-list" style="margin-left: 20px;">
-                                        <label class="radio-inline">
-                                            <input type="radio" value="1"  name="recover" id="recover1" checked>
-                                            正常
-                                        </label>
-                                        <label class="radio-inline">
-                                            <input type="radio" value="0" name="recover" id="recover2" >
-                                            异常
-                                        </label>
-                                    </div>
-                                </div>
-                                <label class="col-md-1 control-label">备注</label>
-                                <div class="col-md-6">
-                                    <input id="recover_remark" autocomplete="off" type="text" name="recover_remark"
-                                           class="form-control" placeholder="" value="">
-                                    <div class="form-control-focus"></div>
-                                </div>
-                            </div>
-                            <div class="form-group ">
-                                <label class="col-md-3 control-label">其他错误报告内容</label>
-                                <div class="col-md-9">
-                                    <textarea class="form-control" rows="6" id="extra_error_content"
-                                              name="extra_error_content"></textarea>
-                                    <div class="form-control-focus"></div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <div class="col-md-5">
-                                    <hr>
-                                    <div class="form-control-focus"></div>
-                                </div>
-                                <label class="col-md-2 control-label"
-                                       style="font-weight: bold;font-size:20px;text-align: center">总结和建议</label>
-                                <div class="col-md-5">
-                                    <hr>
-                                    <div class="form-control-focus"></div>
-                                </div>
-                            </div>
-                            <div class="form-group ">
-                                <div class="col-md-1"></div>
-                                <div class="col-md-11">
-                                    <textarea class="form-control" rows="15" id="suggestion_and_summary"
-                                              name="suggestion_and_summary"></textarea>
-                                    <div class="form-control-focus"></div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-md-2 control-label"><span style="color:red;">*</span>客户签字</label>
-                                <div class="col-md-4">
-                                    <input id="client_sign" autocomplete="off" type="text" name="client_sign"
-                                           class="form-control" placeholder="" value="">
-                                    <div class="form-control-focus"></div>
-                                </div>
-                                <label class="col-md-2 control-label">签字日期</label>
-                                <div class="col-md-4">
-                                    <input id="client_sign_date" autocomplete="off" type="datetime" name="client_sign_date"
-                                           class="form-control" placeholder="" value="">
-                                    <div class="form-control-focus"></div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-md-2 control-label"><span style="color:red;">*</span>维修工程师签字</label>
-                                <div class="col-md-4">
-                                    <input id="engineer_sign" autocomplete="off" type="text" name="engineer_sign"
-                                           class="form-control" placeholder="" value="">
-                                    <div class="form-control-focus"></div>
-                                </div>
-                                <label class="col-md-2 control-label">签字日期</label>
-                                <div class="col-md-4">
-                                    <input id="engineer_sign_date" autocomplete="off" type="datetime" name="engineer_sign_date"
-                                           class="form-control" placeholder="" value="">
-                                    <div class="form-control-focus"></div>
-                                </div>
-                            </div>
-                            <div style="height: 50px;">
                             </div>
                         </div>
                     </form>

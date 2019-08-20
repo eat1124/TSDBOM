@@ -2034,25 +2034,10 @@ def inspection_report(request, funid):
                 "client_name": client.client_name,
             })
 
-        sql_api = SQLApi.CVApi(settings.sql_credit)
-
-        # 备份情况根据存在的agent生成
-        agent_list = []
-        all_sub_clients = sql_api.get_installed_sub_clients_for_status()
-
-        for sub_client in all_sub_clients:
-            cur_idataagent = ""
-            for x in sub_client["idataagent"].split(" "):
-                if x:
-                    cur_idataagent += x
-            if cur_idataagent not in agent_list:
-                agent_list.append(cur_idataagent)
-
         return render(request, "inspection1.html", {
             'username': request.user.userinfo.fullname,
             "pagefuns": getpagefuns(funid, request),
             "client_data_list": client_data_list,
-            "agent_list": agent_list,
         })
     else:
         return HttpResponseRedirect("/login")
@@ -2084,6 +2069,9 @@ def inspection_report_data(request):
                 "all_client": cur_inspection_operate.all_client,
                 "offline_client": cur_inspection_operate.offline_client,
                 "offline_client_content": cur_inspection_operate.offline_client_content,
+                # 介质库
+                "library_server": cur_inspection_operate.library_server,
+
                 # 3.报告信息
                 "inspection_id": inspection_report.id,
                 "report_title": inspection_report.title,
@@ -2161,23 +2149,10 @@ def get_client_data(request):
 def get_clients_info(request):
     if request.user.is_authenticated():
         # 备份状态监控
-        # cv_token = CVRestApiToken()
-        # cv_token.login(info)
-        # print("登录成功。。。")
-        # cv_api = CVApiOperate(cv_token)
-        #
-        # # 客户端版本/主机名/补丁
-        # host_client = cv_api.get_CS()
-        # try:
-        #     client_name = host_client["commCellName"]
-        #     cv_server_client_info = cv_api.get_client_info_by_name(client_name)
-        #     client_version = cv_server_client_info["GalaxyRelease"]
-        #     patch = cv_server_client_info["versionInfo"]
-        #     os_platform = cv_server_client_info["os_info"]
-        # except:
-        #     return JsonResponse({"ret": 0, "data": "获取客户端信息失败。"})
-
         sql_api = SQLApi.CVApi(settings.sql_credit)
+
+        commserv_info = sql_api.get_commserv_info()
+
         # 客户端列表
         client_list = sql_api.get_all_install_clients()
 
@@ -2199,32 +2174,34 @@ def get_clients_info(request):
                 offline_client = cur.fetchone()
             except:
                 print("备份任务不存在!")
+        sql_api = SQLApi.CVApi(settings.sql_credit)
 
+        # 介质服务器
         # 存储总容量/已用容量/平均每月增长量
-        # total_capacity = 0
-        # total_available_capacity = 0
-        # library_list = cv_api.get_library_list()
-        # for library in library_list:
-        #     library_info = cv_api.get_library_info(library["library_id"])
-        #     cur_total_capacity = library_info["total_capacity"]
-        #     cur_total_available_capacity = library_info["total_available_capacity"]
-        #     if "GB" in cur_total_capacity:
-        #         cur_total_capacity = float(cur_total_capacity[:-3])
-        #         total_capacity += cur_total_capacity
-        #     if "GB" in cur_total_available_capacity:
-        #         cur_total_available_capacity = float(cur_total_available_capacity[:-3])
-        #         total_available_capacity += cur_total_available_capacity
+        library_space_info = sql_api.get_library_space_info()
 
-        # print(total_capacity, total_available_capacity)
+        # 系统错误报告
+        # 备份情况根据存在的agent生成
+        agent_list = []
+        all_sub_clients = sql_api.get_installed_sub_clients_for_status()
+
+        for sub_client in all_sub_clients:
+            cur_idataagent = ""
+            for x in sub_client["idataagent"].split(" "):
+                if x:
+                    cur_idataagent += x
+            if cur_idataagent not in agent_list:
+                agent_list.append(cur_idataagent)
+
         return JsonResponse({"ret": 1, "data": {
-            # "host_name": client_name,
-            # "version": client_version,
-            # "patch": patch,
-            # "os_platform": os_platform,
+            "host_name": "host_name",
+            "version": commserv_info[0],
+            "patch": commserv_info[1],
+            "os_platform": commserv_info[2],
             "all_client": len(client_list),
-            # "total_capacity": "%.2f" % total_capacity,
-            # "total_available_capacity": "%.2f" % total_available_capacity,
             "offline_client": offline_client,
+            "library_space_info": library_space_info,
+            "agent_list": agent_list,
         }})
     else:
         return JsonResponse({"ret": 0, "data": "用户认证失败。"})
@@ -2237,6 +2214,7 @@ def save_inspection(request):
     :return:
     """
     if request.user.is_authenticated():
+        total_keys = request.POST.keys()
         inspection_id = request.POST.get("inspection_id", "")
         report_title = request.POST.get("report_title", "")
         # 1.客户资料
@@ -2245,10 +2223,10 @@ def save_inspection(request):
         inspection_date = request.POST.get("inspection_date", "")
         last_inspection_date = request.POST.get("last_inspection_date", "")
         next_inspection_date = request.POST.get("next_inspection_date", "")
-        version = request.POST.get("version", "")
-        host_name = request.POST.get("host_name", "")
-        patch = request.POST.get("patch", "")
-        os_platform = request.POST.get("os_platform", "")
+        version = request.POST.get("commv_version", "")
+        host_name = request.POST.get("commv_host_name", "")
+        patch = request.POST.get("commv_patch", "")
+        os_platform = request.POST.get("commv_os_platform", "")
 
         # 2.巡检操作
         all_client = request.POST.get("all_client", "")
@@ -2256,14 +2234,48 @@ def save_inspection(request):
         offline_client_content = request.POST.get("offline_client_content", "")
 
         # 3.介质服务器
+        library_server_list = []
+        copy_total_keys = copy.deepcopy(list(total_keys))
 
+        lib_num = 1
+        for lib_key in copy_total_keys:
+            cur_lib_dict = {}
+            if 'library_' in lib_key:
+                for inner_lib_key in copy_total_keys:
+                    lib_tag = inner_lib_key.split('_')[-1]
+                    try:
+                        lib_tag = int(lib_tag)
+                    except:
+                        continue
+                    else:
+                        if 'library_' in inner_lib_key and lib_tag == lib_num:
+                            if '_lib_name_' in inner_lib_key:
+                                cur_lib_dict["lib_name"] = request.POST.get(inner_lib_key, "")
+                                copy_total_keys.remove(inner_lib_key)
+                            if '_ma_name_' in inner_lib_key:
+                                cur_lib_dict["ma_name"] = request.POST.get(inner_lib_key, "")
+                                copy_total_keys.remove(inner_lib_key)
+                            if '_ma_ip_' in inner_lib_key:
+                                cur_lib_dict["ma_ip"] = request.POST.get(inner_lib_key, "")
+                                copy_total_keys.remove(inner_lib_key)
+                            if '_all_capacity_' in inner_lib_key:
+                                cur_lib_dict["all_capacity"] = request.POST.get(inner_lib_key, "")
+                                copy_total_keys.remove(inner_lib_key)
+                            if '_used_capacity_' in inner_lib_key:
+                                cur_lib_dict["used_capacity"] = request.POST.get(inner_lib_key, "")
+                                copy_total_keys.remove(inner_lib_key)
+                            if '_increase_capacity_' in inner_lib_key:
+                                cur_lib_dict["increase_capacity"] = request.POST.get(inner_lib_key, "")
+                                copy_total_keys.remove(inner_lib_key)
+            if cur_lib_dict:
+                library_server_list.append(cur_lib_dict)
+                lib_num += 1
         # 4.系统错误报告
         hardware = request.POST.get("hardware", "")
         hardware_error_content = request.POST.get("hardware_error_content", "")
 
         software = request.POST.get("software", "")
         software_error_content = request.POST.get("software_error_content", "")
-        total_keys = request.POST.keys()
         agent_backup_info_list = []
         for cur_key in total_keys:
             cur_agent_info = {}
@@ -2290,9 +2302,13 @@ def save_inspection(request):
                         cur_agent_info["tag"] = request.POST.get(inner_key, "")
 
                 agent_backup_info_list.append(cur_agent_info)
-
-        # 需要对这个数据做排序...
-        #...
+        # print(request.POST)
+        # print(library_server_list)
+        # print(agent_backup_info_list)
+        # return JsonResponse({
+        #     "ret": 0,
+        #     "data": "assert"
+        # })
 
         aging_plan_run = request.POST.get("aging_plan_run", "")
         aging_plan_run_remark = request.POST.get("aging_plan_run_remark", "")
@@ -2396,6 +2412,7 @@ def save_inspection(request):
                 inspection_operate.all_client = all_client
                 inspection_operate.offline_client = offline_client
                 inspection_operate.offline_client_content = offline_client_content
+                inspection_operate.library_server = json.dumps(library_server_list)
                 inspection_operate.save()
 
                 inspection_report.inspection_operate = inspection_operate
@@ -2492,7 +2509,7 @@ def save_inspection(request):
         else:
             return JsonResponse({"ret": 0, "data": "网络异常。"})
     else:
-        return JsonResponse({"ret": 0, "data": "用户认证失败。"})
+        return HttpResponseRedirect("/login")
 
 
 def inspection_del(request):
@@ -2515,6 +2532,536 @@ def inspection_del(request):
             return HttpResponse(1)
     else:
         return HttpResponse(0)
+
+
+def custom_inspection(inspection_id, file_name):
+    try:
+        inspection_id = int(inspection_id)
+    except:
+        print('--------------')
+        return 0
+    else:
+        # inspection_data
+        try:
+            cur_inspection = InspectionReport.objects.get(id=inspection_id)
+        except InspectionReport.DoesNotExist as e:
+            print(e)
+            return 0
+        else:
+            cur_client_data = cur_inspection.client_data
+            if cur_client_data:
+                client_name = cur_client_data.client_name
+                address = cur_client_data.address
+                contact = cur_client_data.contact
+                position = cur_client_data.position
+                tel = cur_client_data.tel
+                fax = cur_client_data.fax
+                email = cur_client_data.email
+            else:
+                client_name = ''
+                address = ''
+                contact = ''
+                position = ''
+                tel = ''
+                fax = ''
+                email = ''
+
+            cur_inspection_operate = cur_inspection.inspection_operate
+            if cur_inspection_operate:
+                version = cur_inspection_operate.version
+                host = cur_inspection_operate.host_name
+                os_platform = cur_inspection_operate.os_platform
+                patch = cur_inspection_operate.patch
+                all_client = cur_inspection_operate.all_client
+                offline_client = cur_inspection_operate.offline_client
+                offline_client_content = cur_inspection_operate.offline_client_content
+                library_server = cur_inspection_operate.library_server
+            else:
+                version = ''
+                host = ''
+                os_platform = ''
+                patch = ''
+                all_client = ''
+                offline_client = ''
+                offline_client_content = ''
+                library_server = []
+
+            cur_date = cur_inspection.cur_date
+            engineer = cur_inspection.engineer
+            last_date = cur_inspection.last_date
+            next_date = cur_inspection.next_date
+
+            extra_error_content = cur_inspection.extra_error_content
+            suggestion_and_summary = cur_inspection.suggestion_and_summary
+            client_sign = cur_inspection.client_sign
+            client_sign_date = cur_inspection.client_sign_date
+            engineer_sign = cur_inspection.engineer_sign
+            engineer_sign_date = cur_inspection.engineer_sign_date
+
+            # 硬件故障，软件故障CommvServer
+            hardware_error = json.loads(cur_inspection.hardware_error)
+            software_error = json.loads(cur_inspection.software_error)
+            commserver_status = json.loads(cur_inspection.commserver_status)
+
+            agent_backup_status = json.loads(cur_inspection.agent_backup_status)
+
+            aging_plan_run = json.loads(cur_inspection.aging_plan_run)
+            backup_plan_run = json.loads(cur_inspection.backup_plan_run)
+            running_status = json.loads(cur_inspection.running_status)
+            client_add = json.loads(cur_inspection.client_add)
+            error_send = json.loads(cur_inspection.error_send)
+            cdr_running = json.loads(cur_inspection.cdr_running)
+
+            period_capacity = json.loads(cur_inspection.period_capacity)
+            auxiliary_copy = json.loads(cur_inspection.auxiliary_copy)
+            library_status = json.loads(cur_inspection.library_status)
+            recover_status = json.loads(cur_inspection.recover_status)
+
+            inspection_excel = xlwt.Workbook(encoding="ascii")
+
+            # 创建表
+            inspection_sheet = inspection_excel.add_sheet('sheet01')
+
+            # 样式
+            font = xlwt.Font()
+            font.bold = True
+
+            al = xlwt.Alignment()
+            al.horz = 0x02
+            al.vert = 0x01
+
+            borders = xlwt.Borders()
+            borders.left = xlwt.Borders.MEDIUM
+            borders.right = xlwt.Borders.MEDIUM
+            borders.top = xlwt.Borders.MEDIUM
+            borders.bottom = xlwt.Borders.MEDIUM
+
+            key_style = xlwt.XFStyle()
+            key_style.borders = borders
+            key_style.alignment = al
+            key_style.font = font
+
+            value_style = xlwt.XFStyle()
+            value_style.borders = borders
+            value_style.alignment = al
+
+            default_key_info_list = [
+                # 客户资料
+                {"position": [0, 0, 0, 15], "info": "客户资料"},
+                {"position": [1, 1, 0, 2], "info": "客户名称"},
+                {"position": [2, 2, 0, 2], "info": "上次巡检日期"},
+                {"position": [3, 3, 0, 2], "info": "地址"},
+                {"position": [4, 4, 0, 2], "info": "联系人"},
+                {"position": [5, 5, 0, 2], "info": "联系电话"},
+                {"position": [6, 6, 0, 2], "info": "电子邮件"},
+
+                {"position": [1, 1, 8, 10], "info": "巡检日期"},
+                {"position": [2, 2, 8, 10], "info": "预计下次巡检日期"},
+                {"position": [4, 4, 8, 10], "info": "职称"},
+                {"position": [5, 5, 8, 10], "info": "传真"},
+                {"position": [6, 6, 8, 10], "info": "责任工程师"},
+
+                # 巡检操作
+                {"position": [7, 7, 0, 15], "info": "巡检操作"},
+                {"position": [8, 8, 0, 2], "info": "CommVault版本"},
+                {"position": [9, 9, 0, 2], "info": "主机名"},
+
+                {"position": [8, 8, 8, 10], "info": "补丁"},
+                {"position": [9, 9, 8, 10], "info": "OS平台"},
+
+                # 客户端情况
+                {"position": [10, 10, 0, 15], "info": "客户端情况"},
+                {"position": [11, 11, 0, 2], "info": "全部客户端"},
+                {"position": [12, 14, 0, 2], "info": "故障内容"},
+
+                {"position": [11, 11, 8, 10], "info": "脱机客户端"},
+
+                {"position": [15, 15, 0, 15], "info": "介质服务器"},
+            ]
+            value_info_list = [
+                {"position": [1, 1, 3, 7], "info": client_name},
+                {"position": [2, 2, 3, 7], "info": "{0:%Y-%m-%d}".format(last_date) if last_date else ""},
+                {"position": [3, 3, 3, 15], "info": address},
+                {"position": [4, 4, 3, 7], "info": contact},
+                {"position": [5, 5, 3, 7], "info": tel},
+                {"position": [6, 6, 3, 7], "info": email},
+
+                {"position": [1, 1, 11, 15], "info": "{0:%Y-%m-%d}".format(cur_date) if cur_date else ""},
+                {"position": [2, 2, 11, 15], "info": "{0:%Y-%m-%d}".format(next_date) if next_date else ""},
+                {"position": [4, 4, 11, 15], "info": position},
+                {"position": [5, 5, 11, 15], "info": fax},
+                {"position": [6, 6, 11, 15], "info": engineer},
+
+                {"position": [8, 8, 3, 7], "info": version},
+                {"position": [9, 9, 3, 7], "info": host},
+
+                {"position": [8, 8, 11, 15], "info": patch},
+                {"position": [9, 9, 11, 15], "info": os_platform},
+
+                {"position": [11, 11, 3, 7], "info": all_client},
+                {"position": [12, 14, 3, 15], "info": offline_client_content},
+
+                {"position": [11, 11, 11, 15], "info": offline_client},
+
+            ]
+
+            # 介质服务器
+            library_info_key_list = []
+            library_server = json.loads(library_server)
+
+            pre_row = 16
+            for library in library_server:
+                for key, value in library.items():
+                    if key == "ma_name":
+                        library_info_key_list.append({
+                            "position": [pre_row, pre_row, 0, 1],
+                            "info": value
+                        })
+                    if key == "all_capacity":
+                        library_info_key_list.append({
+                            "position": [pre_row, pre_row, 4, 5],
+                            "info": "备份空间"
+                        })
+                    if key == "used_capacity":
+                        library_info_key_list.append({
+                            "position": [pre_row, pre_row, 8, 9],
+                            "info": "剩余空间"
+                        })
+                    if key == "increase_capacity":
+                        library_info_key_list.append({
+                            "position": [pre_row, pre_row, 12, 13],
+                            "info": "月增长量"
+                        })
+                pre_row += 1
+
+            library_info_value_list = []
+
+            pre_row = 16
+            for library in library_server:
+                for key, value in library.items():
+                    if key == "ma_ip":
+                        library_info_value_list.append({
+                            "position": [pre_row, pre_row, 2, 3],
+                            "info": value
+                        })
+                    if key == "all_capacity":
+                        library_info_value_list.append({
+                            "position": [pre_row, pre_row, 6, 7],
+                            "info": value
+                        })
+                    if key == "used_capacity":
+                        library_info_value_list.append({
+                            "position": [pre_row, pre_row, 10, 11],
+                            "info": value
+                        })
+                    if key == "increase_capacity":
+                        library_info_value_list.append({
+                            "position": [pre_row, pre_row, 14, 15],
+                            "info": value
+                        })
+                pre_row += 1
+
+            # 系统错误报告
+            fixed_info_key = [
+                {"position": [pre_row, pre_row, 0, 15], "info": "系统错误报告"},
+                {"position": [pre_row + 1, pre_row + 1, 0, 3], "info": "有否硬件故障"},
+                {"position": [pre_row + 2, pre_row + 2, 0, 3], "info": "有否软件件故障"},
+                {"position": [pre_row + 3, pre_row + 3, 0, 3], "info": "CommvServer灾难备份情况"},
+                {"position": [pre_row + 1, pre_row + 1, 8, 9], "info": "故障内容"},
+                {"position": [pre_row + 2, pre_row + 2, 8, 9], "info": "故障内容"},
+                {"position": [pre_row + 3, pre_row + 3, 8, 9], "info": "备注"}
+            ]
+
+            fixed_info_value = [
+                # check/status
+                {"position": [pre_row + 1, pre_row + 1, 4, 4],
+                 "info": "√" if int(hardware_error["status"]) == 1 else "□"},
+                {"position": [pre_row + 1, pre_row + 1, 5, 5], "info": "正常"},
+                {"position": [pre_row + 1, pre_row + 1, 6, 6],
+                 "info": "□" if int(hardware_error["status"]) == 1 else "√"},
+                {"position": [pre_row + 1, pre_row + 1, 7, 7], "info": "异常"},
+
+                {"position": [pre_row + 2, pre_row + 2, 4, 4],
+                 "info": "√" if int(software_error["status"]) == 1 else "□"},
+                {"position": [pre_row + 2, pre_row + 2, 5, 5], "info": "正常"},
+                {"position": [pre_row + 2, pre_row + 2, 6, 6],
+                 "info": "□" if int(software_error["status"]) == 1 else "√"},
+                {"position": [pre_row + 2, pre_row + 2, 7, 7], "info": "异常"},
+
+                {"position": [pre_row + 3, pre_row + 3, 4, 4],
+                 "info": "√" if int(commserver_status["status"]) == 1 else "□"},
+                {"position": [pre_row + 3, pre_row + 3, 5, 5], "info": "正常"},
+                {"position": [pre_row + 3, pre_row + 3, 6, 6],
+                 "info": "□" if int(commserver_status["status"]) == 1 else "√"},
+                {"position": [pre_row + 3, pre_row + 3, 7, 7], "info": "异常"},
+
+                {"position": [pre_row + 1, pre_row + 1, 10, 15], "info": hardware_error["remark"]},
+                {"position": [pre_row + 2, pre_row + 2, 10, 15], "info": software_error["remark"]},
+                {"position": [pre_row + 3, pre_row + 3, 10, 15], "info": commserver_status["remark"]}
+            ]
+
+            cur_key_row = pre_row + 4
+            pre_key_tag = 1
+            agent_key_list = []
+            for agent_key in agent_backup_status:
+                for inner_agent_key in agent_backup_status:
+                    if inner_agent_key["tag"] == str(pre_key_tag):
+                        if inner_agent_key["agent_name"].startswith("total_"):
+                            agent_key_list.append({
+                                "position": [cur_key_row, cur_key_row, 0, 3],
+                                "info": inner_agent_key["agent_name"] + "最近两次全备份情况"
+                            })
+                            agent_key_list.append({
+                                "position": [cur_key_row, cur_key_row, 8, 9],
+                                "info": "备注"
+                            })
+                            cur_key_row += 1
+                        if inner_agent_key["agent_name"].startswith("part_"):
+                            agent_key_list.append({
+                                "position": [cur_key_row, cur_key_row, 0, 3],
+                                "info": inner_agent_key["agent_name"] + "最近一周期增量/差异备份情况"
+                            })
+                            agent_key_list.append({
+                                "position": [cur_key_row, cur_key_row, 8, 9],
+                                "info": "备注"
+                            })
+                            cur_key_row += 1
+
+                pre_key_tag += 1
+
+            cur_value_row = pre_row + 4
+            pre_value_tag = 1
+            agent_value_list = []
+            for agent_value in agent_backup_status:
+                for inner_agent_value in agent_backup_status:
+                    if inner_agent_value["tag"] == str(pre_value_tag):
+                        if inner_agent_value["agent_name"].startswith("total_"):
+                            agent_value_list.append({
+                                "position": [cur_value_row, cur_value_row, 10, 15],
+                                "info": inner_agent_value["remark"]
+                            })
+                            agent_value_list.append({
+                                "position": [cur_value_row, cur_value_row, 4, 4],
+                                "info": "√" if inner_agent_value["status"] == "1" else "□"
+                            })
+                            agent_value_list.append({
+                                "position": [cur_value_row, cur_value_row, 5, 5],
+                                "info": "正常"
+                            })
+                            agent_value_list.append({
+                                "position": [cur_value_row, cur_value_row, 6, 6],
+                                "info": "□" if inner_agent_value["status"] == "1" else "√"
+                            })
+                            agent_value_list.append({
+                                "position": [cur_value_row, cur_value_row, 7, 7],
+                                "info": "异常"
+                            })
+                            cur_value_row += 1
+                        if inner_agent_value["agent_name"].startswith("part_"):
+                            agent_value_list.append({
+                                "position": [cur_value_row, cur_value_row, 10, 15],
+                                "info": inner_agent_value["remark"]
+                            })
+                            agent_value_list.append({
+                                "position": [cur_value_row, cur_value_row, 4, 4],
+                                "info": "√" if inner_agent_value["status"] == "1" else "□"
+                            })
+                            agent_value_list.append({
+                                "position": [cur_value_row, cur_value_row, 5, 5],
+                                "info": "正常"
+                            })
+                            agent_value_list.append({
+                                "position": [cur_value_row, cur_value_row, 6, 6],
+                                "info": "□" if inner_agent_value["status"] == "1" else "√"
+                            })
+                            agent_value_list.append({
+                                "position": [cur_value_row, cur_value_row, 7, 7],
+                                "info": "异常"
+                            })
+                            cur_value_row += 1
+
+                pre_value_tag += 1
+
+            def merge_and_write(inspection_sheet, position, info, style=None):
+                if style:
+                    inspection_sheet.write_merge(position[0], position[1], position[2], position[3], info, style)
+                else:
+                    inspection_sheet.write_merge(position[0], position[1], position[2], position[3], info)
+
+            for k_info in default_key_info_list:
+                merge_and_write(inspection_sheet, k_info["position"], k_info["info"], style=key_style)
+
+            for v_info in value_info_list:
+                merge_and_write(inspection_sheet, v_info["position"], v_info["info"], style=value_style)
+
+            # 介质服务器
+            for l_info in library_info_key_list:
+                merge_and_write(inspection_sheet, l_info["position"], l_info["info"], style=key_style)
+
+            for l_info in library_info_value_list:
+                merge_and_write(inspection_sheet, l_info["position"], l_info["info"], style=value_style)
+
+            # 系统异常报告：第几行?pre_row
+            for fk_info in fixed_info_key:
+                merge_and_write(inspection_sheet, fk_info["position"], fk_info["info"], style=key_style)
+            for fv_info in fixed_info_value:
+                merge_and_write(inspection_sheet, fv_info["position"], fv_info["info"], style=value_style)
+
+            for ak_info in agent_key_list:
+                merge_and_write(inspection_sheet, ak_info["position"], ak_info["info"], style=key_style)
+
+            for av_info in agent_value_list:
+                merge_and_write(inspection_sheet, av_info["position"], av_info["info"], style=value_style)
+
+            # 数据时效计划...
+            cur_row = cur_value_row - 1
+            fixed_after_key = [
+                {"position": [cur_row + 1, cur_row + 1, 0, 3], "info": "数据时效计划运行情况"},
+                {"position": [cur_row + 1, cur_row + 1, 8, 9], "info": "备注"},
+                {"position": [cur_row + 2, cur_row + 2, 0, 3], "info": "数据备份计划运行情况"},
+                {"position": [cur_row + 2, cur_row + 2, 8, 9], "info": "备注"},
+                {"position": [cur_row + 3, cur_row + 3, 0, 3], "info": "报告计划运行情况"},
+                {"position": [cur_row + 3, cur_row + 3, 8, 9], "info": "备注"},
+                {"position": [cur_row + 4, cur_row + 4, 0, 3], "info": "最近是否打算要增加新的客户端"},
+                {"position": [cur_row + 4, cur_row + 4, 8, 9], "info": "备注"},
+                {"position": [cur_row + 5, cur_row + 5, 0, 3], "info": "一个周期数据大概容量"},
+                {"position": [cur_row + 5, cur_row + 5, 8, 9], "info": "备注"},
+                {"position": [cur_row + 6, cur_row + 6, 0, 3], "info": "有否发给cvadmin用户的错误报告"},
+                {"position": [cur_row + 6, cur_row + 6, 8, 9], "info": "备注"},
+                {"position": [cur_row + 7, cur_row + 7, 0, 3], "info": "CDR运行情况"},
+                {"position": [cur_row + 7, cur_row + 7, 8, 9], "info": "备注"},
+                {"position": [cur_row + 8, cur_row + 8, 0, 3], "info": "辅助拷贝运行情况"},
+                {"position": [cur_row + 8, cur_row + 8, 8, 9], "info": "备注"},
+                {"position": [cur_row + 9, cur_row + 9, 0, 3], "info": "备份介质运行状态"},
+                {"position": [cur_row + 9, cur_row + 9, 8, 9], "info": "备注"},
+                {"position": [cur_row + 10, cur_row + 10, 0, 3], "info": "数据恢复演练情况"},
+                {"position": [cur_row + 10, cur_row + 10, 8, 9], "info": "备注"},
+                {"position": [cur_row + 11, cur_row + 11, 0, 3], "info": "错误报告内容"},
+            ]
+
+            fixed_after_value = [
+                # check/status
+                {"position": [cur_row + 1, cur_row + 1, 4, 4],
+                 "info": "√" if int(aging_plan_run["status"]) == 1 else "□"},
+                {"position": [cur_row + 1, cur_row + 1, 5, 5], "info": "正常"},
+                {"position": [cur_row + 1, cur_row + 1, 6, 6],
+                 "info": "□" if int(aging_plan_run["status"]) == 1 else "√"},
+                {"position": [cur_row + 1, cur_row + 1, 7, 7], "info": "异常"},
+
+                {"position": [cur_row + 2, cur_row + 2, 4, 4],
+                 "info": "√" if int(backup_plan_run["status"]) == 1 else "□"},
+                {"position": [cur_row + 2, cur_row + 2, 5, 5], "info": "正常"},
+                {"position": [cur_row + 2, cur_row + 2, 6, 6],
+                 "info": "□" if int(backup_plan_run["status"]) == 1 else "√"},
+                {"position": [cur_row + 2, cur_row + 2, 7, 7], "info": "异常"},
+
+                {"position": [cur_row + 3, cur_row + 3, 4, 4],
+                 "info": "√" if int(running_status["status"]) == 1 else "□"},
+                {"position": [cur_row + 3, cur_row + 3, 5, 5], "info": "正常"},
+                {"position": [cur_row + 3, cur_row + 3, 6, 6],
+                 "info": "□" if int(running_status["status"]) == 1 else "√"},
+                {"position": [cur_row + 3, cur_row + 3, 7, 7], "info": "异常"},
+
+                {"position": [cur_row + 4, cur_row + 4, 4, 4],
+                 "info": "√" if int(client_add["status"]) == 1 else "□"},
+                {"position": [cur_row + 4, cur_row + 4, 5, 5], "info": "正常"},
+                {"position": [cur_row + 4, cur_row + 4, 6, 6],
+                 "info": "□" if int(client_add["status"]) == 1 else "√"},
+                {"position": [cur_row + 4, cur_row + 4, 7, 7], "info": "异常"},
+
+                {"position": [cur_row + 5, cur_row + 5, 4, 4],
+                 "info": "√" if int(period_capacity["status"]) == 1 else "□"},
+                {"position": [cur_row + 5, cur_row + 5, 5, 5], "info": "正常"},
+                {"position": [cur_row + 5, cur_row + 5, 6, 6],
+                 "info": "□" if int(period_capacity["status"]) == 1 else "√"},
+                {"position": [cur_row + 5, cur_row + 5, 7, 7], "info": "异常"},
+
+                {"position": [cur_row + 6, cur_row + 6, 4, 4],
+                 "info": "√" if int(error_send["status"]) == 1 else "□"},
+                {"position": [cur_row + 6, cur_row + 6, 5, 5], "info": "正常"},
+                {"position": [cur_row + 6, cur_row + 6, 6, 6],
+                 "info": "□" if int(error_send["status"]) == 1 else "√"},
+                {"position": [cur_row + 6, cur_row + 6, 7, 7], "info": "异常"},
+
+                {"position": [cur_row + 7, cur_row + 7, 4, 4],
+                 "info": "√" if int(cdr_running["status"]) == 1 else "□"},
+                {"position": [cur_row + 7, cur_row + 7, 5, 5], "info": "正常"},
+                {"position": [cur_row + 7, cur_row + 7, 6, 6],
+                 "info": "□" if int(cdr_running["status"]) == 1 else "√"},
+                {"position": [cur_row + 7, cur_row + 7, 7, 7], "info": "异常"},
+
+                {"position": [cur_row + 8, cur_row + 8, 4, 4],
+                 "info": "√" if int(auxiliary_copy["status"]) == 1 else "□"},
+                {"position": [cur_row + 8, cur_row + 8, 5, 5], "info": "正常"},
+                {"position": [cur_row + 8, cur_row + 8, 6, 6],
+                 "info": "□" if int(auxiliary_copy["status"]) == 1 else "√"},
+                {"position": [cur_row + 8, cur_row + 8, 7, 7], "info": "异常"},
+
+                {"position": [cur_row + 9, cur_row + 9, 4, 4],
+                 "info": "√" if int(library_status["status"]) == 1 else "□"},
+                {"position": [cur_row + 9, cur_row + 9, 5, 5], "info": "正常"},
+                {"position": [cur_row + 9, cur_row + 9, 6, 6],
+                 "info": "□" if int(library_status["status"]) == 1 else "√"},
+                {"position": [cur_row + 9, cur_row + 9, 7, 7], "info": "异常"},
+
+                {"position": [cur_row + 10, cur_row + 10, 4, 4],
+                 "info": "√" if int(recover_status["status"]) == 1 else "□"},
+                {"position": [cur_row + 10, cur_row + 10, 5, 5], "info": "正常"},
+                {"position": [cur_row + 10, cur_row + 10, 6, 6],
+                 "info": "□" if int(recover_status["status"]) == 1 else "√"},
+                {"position": [cur_row + 10, cur_row + 10, 7, 7], "info": "异常"},
+
+                {"position": [cur_row + 1, cur_row + 1, 10, 15], "info": aging_plan_run["remark"]},
+                {"position": [cur_row + 2, cur_row + 2, 10, 15], "info": backup_plan_run["remark"]},
+                {"position": [cur_row + 3, cur_row + 3, 10, 15], "info": running_status["remark"]},
+                {"position": [cur_row + 4, cur_row + 4, 10, 15], "info": client_add["remark"]},
+                {"position": [cur_row + 5, cur_row + 5, 10, 15], "info": period_capacity["remark"]},
+                {"position": [cur_row + 6, cur_row + 6, 10, 15], "info": error_send["remark"]},
+                {"position": [cur_row + 7, cur_row + 7, 10, 15], "info": cdr_running["remark"]},
+                {"position": [cur_row + 8, cur_row + 8, 10, 15], "info": auxiliary_copy["remark"]},
+                {"position": [cur_row + 9, cur_row + 9, 10, 15], "info": running_status["remark"]},
+                {"position": [cur_row + 10, cur_row + 10, 10, 15], "info": recover_status["remark"]},
+                {"position": [cur_row + 11, cur_row + 11, 4, 15], "info": extra_error_content},
+            ]
+
+            for fak_info in fixed_after_key:
+                merge_and_write(inspection_sheet, fak_info["position"], fak_info["info"], style=key_style)
+
+            for fav_info in fixed_after_value:
+                merge_and_write(inspection_sheet, fav_info["position"], fav_info["info"], style=value_style)
+
+            inspection_excel.save(file_name)
+            return 1
+
+
+def download_inspection(request):
+    if request.user.is_authenticated():
+        inspection_id = request.GET.get("inspection_id", "")
+
+        file_name = os.path.join(os.path.join(settings.BASE_DIR, "dbom"), "download") + os.sep + "inspection.xls"
+
+        # 写入excel文件
+        result = custom_inspection(inspection_id, file_name)
+
+        if result == 1:
+            def file_iterator(file_name, chunk_size=512):
+                with open(file_name, 'rb') as f:
+                    while True:
+                        c = f.read(chunk_size)
+                        if c:
+                            yield c
+                        else:
+                            break
+
+            response = StreamingHttpResponse(file_iterator(file_name))
+            response['Content-Type'] = 'application/vnd.ms-excel'
+            response['Content-Disposition'] = 'attachment;filename="inspection{0:%Y-%m-%d}.xls"'.format(
+                datetime.datetime.now())
+            return response
+        else:
+            raise Http404()
+    else:
+        return HttpResponseRedirect("/login")
 
 
 def get_process_rto(request):

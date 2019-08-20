@@ -84,6 +84,7 @@ urlpatterns = [
     url(r'^get_clients_info/$', get_clients_info),
     url(r'^inspection_report_data/$', inspection_report_data),
     url(r'^inspection_del/$', inspection_del),
+    url(r'^download_inspection/$', download_inspection),
 
     # 客户录入
     url(r'^clients/$', client_data_index, {'funid': 95}),

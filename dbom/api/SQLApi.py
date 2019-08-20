@@ -713,6 +713,27 @@ class CVApi(DataMonitor):
                 automatic_clients.append(i)
         return automatic_clients
 
+    def get_library_space_info(self):
+        library_space_sql = """select ma.DisplayName, ls.LibraryName, ls.TotalSpaceMB, ls.TotalFreeSpaceMB from CommServ.dbo.CNMMMediaInfoView as ls 
+                                inner join CommServ.dbo.CNMMMALibraryView as mc on mc.LibraryID = ls.LibraryID 
+                                inner join CommServ.dbo.CNMMMAInfoView as ma on mc.MediaAgentID = ma.MediaAgentID;"""
+        content = self.fetch_all(library_space_sql)
+        library_space_info = []
+        for i in content:
+            library_space_info.append({
+                "MAName": i[0],
+                "LibraryName": i[1],
+                "TotalSpaceMB": i[2],
+                "TotalFreeSpaceMB": i[3],
+            })
+        return library_space_info
+
+    def get_commserv_info(self):
+        commserv_info_sql = """select SWVersion, ServicePack, OSName from CommServ.dbo.CNCommCellInfoView;"""
+        commserv_info = []
+        commserv_info = self.fetch_one(commserv_info_sql)
+
+        return commserv_info
 
 class CustomFilter(CVApi):
     def custom_all_backup_content(self):
