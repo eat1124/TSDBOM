@@ -2236,278 +2236,291 @@ def save_inspection(request):
         # 3.介质服务器
         library_server_list = []
         copy_total_keys = copy.deepcopy(list(total_keys))
+        print(request.POST)
 
-        lib_num = 1
-        for lib_key in copy_total_keys:
-            cur_lib_dict = {}
-            if 'library_' in lib_key:
-                for inner_lib_key in copy_total_keys:
+        # 组数
+        lib_num = 0
+        for lib_key in total_keys:
+            lib_tag = lib_key.split('_')[-1]
+
+            if "library_" in lib_key:
+                print(lib_key)
+                try:
+                    lib_tag = int(lib_tag)
+                except:
+                    pass
+                else:
+                    lib_num += 1
+        try:
+            lib_group_num = int(lib_num / 6)
+        except:
+            return JsonResponse({
+                "ret": 0,
+                "data": "网络异常"
+            })
+        else:
+            for i in range(0, lib_group_num):
+                for inner_lib_key in total_keys:
                     lib_tag = inner_lib_key.split('_')[-1]
-                    try:
-                        lib_tag = int(lib_tag)
-                    except:
-                        continue
-                    else:
-                        if 'library_' in inner_lib_key and lib_tag == lib_num:
-                            if '_lib_name_' in inner_lib_key:
-                                cur_lib_dict["lib_name"] = request.POST.get(inner_lib_key, "")
-                                copy_total_keys.remove(inner_lib_key)
-                            if '_ma_name_' in inner_lib_key:
-                                cur_lib_dict["ma_name"] = request.POST.get(inner_lib_key, "")
-                                copy_total_keys.remove(inner_lib_key)
-                            if '_ma_ip_' in inner_lib_key:
-                                cur_lib_dict["ma_ip"] = request.POST.get(inner_lib_key, "")
-                                copy_total_keys.remove(inner_lib_key)
-                            if '_all_capacity_' in inner_lib_key:
-                                cur_lib_dict["all_capacity"] = request.POST.get(inner_lib_key, "")
-                                copy_total_keys.remove(inner_lib_key)
-                            if '_used_capacity_' in inner_lib_key:
-                                cur_lib_dict["used_capacity"] = request.POST.get(inner_lib_key, "")
-                                copy_total_keys.remove(inner_lib_key)
-                            if '_increase_capacity_' in inner_lib_key:
-                                cur_lib_dict["increase_capacity"] = request.POST.get(inner_lib_key, "")
-                                copy_total_keys.remove(inner_lib_key)
-            if cur_lib_dict:
-                library_server_list.append(cur_lib_dict)
-                lib_num += 1
-        # 4.系统错误报告
-        hardware = request.POST.get("hardware", "")
-        hardware_error_content = request.POST.get("hardware_error_content", "")
+                    if lib_tag == str(i + 1):
+                        try:
+                            assert library_server_list[i]
+                        except:
+                            library_server_list.append({})
 
-        software = request.POST.get("software", "")
-        software_error_content = request.POST.get("software_error_content", "")
-        agent_backup_info_list = []
-        for cur_key in total_keys:
-            cur_agent_info = {}
-            cur_key_mark = cur_key.split("_")
-            if "total_" in cur_key and len(cur_key_mark) == 2:
-                cur_agent_info["agent_name"] = cur_key
-                cur_agent_info["status"] = request.POST.get(cur_key, "")
-                for inner_key in total_keys:
-                    if cur_key in inner_key and cur_key != inner_key and "_tag" not in inner_key:
-                        cur_agent_info["remark"] = request.POST.get(inner_key, "")
+                        if '_lib_name_' in inner_lib_key:
+                            library_server_list[i]["lib_name"] = request.POST.get(inner_lib_key, "")
+                        if '_ma_name_' in inner_lib_key:
+                            library_server_list[i]["ma_name"] = request.POST.get(inner_lib_key, "")
+                        if '_ma_ip_' in inner_lib_key:
+                            library_server_list[i]["ma_ip"] = request.POST.get(inner_lib_key, "")
+                        if '_all_capacity_' in inner_lib_key:
+                            library_server_list[i]["all_capacity"] = request.POST.get(inner_lib_key, "")
+                        if '_used_capacity_' in inner_lib_key:
+                            library_server_list[i]["used_capacity"] = request.POST.get(inner_lib_key, "")
+                        if '_increase_capacity_' in inner_lib_key:
+                            library_server_list[i]["increase_capacity"] = request.POST.get(inner_lib_key, "")
 
-                    if cur_key in inner_key and cur_key != inner_key and "_tag" in inner_key:
-                        cur_agent_info["tag"] = request.POST.get(inner_key, "")
+            # 4.系统错误报告
+            hardware = request.POST.get("hardware", "")
+            hardware_error_content = request.POST.get("hardware_error_content", "")
 
-                agent_backup_info_list.append(cur_agent_info)
-            if "part_" in cur_key and len(cur_key_mark) == 2:
-                cur_agent_info["agent_name"] = cur_key
-                cur_agent_info["status"] = request.POST.get(cur_key, "")
-                for inner_key in total_keys:
-                    if cur_key in inner_key and cur_key != inner_key and "_tag" not in inner_key:
-                        cur_agent_info["remark"] = request.POST.get(inner_key, "")
+            software = request.POST.get("software", "")
+            software_error_content = request.POST.get("software_error_content", "")
+            agent_backup_info_list = []
+            for cur_key in total_keys:
+                cur_agent_info = {}
+                cur_key_mark = cur_key.split("_")
+                if "total_" in cur_key and len(cur_key_mark) == 2:
+                    cur_agent_info["agent_name"] = cur_key
+                    cur_agent_info["status"] = request.POST.get(cur_key, "")
+                    for inner_key in total_keys:
+                        if cur_key in inner_key and cur_key != inner_key and "_tag" not in inner_key:
+                            cur_agent_info["remark"] = request.POST.get(inner_key, "")
 
-                    if cur_key in inner_key and cur_key != inner_key and "_tag" in inner_key:
-                        cur_agent_info["tag"] = request.POST.get(inner_key, "")
+                        if cur_key in inner_key and cur_key != inner_key and "_tag" in inner_key:
+                            cur_agent_info["tag"] = request.POST.get(inner_key, "")
 
-                agent_backup_info_list.append(cur_agent_info)
-        # print(request.POST)
-        # print(library_server_list)
-        # print(agent_backup_info_list)
-        # return JsonResponse({
-        #     "ret": 0,
-        #     "data": "assert"
-        # })
+                    agent_backup_info_list.append(cur_agent_info)
+                if "part_" in cur_key and len(cur_key_mark) == 2:
+                    cur_agent_info["agent_name"] = cur_key
+                    cur_agent_info["status"] = request.POST.get(cur_key, "")
+                    for inner_key in total_keys:
+                        if cur_key in inner_key and cur_key != inner_key and "_tag" not in inner_key:
+                            cur_agent_info["remark"] = request.POST.get(inner_key, "")
 
-        aging_plan_run = request.POST.get("aging_plan_run", "")
-        aging_plan_run_remark = request.POST.get("aging_plan_run_remark", "")
+                        if cur_key in inner_key and cur_key != inner_key and "_tag" in inner_key:
+                            cur_agent_info["tag"] = request.POST.get(inner_key, "")
 
-        backup_plan_run = request.POST.get("backup_plan_run", "")
-        backup_plan_run_remark = request.POST.get("backup_plan_run_remark", "")
+                    agent_backup_info_list.append(cur_agent_info)
 
-        running_status = request.POST.get("running_status", "")
-        running_remark = request.POST.get("running_remark", "")
+            # with open("library_server_list.json", 'w') as f:
+            #     f.write(json.dumps(library_server_list))
+            # # with open("agent_backup_info_list.json", 'w') as f:
+            # #     f.write(json.dumps(agent_backup_info_list))
+            # return JsonResponse({
+            #     "ret": 0,
+            #     "data": "assert"
+            # })
 
-        client_add = request.POST.get("client_add", "")
-        client_add_remark = request.POST.get("client_add_remark", "")
+            aging_plan_run = request.POST.get("aging_plan_run", "")
+            aging_plan_run_remark = request.POST.get("aging_plan_run_remark", "")
 
-        period_capacity = request.POST.get("period_capacity", "")
-        period_capacity_remark = request.POST.get("period_capacity_remark", "")
+            backup_plan_run = request.POST.get("backup_plan_run", "")
+            backup_plan_run_remark = request.POST.get("backup_plan_run_remark", "")
 
-        error_send = request.POST.get("error_send", "")
-        error_send_remark = request.POST.get("error_send_remark", "")
+            running_status = request.POST.get("running_status", "")
+            running_remark = request.POST.get("running_remark", "")
 
-        cdr_running = request.POST.get("cdr_running", "")
-        cdr_running_remark = request.POST.get("cdr_running_remark", "")
+            client_add = request.POST.get("client_add", "")
+            client_add_remark = request.POST.get("client_add_remark", "")
 
-        auxiliary_copy = request.POST.get("auxiliary_copy", "")
-        auxiliary_copy_remark = request.POST.get("auxiliary_copy_remark", "")
+            period_capacity = request.POST.get("period_capacity", "")
+            period_capacity_remark = request.POST.get("period_capacity_remark", "")
 
-        library_status = request.POST.get("library_status", "")
-        library_status_remark = request.POST.get("library_status_remark", "")
+            error_send = request.POST.get("error_send", "")
+            error_send_remark = request.POST.get("error_send_remark", "")
 
-        recover = request.POST.get("recover", "")
-        recover_remark = request.POST.get("recover_remark", "")
+            cdr_running = request.POST.get("cdr_running", "")
+            cdr_running_remark = request.POST.get("cdr_running_remark", "")
 
-        extra_error_content = request.POST.get("extra_error_content", "")
-        suggestion_and_summary = request.POST.get("suggestion_and_summary", "")
+            auxiliary_copy = request.POST.get("auxiliary_copy", "")
+            auxiliary_copy_remark = request.POST.get("auxiliary_copy_remark", "")
 
-        client_sign = request.POST.get("client_sign", "")
-        engineer_sign = request.POST.get("engineer_sign", "")
-        client_sign_date = request.POST.get("client_sign_date", "")
-        engineer_sign_date = request.POST.get("engineer_sign_date", "")
+            library_status = request.POST.get("library_status", "")
+            library_status_remark = request.POST.get("library_status_remark", "")
 
-        commserver_status = request.POST.get("commserver_status", "")
-        commserver_status_remark = request.POST.get("commserver_status_remark", "")
+            recover = request.POST.get("recover", "")
+            recover_remark = request.POST.get("recover_remark", "")
 
-        if report_title.strip() == "":
-            return JsonResponse({"ret": 0, "data": "报告标题不能为空。"})
-        if client_id.strip() == "":
-            return JsonResponse({"ret": 0, "data": "客户名称不能为空。"})
-        if engineer.strip() == "":
-            return JsonResponse({"ret": 0, "data": "责任工程师不能为空。"})
-        if client_sign.strip() == "":
-            return JsonResponse({"ret": 0, "data": "客户必须签字。"})
-        if engineer_sign.strip() == "":
-            return JsonResponse({"ret": 0, "data": "维修工程师必须签字。"})
-        try:
-            inspection_id = int(inspection_id)
-        except:
-            return JsonResponse({"ret": 0, "data": "网络错误。"})
-        try:
-            client_id = int(client_id)
-        except:
-            return JsonResponse({"ret": 0, "data": "客户资料有误。"})
-        if inspection_date:
-            inspection_date = datetime.datetime.strptime(inspection_date, "%Y-%m-%d")
-        else:
-            inspection_date = None
-        if last_inspection_date:
-            last_inspection_date = datetime.datetime.strptime(last_inspection_date, "%Y-%m-%d")
-        else:
-            last_inspection_date = None
-        if next_inspection_date:
-            next_inspection_date = datetime.datetime.strptime(next_inspection_date, "%Y-%m-%d")
-        else:
-            next_inspection_date = None
+            extra_error_content = request.POST.get("extra_error_content", "")
+            suggestion_and_summary = request.POST.get("suggestion_and_summary", "")
 
-        if all_client:
-            all_client = int(all_client)
-        else:
-            all_client = 0
-        if offline_client:
-            offline_client = int(offline_client)
-        else:
-            offline_client = 0
+            client_sign = request.POST.get("client_sign", "")
+            engineer_sign = request.POST.get("engineer_sign", "")
+            client_sign_date = request.POST.get("client_sign_date", "")
+            engineer_sign_date = request.POST.get("engineer_sign_date", "")
 
-        if client_sign_date:
-            client_sign_date = datetime.datetime.strptime(client_sign_date, "%Y-%m-%d")
-        else:
-            client_sign_date = None
-        if engineer_sign_date:
-            engineer_sign_date = datetime.datetime.strptime(engineer_sign_date, "%Y-%m-%d")
-        else:
-            engineer_sign_date = None
+            commserver_status = request.POST.get("commserver_status", "")
+            commserver_status_remark = request.POST.get("commserver_status_remark", "")
 
-        # save add/modify
-        if not inspection_id:
-            inspection_report = InspectionReport()
-            inspection_operate = InspectionOperate()
+            if report_title.strip() == "":
+                return JsonResponse({"ret": 0, "data": "报告标题不能为空。"})
+            if client_id.strip() == "":
+                return JsonResponse({"ret": 0, "data": "客户名称不能为空。"})
+            if engineer.strip() == "":
+                return JsonResponse({"ret": 0, "data": "责任工程师不能为空。"})
+            if client_sign.strip() == "":
+                return JsonResponse({"ret": 0, "data": "客户必须签字。"})
+            if engineer_sign.strip() == "":
+                return JsonResponse({"ret": 0, "data": "维修工程师必须签字。"})
             try:
-                inspection_operate.version = version
-                inspection_operate.host_name = host_name
-                inspection_operate.os_platform = os_platform
-                inspection_operate.patch = patch
-                inspection_operate.all_client = all_client
-                inspection_operate.offline_client = offline_client
-                inspection_operate.offline_client_content = offline_client_content
-                inspection_operate.library_server = json.dumps(library_server_list)
-                inspection_operate.save()
-
-                inspection_report.inspection_operate = inspection_operate
-                inspection_report.client_data_id = client_id
-
-                inspection_report.title = report_title
-                inspection_report.cur_date = inspection_date
-                inspection_report.engineer = engineer
-                inspection_report.last_date = last_inspection_date
-                inspection_report.next_date = next_inspection_date
-
-                inspection_report.hardware_error = json.dumps({
-                    "status": int(hardware),
-                    "remark": hardware_error_content
-                })
-
-                inspection_report.software_error = json.dumps({
-                    "status": int(software),
-                    "remark": software_error_content
-                })
-
-                inspection_report.aging_plan_run = json.dumps({
-                    "status": int(aging_plan_run),
-                    "remark": aging_plan_run_remark
-                })
-
-                inspection_report.backup_plan_run = json.dumps({
-                    "status": int(backup_plan_run),
-                    "remark": backup_plan_run_remark
-                })
-
-                inspection_report.running_status = json.dumps({
-                    "status": int(running_status),
-                    "remark": running_remark
-                })
-
-                inspection_report.client_add = json.dumps({
-                    "status": int(client_add),
-                    "remark": client_add_remark
-                })
-
-                inspection_report.error_send = json.dumps({
-                    "status": int(error_send),
-                    "remark": error_send_remark
-                })
-
-                inspection_report.cdr_running = json.dumps({
-                    "status": int(cdr_running),
-                    "remark": cdr_running_remark
-                })
-
-                inspection_report.extra_error_content = extra_error_content
-                inspection_report.suggestion_and_summary = suggestion_and_summary
-
-                inspection_report.client_sign = client_sign
-                inspection_report.engineer_sign = engineer_sign
-                inspection_report.client_sign_date = client_sign_date
-                inspection_report.engineer_sign_date = engineer_sign_date
-
-                # modify
-                inspection_report.commserver_status = json.dumps({
-                    "status": int(commserver_status),
-                    "remark": commserver_status_remark,
-                })
-
-                inspection_report.agent_backup_status = json.dumps(agent_backup_info_list)
-
-                inspection_report.period_capacity = json.dumps({
-                    "status": int(period_capacity),
-                    "remark": period_capacity_remark,
-                })
-
-                inspection_report.auxiliary_copy = json.dumps({
-                    "status": int(auxiliary_copy),
-                    "remark": auxiliary_copy_remark,
-                })
-
-                inspection_report.library_status = json.dumps({
-                    "status": int(library_status),
-                    "remark": library_status_remark,
-                })
-
-                inspection_report.recover_status = json.dumps({
-                    "status": int(recover),
-                    "remark": recover_remark,
-                })
-
-                inspection_report.save()
-            except Exception as e:
-                print(e)
-                return JsonResponse({"ret": 0, "data": "数据存储失败。"})
+                inspection_id = int(inspection_id)
+            except:
+                return JsonResponse({"ret": 0, "data": "网络错误。"})
+            try:
+                client_id = int(client_id)
+            except:
+                return JsonResponse({"ret": 0, "data": "客户资料有误。"})
+            if inspection_date:
+                inspection_date = datetime.datetime.strptime(inspection_date, "%Y-%m-%d")
             else:
-                return JsonResponse({"ret": 1, "data": "保存成功。"})
-        else:
-            return JsonResponse({"ret": 0, "data": "网络异常。"})
+                inspection_date = None
+            if last_inspection_date:
+                last_inspection_date = datetime.datetime.strptime(last_inspection_date, "%Y-%m-%d")
+            else:
+                last_inspection_date = None
+            if next_inspection_date:
+                next_inspection_date = datetime.datetime.strptime(next_inspection_date, "%Y-%m-%d")
+            else:
+                next_inspection_date = None
+
+            if all_client:
+                all_client = int(all_client)
+            else:
+                all_client = 0
+            if offline_client:
+                offline_client = int(offline_client)
+            else:
+                offline_client = 0
+
+            if client_sign_date:
+                client_sign_date = datetime.datetime.strptime(client_sign_date, "%Y-%m-%d")
+            else:
+                client_sign_date = None
+            if engineer_sign_date:
+                engineer_sign_date = datetime.datetime.strptime(engineer_sign_date, "%Y-%m-%d")
+            else:
+                engineer_sign_date = None
+
+            # save add/modify
+            if not inspection_id:
+                inspection_report = InspectionReport()
+                inspection_operate = InspectionOperate()
+                try:
+                    inspection_operate.version = version
+                    inspection_operate.host_name = host_name
+                    inspection_operate.os_platform = os_platform
+                    inspection_operate.patch = patch
+                    inspection_operate.all_client = all_client
+                    inspection_operate.offline_client = offline_client
+                    inspection_operate.offline_client_content = offline_client_content
+                    inspection_operate.library_server = json.dumps(library_server_list)
+                    inspection_operate.save()
+
+                    inspection_report.inspection_operate = inspection_operate
+                    inspection_report.client_data_id = client_id
+
+                    inspection_report.title = report_title
+                    inspection_report.cur_date = inspection_date
+                    inspection_report.engineer = engineer
+                    inspection_report.last_date = last_inspection_date
+                    inspection_report.next_date = next_inspection_date
+
+                    inspection_report.hardware_error = json.dumps({
+                        "status": int(hardware),
+                        "remark": hardware_error_content
+                    })
+
+                    inspection_report.software_error = json.dumps({
+                        "status": int(software),
+                        "remark": software_error_content
+                    })
+
+                    inspection_report.aging_plan_run = json.dumps({
+                        "status": int(aging_plan_run),
+                        "remark": aging_plan_run_remark
+                    })
+
+                    inspection_report.backup_plan_run = json.dumps({
+                        "status": int(backup_plan_run),
+                        "remark": backup_plan_run_remark
+                    })
+
+                    inspection_report.running_status = json.dumps({
+                        "status": int(running_status),
+                        "remark": running_remark
+                    })
+
+                    inspection_report.client_add = json.dumps({
+                        "status": int(client_add),
+                        "remark": client_add_remark
+                    })
+
+                    inspection_report.error_send = json.dumps({
+                        "status": int(error_send),
+                        "remark": error_send_remark
+                    })
+
+                    inspection_report.cdr_running = json.dumps({
+                        "status": int(cdr_running),
+                        "remark": cdr_running_remark
+                    })
+
+                    inspection_report.extra_error_content = extra_error_content
+                    inspection_report.suggestion_and_summary = suggestion_and_summary
+
+                    inspection_report.client_sign = client_sign
+                    inspection_report.engineer_sign = engineer_sign
+                    inspection_report.client_sign_date = client_sign_date
+                    inspection_report.engineer_sign_date = engineer_sign_date
+
+                    # modify
+                    inspection_report.commserver_status = json.dumps({
+                        "status": int(commserver_status),
+                        "remark": commserver_status_remark,
+                    })
+
+                    inspection_report.agent_backup_status = json.dumps(agent_backup_info_list)
+
+                    inspection_report.period_capacity = json.dumps({
+                        "status": int(period_capacity),
+                        "remark": period_capacity_remark,
+                    })
+
+                    inspection_report.auxiliary_copy = json.dumps({
+                        "status": int(auxiliary_copy),
+                        "remark": auxiliary_copy_remark,
+                    })
+
+                    inspection_report.library_status = json.dumps({
+                        "status": int(library_status),
+                        "remark": library_status_remark,
+                    })
+
+                    inspection_report.recover_status = json.dumps({
+                        "status": int(recover),
+                        "remark": recover_remark,
+                    })
+
+                    inspection_report.save()
+                except Exception as e:
+                    print(e)
+                    return JsonResponse({"ret": 0, "data": "数据存储失败。"})
+                else:
+                    return JsonResponse({"ret": 1, "data": "保存成功。"})
+            else:
+                return JsonResponse({"ret": 0, "data": "网络异常。"})
     else:
         return HttpResponseRedirect("/login")
 
@@ -2936,7 +2949,7 @@ def custom_inspection(inspection_id, file_name):
                 {"position": [cur_row + 9, cur_row + 9, 8, 9], "info": "备注"},
                 {"position": [cur_row + 10, cur_row + 10, 0, 3], "info": "数据恢复演练情况"},
                 {"position": [cur_row + 10, cur_row + 10, 8, 9], "info": "备注"},
-                {"position": [cur_row + 11, cur_row + 11, 0, 3], "info": "错误报告内容"},
+                {"position": [cur_row + 11, cur_row + 13, 0, 3], "info": "错误报告内容"},
             ]
 
             fixed_after_value = [
@@ -3021,7 +3034,7 @@ def custom_inspection(inspection_id, file_name):
                 {"position": [cur_row + 8, cur_row + 8, 10, 15], "info": auxiliary_copy["remark"]},
                 {"position": [cur_row + 9, cur_row + 9, 10, 15], "info": running_status["remark"]},
                 {"position": [cur_row + 10, cur_row + 10, 10, 15], "info": recover_status["remark"]},
-                {"position": [cur_row + 11, cur_row + 11, 4, 15], "info": extra_error_content},
+                {"position": [cur_row + 11, cur_row + 13, 4, 15], "info": extra_error_content},
             ]
 
             for fak_info in fixed_after_key:

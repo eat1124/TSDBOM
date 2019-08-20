@@ -656,6 +656,15 @@ $('#sample_1 tbody').on('click', 'button#edit', function () {
 
 
 $("#new").click(function () {
+    // 展示
+    $('#inspection_form').find('input[type="text"]:not(input[name^="library_"]):not(input[name^="commv_"])').val("");
+    $('#inspection_form').find('input[type="text"]').prop("readonly", false);
+    $('#inspection_form').find('input[type="number"]').prop("readonly", false);
+    $('#inspection_form').find('input[type="radio"]').prop("disabled", false);
+    $('#inspection_form').find('input[type="datetime"]').prop("disabled", false).val("");
+    $('#inspection_form').find('textarea').prop("readonly", false).val("");
+    $('#inspection_form').find('select').prop("disabled", false).val("");
+    $('#last_inspection_date').prop("readonly", true);
     $.ajax({
         type: "POST",
         url: "../get_clients_info/",
@@ -1112,16 +1121,6 @@ $("#new").click(function () {
                     }
                 });
 
-                // 展示
-                $('#inspection_form').find('input[type="text"]:not(input[name^="library_"]):not(input[name^="commv_"])');
-                $('#inspection_form').find('input[type="text"]').prop("readonly", false);
-                $('#inspection_form').find('input[type="number"]').prop("readonly", false);
-                $('#inspection_form').find('input[type="radio"]').prop("disabled", false);
-                $('#inspection_form').find('input[type="datetime"]').prop("disabled", false).val("");
-                $('#inspection_form').find('textarea').prop("readonly", false).val("");
-                $('#inspection_form').find('select').prop("disabled", false).val("");
-                $('#last_inspection_date').prop("readonly", true);
-
                 $("#all_client").val(data.data.all_client);
                 $("#commv_version").val(data.data.version);
                 $("#commv_host_name").val(data.data.host_name);
@@ -1136,6 +1135,8 @@ $("#new").click(function () {
                 $('#inspection_save').show();
 
                 $('#inspection_id').val(0);
+
+                $('#inspection_form').find('input[type="text"]').prop("readonly", false);
 
                 $('#inspection_date').datetimepicker({
                     format: 'yyyy-mm-dd',
