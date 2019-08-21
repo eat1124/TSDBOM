@@ -121,6 +121,7 @@ $('#sample_1 tbody').on('click', 'button#edit', function () {
 
     var commserver_status = JSON.parse(data.commserver_status);
     var agent_backup_status = JSON.parse(data.agent_backup_status);
+
     var period_capacity = JSON.parse(data.period_capacity);
     var auxiliary_copy = JSON.parse(data.auxiliary_copy);
     var library_status = JSON.parse(data.library_status);
@@ -170,7 +171,7 @@ $('#sample_1 tbody').on('click', 'button#edit', function () {
                     '            <div class="form-control-focus"></div>\n' +
                     '        </div>\n' +
                     '    </div>\n' +
-                    '</div>'
+                    '</div>';
             }
 
             init_html += '\n' +
@@ -245,16 +246,16 @@ $('#sample_1 tbody').on('click', 'button#edit', function () {
                 '                class="form-control" placeholder="" value="">\n' +
                 '        <div class="form-control-focus"></div>\n' +
                 '    </div>\n' +
-                '</div>'
+                '</div>';
 
             // 系统错误报告
             for (index in agent_backup_status) {
-                index = parseInt(index)
+                index = parseInt(index);
 
-                var inner_init_html = ""
-                var sorted_list = []
+                var inner_init_html = "";
+                var sorted_list = [];
                 for (index_inner in agent_backup_status) {
-                    index_inner = parseInt(index_inner)
+                    index_inner = parseInt(index_inner);
                     if (agent_backup_status[index_inner].tag == index + 1) {
                         if (agent_backup_status[index_inner].agent_name.indexOf("total_") != -1 && agent_backup_status[index_inner].agent_name.indexOf("_tag") == -1) {
                             var pre_check = "";
@@ -316,10 +317,10 @@ $('#sample_1 tbody').on('click', 'button#edit', function () {
                                 '</div>\n' +
                                 '</div>';
                         }
-                        pre_num++
+                        pre_num++;
                     }
                 }
-                init_html += inner_init_html
+                init_html += inner_init_html;
             }
 
             init_html += '<div class="form-group">\n' +
@@ -633,7 +634,7 @@ $('#sample_1 tbody').on('click', 'button#edit', function () {
     $("input[name='library_status']:radio[value='" + library_status.status + "']").prop('checked', 'true');
     $("#library_status_remark").val(library_status.remark);
 
-    $("input[name='recover_status']:radio[value='" + recover_status.status + "']").prop('checked', 'true');
+    $("input[name='recover']:radio[value='" + recover_status.status + "']").prop('checked', 'true');
     $("#recover_remark").val(recover_status.remark);
 
     $("#extra_error_content").val(data.extra_error_content);
@@ -658,7 +659,7 @@ $('#sample_1 tbody').on('click', 'button#edit', function () {
 $("#new").click(function () {
     // 展示
     $('#inspection_form').find('input[type="text"]:not(input[name^="library_"]):not(input[name^="commv_"])').val("");
-    $('#inspection_form').find('input[type="text"]').prop("readonly", false);
+    $('#inspection_form').find('input[type="text"]:not(input[name^="last_inspection"])').prop("readonly", false);
     $('#inspection_form').find('input[type="number"]').prop("readonly", false);
     $('#inspection_form').find('input[type="radio"]').prop("disabled", false);
     $('#inspection_form').find('input[type="datetime"]').prop("disabled", false).val("");
@@ -1136,7 +1137,7 @@ $("#new").click(function () {
 
                 $('#inspection_id').val(0);
 
-                $('#inspection_form').find('input[type="text"]').prop("readonly", false);
+                $('#inspection_form').find('input[type="text"]:not(input[name^="last_inspection"])').prop("readonly", false);
 
                 $('#inspection_date').datetimepicker({
                     format: 'yyyy-mm-dd',

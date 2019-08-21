@@ -76,7 +76,7 @@ class InspectionOperate(models.Model):
     offline_client = models.IntegerField("脱机客户端", default=0)
     offline_client_content = models.CharField("脱机故障内容", max_length=512, blank=True, default="")
     # 介质服务器
-    library_server = models.CharField("介质服务器", max_length=2000, blank=True, default="")
+    library_server = models.TextField("介质服务器", blank=True, default="")
     # [{
     #     "ma_name": "",
     #     "ma_ip": "",
@@ -120,7 +120,7 @@ class InspectionReport(models.Model):
     # modify
     commserver_status = models.CharField("CommServer灾难运行情况", max_length=640, blank=True, default="")
 
-    agent_backup_status = models.CharField("各类agent备份情况", max_length=2000, blank=True, default="")
+    agent_backup_status = models.TextField("各类agent备份情况", blank=True, default="")
     # [{
     #     "agent_name": "",
     #     "status": 1/0,
