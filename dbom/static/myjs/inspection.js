@@ -137,9 +137,9 @@ $('#sample_1 tbody').on('click', 'button#edit', function () {
             $(this).nextAll().remove();
 
             // 加载agent_backup_status
-            var init_html = ""
+            var init_html = "";
             for (var i = 0; i < library_server.length; i++) {
-                var j = i + 1
+                var j = i + 1;
                 init_html += '<div class="form-group">\n' +
                     '    <label class="col-md-2 control-label">' + library_server[i].ma_name + '</label>\n' +
                     '    <input type="text" name="library_lib_name_' + j + '" value="' + library_server[i].lib_name + '" hidden>\n' +

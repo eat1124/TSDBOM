@@ -2194,7 +2194,7 @@ def get_clients_info(request):
                 agent_list.append(cur_idataagent)
 
         return JsonResponse({"ret": 1, "data": {
-            "host_name": "host_name",
+            "host_name": commserv_info[3],
             "version": commserv_info[0],
             "patch": commserv_info[1],
             "os_platform": commserv_info[2],
@@ -2236,7 +2236,6 @@ def save_inspection(request):
         # 3.介质服务器
         library_server_list = []
         copy_total_keys = copy.deepcopy(list(total_keys))
-        print(request.POST)
 
         # 组数
         lib_num = 0
@@ -2820,6 +2819,7 @@ def custom_inspection(inspection_id, file_name):
                 for inner_agent_key in agent_backup_status:
                     if inner_agent_key["tag"] == str(pre_key_tag):
                         if inner_agent_key["agent_name"].startswith("total_"):
+
                             agent_key_list.append({
                                 "position": [cur_key_row, cur_key_row, 0, 3],
                                 "info": inner_agent_key["agent_name"] + "最近两次全备份情况"

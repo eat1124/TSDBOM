@@ -70,10 +70,12 @@ class CVApi(DataMonitor):
     def get_single_installed_client(self, client):
         if isinstance(client, int):
             client_sql = """SELECT [ClientId],[Client],[NetworkInterface],[OS [Version]]],[Hardware],[GalaxyRelease],[InstallTime],[UninstallTime],[DeletedTime],[ClientStatus],[ClientBkpEnable],[ClientRstEnable]
-                            FROM [commserv].[dbo].[CommCellClientConfig] WHERE [ClientId]='{0}' AND [ClientStatus]='installed'""".format(client)
+                            FROM [commserv].[dbo].[CommCellClientConfig] WHERE [ClientId]='{0}' AND [ClientStatus]='installed'""".format(
+                client)
         elif isinstance(client, str):
             client_sql = """SELECT [ClientId],[Client],[NetworkInterface],[OS [Version]]],[Hardware],[GalaxyRelease],[InstallTime],[UninstallTime],[DeletedTime],[ClientStatus],[ClientBkpEnable],[ClientRstEnable]
-                            FROM [commserv].[dbo].[CommCellClientConfig] WHERE [Client]='{0}' AND [ClientStatus]='installed'""".format(client)
+                            FROM [commserv].[dbo].[CommCellClientConfig] WHERE [Client]='{0}' AND [ClientStatus]='installed'""".format(
+                client)
         else:
             self.msg = "请传入正确的客户端id或名称。"
             return None
@@ -100,12 +102,14 @@ class CVApi(DataMonitor):
                 sub_client_sql = """SELECT [appid],[clientid],[clientname],[idataagent],[idataagentstatus],[idagentbkenable],[idagentrstenable],[instance],[backupset],[subclient],[subclientstatus],[schedjobpattern],
                                      [schedbackupday],[schedbackuptime],[schednextbackuptime],[data_sp],[data_sp_copy],[data_sp_copy_retendays],[data_sp_copy_fullcycles],[data_sp_schedauxcopypattern],[data_sp_schedauxcopyday],[data_sp_schedauxcopytime],
                                      [data_sp_schednextauxcopytime],[data_sp_scheddestcopy],[log_sp],[LastFullBkpSize(Bytes)],[LastIncBkpSize(Bytes)],[LastDiffBkpSize(Bytes)],[QDisplayName],[xmlDisplayName]
-                                     FROM [commserv].[dbo].[CommCellSubClientConfig] WHERE [clientid]='{0}' AND [idataagentstatus]='installed' AND [backupset]!='Indexing BackupSet'""".format(client)
+                                     FROM [commserv].[dbo].[CommCellSubClientConfig] WHERE [clientid]='{0}' AND [idataagentstatus]='installed' AND [backupset]!='Indexing BackupSet'""".format(
+                    client)
             elif isinstance(client, str):
                 sub_client_sql = """SELECT [appid],[clientid],[clientname],[idataagent],[idataagentstatus],[idagentbkenable],[idagentrstenable],[instance],[backupset],[subclient],[subclientstatus],[schedjobpattern],
                                      [schedbackupday],[schedbackuptime],[schednextbackuptime],[data_sp],[data_sp_copy],[data_sp_copy_retendays],[data_sp_copy_fullcycles],[data_sp_schedauxcopypattern],[data_sp_schedauxcopyday],[data_sp_schedauxcopytime],
                                      [data_sp_schednextauxcopytime],[data_sp_scheddestcopy],[log_sp],[LastFullBkpSize(Bytes)],[LastIncBkpSize(Bytes)],[LastDiffBkpSize(Bytes)],[QDisplayName],[xmlDisplayName]
-                                     FROM [commserv].[dbo].[CommCellSubClientConfig] WHERE [clientname]='{0}' AND [idataagentstatus]='installed' AND [backupset]!='Indexing BackupSet'""".format(client)
+                                     FROM [commserv].[dbo].[CommCellSubClientConfig] WHERE [clientname]='{0}' AND [idataagentstatus]='installed' AND [backupset]!='Indexing BackupSet'""".format(
+                    client)
             else:
                 self.msg = "请传入正确的客户端id或名称。"
                 return None
@@ -156,12 +160,14 @@ class CVApi(DataMonitor):
                 sub_client_sql = """SELECT [appid],[clientid],[clientname],[idataagent],[idataagentstatus],[idagentbkenable],[idagentrstenable],[instance],[backupset],[subclient],[subclientstatus],[schedjobpattern],
                                      [schedbackupday],[schedbackuptime],[schednextbackuptime],[data_sp],[data_sp_copy],[data_sp_copy_retendays],[data_sp_copy_fullcycles],[data_sp_schedauxcopypattern],[data_sp_schedauxcopyday],[data_sp_schedauxcopytime],
                                      [data_sp_schednextauxcopytime],[data_sp_scheddestcopy],[log_sp],[LastFullBkpSize(Bytes)],[LastIncBkpSize(Bytes)],[LastDiffBkpSize(Bytes)],[QDisplayName],[xmlDisplayName]
-                                     FROM [commserv].[dbo].[CommCellSubClientConfig] WHERE [clientid]='{0}' AND [idataagentstatus]='installed' AND [backupset]!='Indexing BackupSet'""".format(client)
+                                     FROM [commserv].[dbo].[CommCellSubClientConfig] WHERE [clientid]='{0}' AND [idataagentstatus]='installed' AND [backupset]!='Indexing BackupSet'""".format(
+                    client)
             elif isinstance(client, str):
                 sub_client_sql = """SELECT [appid],[clientid],[clientname],[idataagent],[idataagentstatus],[idagentbkenable],[idagentrstenable],[instance],[backupset],[subclient],[subclientstatus],[schedjobpattern],
                                      [schedbackupday],[schedbackuptime],[schednextbackuptime],[data_sp],[data_sp_copy],[data_sp_copy_retendays],[data_sp_copy_fullcycles],[data_sp_schedauxcopypattern],[data_sp_schedauxcopyday],[data_sp_schedauxcopytime],
                                      [data_sp_schednextauxcopytime],[data_sp_scheddestcopy],[log_sp],[LastFullBkpSize(Bytes)],[LastIncBkpSize(Bytes)],[LastDiffBkpSize(Bytes)],[QDisplayName],[xmlDisplayName]
-                                     FROM [commserv].[dbo].[CommCellSubClientConfig] WHERE [clientname]='{0}' AND [idataagentstatus]='installed' AND [backupset]!='Indexing BackupSet'""".format(client)
+                                     FROM [commserv].[dbo].[CommCellSubClientConfig] WHERE [clientname]='{0}' AND [idataagentstatus]='installed' AND [backupset]!='Indexing BackupSet'""".format(
+                    client)
             else:
                 self.msg = "请传入正确的客户端id或名称。"
                 return None
@@ -186,12 +192,14 @@ class CVApi(DataMonitor):
                 sub_client_sql = """SELECT [appid],[clientid],[clientname],[idataagent],[idataagentstatus],[idagentbkenable],[idagentrstenable],[instance],[backupset],[subclient],[subclientstatus],[schedjobpattern],
                                      [schedbackupday],[schedbackuptime],[schednextbackuptime],[data_sp],[data_sp_copy],[data_sp_copy_retendays],[data_sp_copy_fullcycles],[data_sp_schedauxcopypattern],[data_sp_schedauxcopyday],[data_sp_schedauxcopytime],
                                      [data_sp_schednextauxcopytime],[data_sp_scheddestcopy],[log_sp],[LastFullBkpSize(Bytes)],[LastIncBkpSize(Bytes)],[LastDiffBkpSize(Bytes)],[QDisplayName],[xmlDisplayName]
-                                     FROM [commserv].[dbo].[CommCellSubClientConfig] WHERE [clientid]='{0}' AND [idataagentstatus]='installed' AND [backupset]!='Indexing BackupSet'""".format(client)
+                                     FROM [commserv].[dbo].[CommCellSubClientConfig] WHERE [clientid]='{0}' AND [idataagentstatus]='installed' AND [backupset]!='Indexing BackupSet'""".format(
+                    client)
             elif isinstance(client, str):
                 sub_client_sql = """SELECT [appid],[clientid],[clientname],[idataagent],[idataagentstatus],[idagentbkenable],[idagentrstenable],[instance],[backupset],[subclient],[subclientstatus],[schedjobpattern],
                                      [schedbackupday],[schedbackuptime],[schednextbackuptime],[data_sp],[data_sp_copy],[data_sp_copy_retendays],[data_sp_copy_fullcycles],[data_sp_schedauxcopypattern],[data_sp_schedauxcopyday],[data_sp_schedauxcopytime],
                                      [data_sp_schednextauxcopytime],[data_sp_scheddestcopy],[log_sp],[LastFullBkpSize(Bytes)],[LastIncBkpSize(Bytes)],[LastDiffBkpSize(Bytes)],[QDisplayName],[xmlDisplayName]
-                                     FROM [commserv].[dbo].[CommCellSubClientConfig] WHERE [clientname]='{0}' AND [idataagentstatus]='installed' AND [backupset]!='Indexing BackupSet'""".format(client)
+                                     FROM [commserv].[dbo].[CommCellSubClientConfig] WHERE [clientname]='{0}' AND [idataagentstatus]='installed' AND [backupset]!='Indexing BackupSet'""".format(
+                    client)
             else:
                 self.msg = "请传入正确的客户端id或名称。"
                 return None
@@ -240,7 +248,8 @@ class CVApi(DataMonitor):
         for storage in storages:
 
             for content in extra_content:
-                if content['clientname'] == storage['clientname'] and content['idataagent'] == storage['idataagent'] and content['backupset'] == storage['backupset']:
+                if content['clientname'] == storage['clientname'] and content['idataagent'] == storage['idataagent'] and \
+                        content['backupset'] == storage['backupset']:
                     whole_list.append({
                         "storagepolicy": storage['storagepolicy'],
                         "clientname": storage['clientname'],
@@ -358,7 +367,8 @@ class CVApi(DataMonitor):
 
             if i[7] in ["Yearly", "Yearly relative"]:
                 year_list = i[9].split(" of ")
-                schedbackupday = "每年{0}{1}日".format(month_chz[year_list[1]] if year_list[1] in month_chz.keys() else year_list[1], year_list[0])
+                schedbackupday = "每年{0}{1}日".format(
+                    month_chz[year_list[1]] if year_list[1] in month_chz.keys() else year_list[1], year_list[0])
 
                 if i[8] == "Every 0":
                     schedinterval = "不重复"
@@ -396,7 +406,8 @@ class CVApi(DataMonitor):
         for schedule in schedules:
 
             for content in extra_content:
-                if content['clientname'] == schedule['clientName'] and content['idataagent'] == schedule['idaagent'] and content['backupset'] == schedule['backupset']:
+                if content['clientname'] == schedule['clientName'] and content['idataagent'] == schedule['idaagent'] and \
+                        content['backupset'] == schedule['backupset']:
                     whole_list.append({
                         "scheduePolicy": schedule['scheduePolicy'],
                         "scheduleName": schedule['scheduleName'],
@@ -476,17 +487,18 @@ class CVApi(DataMonitor):
                 sub_client_list = cv_api.get_sub_client_list(client_id)
 
                 # subclientId
-                #{'applicationId': '106', '_type_': '7', 'backupsetName': 'defaultBackupSet', 'instanceId': '10', 'subclientGUID': 'A546CEEC-22ED-4370-A81F-680E88CA5A76', 'subclientName': 'default', 'clientId': '5', '
+                # {'applicationId': '106', '_type_': '7', 'backupsetName': 'defaultBackupSet', 'instanceId': '10', 'subclientGUID': 'A546CEEC-22ED-4370-A81F-680E88CA5A76', 'subclientName': 'default', 'clientId': '5', '
                 # backupsetId': '16', 'subclientId': '22', 'displayName': 'vctest.hzx', 'appName': 'Virtual Server', 'clientName': 'vctest.hzx', 'instanceName': 'VMware'},
                 for sub_client in sub_client_list:
-                    if sub_client['appName'] == i[1] and sub_client['backupsetName'] == i[3] and sub_client['subclientName'] == i[4]:
+                    if sub_client['appName'] == i[1] and sub_client['backupsetName'] == i[3] and sub_client[
+                        'subclientName'] == i[4]:
                         content = cv_api.get_vm_backup_content(sub_client['subclientId'])
 
                         if content:
                             vm_content = ''
                             for vm in content:
                                 vm_content += vm + ','
-                        
+
                         backupset_content_list.append({
                             "clientname": i[0],
                             "idataagent": i[1],
@@ -503,7 +515,8 @@ class CVApi(DataMonitor):
         for b_content in backupset_content_list:
 
             for content in extra_content:
-                if content['clientname'] == b_content['clientname'] and content['idataagent'] == b_content['idataagent'] and content['backupset'] == b_content['backupset']:
+                if content['clientname'] == b_content['clientname'] and content['idataagent'] == b_content[
+                    'idataagent'] and content['backupset'] == b_content['backupset']:
                     whole_list.append({
                         "clientname": b_content['clientname'],
                         "idataagent": b_content['idataagent'],
@@ -527,7 +540,8 @@ class CVApi(DataMonitor):
 
         return whole_list
 
-    def get_schedules(self, client=None, agent=None, backup_set=None, sub_client=None, schedule=None, schedule_type=None):
+    def get_schedules(self, client=None, agent=None, backup_set=None, sub_client=None, schedule=None,
+                      schedule_type=None):
         if all([client, agent, backup_set, sub_client, schedule, schedule_type]):
             schedule_sql = """SELECT [CommCellId],[CommCellName],[scheduleId],[scheduePolicy],[scheduleName],[scheduletask],[schedbackuptype],[schedpattern],[schedinterval]
             ,[schedbackupday],[schedbackupTime],[schednextbackuptime],[appid],[clientName],[idaagent],[instance],[backupset],[subclient]
@@ -626,7 +640,8 @@ class CVApi(DataMonitor):
 
         for backup_job in backup_jobs:
             for content in extra_content:
-                if content['clientname'] == backup_job['clientname'] and content['idataagent'] == backup_job['idataagent']:
+                if content['clientname'] == backup_job['clientname'] and content['idataagent'] == backup_job[
+                    'idataagent']:
                     whole_list.append({
                         "clientname": backup_job['clientname'],
                         "idataagent": backup_job['idataagent'],
@@ -729,11 +744,13 @@ class CVApi(DataMonitor):
         return library_space_info
 
     def get_commserv_info(self):
-        commserv_info_sql = """select SWVersion, ServicePack, OSName from CommServ.dbo.CNCommCellInfoView;"""
+        commserv_info_sql = """select cn.SWVersion, cn.ServicePack, cn.OSName, ac.CCHostName from CommServ.dbo.CNCommCellInfoView as cn
+                               inner join CommServ.dbo.APP_CommCellInfo as ac on ac.commcellId=cn.id;"""
         commserv_info = []
         commserv_info = self.fetch_one(commserv_info_sql)
 
         return commserv_info
+
 
 class CustomFilter(CVApi):
     def custom_all_backup_content(self):
@@ -785,7 +802,8 @@ class CustomFilter(CVApi):
 
                     specific_content_three = []
                     for content_three in all_content_list:
-                        if content_three["clientname"] == client["client_name"] and content_three["idataagent"] == agent and content_three["backupset"] == backup_set:
+                        if content_three["clientname"] == client["client_name"] and content_three[
+                            "idataagent"] == agent and content_three["backupset"] == backup_set:
                             # 当前客户端/agent/backupset下所有备份列表
                             specific_content_three.append(content_three)
                     # 当前客户端/agent/backupset的rowspan
@@ -815,7 +833,9 @@ class CustomFilter(CVApi):
 
                         specific_content_five = []
                         for content_five in all_content_list:
-                            if content_five["clientname"] == client["client_name"] and content_five["idataagent"] == agent and content_five["backupset"] == backup_set and content_five["content"] == content:
+                            if content_five["clientname"] == client["client_name"] and content_five[
+                                "idataagent"] == agent and content_five["backupset"] == backup_set and content_five[
+                                "content"] == content:
                                 # 当前客户端/agent/backupset/备份内容的列表
                                 specific_content_five.append(content_five)
 
@@ -876,7 +896,8 @@ class CustomFilter(CVApi):
 
                     specific_storage_three = []
                     for storage_three in all_storage_list:
-                        if storage_three["clientname"] == client["client_name"] and storage_three["idataagent"] == agent and storage_three["backupset"] == backup_set:
+                        if storage_three["clientname"] == client["client_name"] and storage_three[
+                            "idataagent"] == agent and storage_three["backupset"] == backup_set:
                             specific_storage_three.append(storage_three)
 
                     backupset_row_list.append(len(specific_storage_three))
@@ -902,7 +923,9 @@ class CustomFilter(CVApi):
 
                         specific_storage_five = []
                         for storage_five in all_storage_list:
-                            if storage_five["clientname"] == client["client_name"] and storage_five["idataagent"] == agent and storage_five["backupset"] == backup_set and storage_five["storagepolicy"] == storage:
+                            if storage_five["clientname"] == client["client_name"] and storage_five[
+                                "idataagent"] == agent and storage_five["backupset"] == backup_set and storage_five[
+                                "storagepolicy"] == storage:
                                 specific_storage_five.append(storage_five)
 
                         storage_row_list.append(len(specific_storage_five))
@@ -968,7 +991,8 @@ class CustomFilter(CVApi):
 
                     specific_schedule_three = []
                     for schedule_three in all_schedule_list:
-                        if schedule_three["clientName"] == client["client_name"] and schedule_three["idaagent"] == agent and schedule_three["backupset"] == backup_set:
+                        if schedule_three["clientName"] == client["client_name"] and schedule_three[
+                            "idaagent"] == agent and schedule_three["backupset"] == backup_set:
                             specific_schedule_three.append(schedule_three)
 
                     backupset_row_list.append(len(specific_schedule_three))
@@ -994,7 +1018,9 @@ class CustomFilter(CVApi):
 
                         specific_schedule_five = []
                         for schedule_five in all_schedule_list:
-                            if schedule_five["clientName"] == client["client_name"] and schedule_five["idaagent"] == agent and schedule_five["backupset"] == backup_set and schedule_five["scheduePolicy"] == schedule:
+                            if schedule_five["clientName"] == client["client_name"] and schedule_five[
+                                "idaagent"] == agent and schedule_five["backupset"] == backup_set and schedule_five[
+                                "scheduePolicy"] == schedule:
                                 specific_schedule_five.append(schedule_five)
 
                         schedule_row_list.append(len(specific_schedule_five))
@@ -1007,7 +1033,9 @@ class CustomFilter(CVApi):
 
                             specific_schedule_six = []
                             for schedule_six in all_schedule_list:
-                                if schedule_six["clientName"] == client["client_name"] and schedule_six["idaagent"] == agent and schedule_six["backupset"] == backup_set and schedule_six["scheduePolicy"] == schedule and schedule_six[
+                                if schedule_six["clientName"] == client["client_name"] and schedule_six[
+                                    "idaagent"] == agent and schedule_six["backupset"] == backup_set and schedule_six[
+                                    "scheduePolicy"] == schedule and schedule_six[
                                     "schedbackuptype"] == c_schedule:
                                     specific_schedule_six.append(schedule_six)
 
@@ -1087,7 +1115,8 @@ class CustomFilter(CVApi):
                     agent_job_list.append({
                         "client_name": client["client_name"],
                         "agent_type_name": job["idataagent"],
-                        "job_start_time": job["startdate"].strftime("%Y-%m-%d %H:%M:%S") if job["startdate"] != '无' else job["startdate"],
+                        "job_start_time": job["startdate"].strftime("%Y-%m-%d %H:%M:%S") if job["startdate"] != '无' else
+                        job["startdate"],
                         "job_backup_status": job_status_str,
                         "status_label": status_label,
                         "aux_copy_status": aux_copy_status_str,
