@@ -2829,7 +2829,7 @@ def custom_inspection(inspection_id, file_name):
 
                             agent_key_list.append({
                                 "position": [sorted_key_row, sorted_key_row, 0, 3],
-                                "info": inner_agent_key["agent_name"] + "最近两次全备份情况"
+                                "info": inner_agent_key["agent_name"].split("_", maxsplit=1)[-1] + "最近两次全备份情况"
                             })
                             agent_key_list.append({
                                 "position": [sorted_key_row, sorted_key_row, 8, 9],
@@ -2846,7 +2846,7 @@ def custom_inspection(inspection_id, file_name):
 
                             agent_key_list.append({
                                 "position": [sorted_key_row, sorted_key_row, 0, 3],
-                                "info": inner_agent_key["agent_name"] + "最近一周期增量/差异备份情况"
+                                "info": inner_agent_key["agent_name"].split("_", maxsplit=1)[-1] + "最近一周期增量/差异备份情况"
                             })
                             agent_key_list.append({
                                 "position": [sorted_key_row, sorted_key_row, 8, 9],
