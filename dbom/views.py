@@ -2816,82 +2816,112 @@ def custom_inspection(inspection_id, file_name):
             pre_key_tag = 1
             agent_key_list = []
             for agent_key in agent_backup_status:
+                sorted_tag = ""
                 for inner_agent_key in agent_backup_status:
                     if inner_agent_key["tag"] == str(pre_key_tag):
                         if inner_agent_key["agent_name"].startswith("total_"):
 
+                            # 组内排序
+                            if sorted_tag == "part":  # 第二个
+                                sorted_key_row = cur_key_row - 1
+                            if sorted_tag == "":
+                                sorted_key_row = cur_key_row
+
                             agent_key_list.append({
-                                "position": [cur_key_row, cur_key_row, 0, 3],
+                                "position": [sorted_key_row, sorted_key_row, 0, 3],
                                 "info": inner_agent_key["agent_name"] + "最近两次全备份情况"
                             })
                             agent_key_list.append({
-                                "position": [cur_key_row, cur_key_row, 8, 9],
+                                "position": [sorted_key_row, sorted_key_row, 8, 9],
                                 "info": "备注"
                             })
                             cur_key_row += 1
+                            sorted_tag = "total"
                         if inner_agent_key["agent_name"].startswith("part_"):
+
+                            if sorted_tag == "total":  # 第二个
+                                sorted_key_row = cur_key_row
+                            if sorted_tag == "":
+                                sorted_key_row = cur_key_row + 1
+
                             agent_key_list.append({
-                                "position": [cur_key_row, cur_key_row, 0, 3],
+                                "position": [sorted_key_row, sorted_key_row, 0, 3],
                                 "info": inner_agent_key["agent_name"] + "最近一周期增量/差异备份情况"
                             })
                             agent_key_list.append({
-                                "position": [cur_key_row, cur_key_row, 8, 9],
+                                "position": [sorted_key_row, sorted_key_row, 8, 9],
                                 "info": "备注"
                             })
                             cur_key_row += 1
-
+                            sorted_tag = "part"
                 pre_key_tag += 1
 
             cur_value_row = pre_row + 4
             pre_value_tag = 1
             agent_value_list = []
             for agent_value in agent_backup_status:
+                sorted_tag = ""
                 for inner_agent_value in agent_backup_status:
                     if inner_agent_value["tag"] == str(pre_value_tag):
                         if inner_agent_value["agent_name"].startswith("total_"):
+
+                            if sorted_tag == "part":
+                                sorted_value_row = cur_value_row - 1
+                            if sorted_tag == "":
+                                sorted_value_row = cur_value_row
+
                             agent_value_list.append({
-                                "position": [cur_value_row, cur_value_row, 10, 15],
+                                "position": [sorted_value_row, sorted_value_row, 10, 15],
                                 "info": inner_agent_value["remark"]
                             })
                             agent_value_list.append({
-                                "position": [cur_value_row, cur_value_row, 4, 4],
+                                "position": [sorted_value_row, sorted_value_row, 4, 4],
                                 "info": "√" if inner_agent_value["status"] == "1" else "□"
                             })
                             agent_value_list.append({
-                                "position": [cur_value_row, cur_value_row, 5, 5],
+                                "position": [sorted_value_row, sorted_value_row, 5, 5],
                                 "info": "正常"
                             })
                             agent_value_list.append({
-                                "position": [cur_value_row, cur_value_row, 6, 6],
+                                "position": [sorted_value_row, sorted_value_row, 6, 6],
                                 "info": "□" if inner_agent_value["status"] == "1" else "√"
                             })
                             agent_value_list.append({
-                                "position": [cur_value_row, cur_value_row, 7, 7],
+                                "position": [sorted_value_row, sorted_value_row, 7, 7],
                                 "info": "异常"
                             })
                             cur_value_row += 1
+                            sorted_tag = "total"
+
                         if inner_agent_value["agent_name"].startswith("part_"):
+
+                            if sorted_tag == "total":
+                                sorted_value_row = cur_value_row
+                            if sorted_tag == "":
+                                sorted_value_row = cur_value_row + 1
+
                             agent_value_list.append({
-                                "position": [cur_value_row, cur_value_row, 10, 15],
+                                "position": [sorted_value_row, sorted_value_row, 10, 15],
                                 "info": inner_agent_value["remark"]
                             })
                             agent_value_list.append({
-                                "position": [cur_value_row, cur_value_row, 4, 4],
+                                "position": [sorted_value_row, sorted_value_row, 4, 4],
                                 "info": "√" if inner_agent_value["status"] == "1" else "□"
                             })
                             agent_value_list.append({
-                                "position": [cur_value_row, cur_value_row, 5, 5],
+                                "position": [sorted_value_row, sorted_value_row, 5, 5],
                                 "info": "正常"
                             })
                             agent_value_list.append({
-                                "position": [cur_value_row, cur_value_row, 6, 6],
+                                "position": [sorted_value_row, sorted_value_row, 6, 6],
                                 "info": "□" if inner_agent_value["status"] == "1" else "√"
                             })
                             agent_value_list.append({
-                                "position": [cur_value_row, cur_value_row, 7, 7],
+                                "position": [sorted_value_row, sorted_value_row, 7, 7],
                                 "info": "异常"
                             })
                             cur_value_row += 1
+                            sorted_tag = "part"
 
                 pre_value_tag += 1
 
