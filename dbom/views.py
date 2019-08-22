@@ -3062,7 +3062,7 @@ def custom_inspection(inspection_id, file_name):
                 {"position": [cur_row + 6, cur_row + 6, 10, 15], "info": error_send["remark"]},
                 {"position": [cur_row + 7, cur_row + 7, 10, 15], "info": cdr_running["remark"]},
                 {"position": [cur_row + 8, cur_row + 8, 10, 15], "info": auxiliary_copy["remark"]},
-                {"position": [cur_row + 9, cur_row + 9, 10, 15], "info": running_status["remark"]},
+                {"position": [cur_row + 9, cur_row + 9, 10, 15], "info": library_status["remark"]},
                 {"position": [cur_row + 10, cur_row + 10, 10, 15], "info": recover_status["remark"]},
                 {"position": [cur_row + 11, cur_row + 13, 4, 15], "info": extra_error_content},
             ]
