@@ -542,7 +542,6 @@ def get_backup_status(request):
             "ret": 0,
             "data": "获取备份状态信息失败。",
         })
-
     return JsonResponse({
         "ret": 1,
         "data": whole_list,
@@ -2167,7 +2166,7 @@ def get_clients_info(request):
         offline_client = 0
         try:
             conn = pymssql.connect(host='cv-server\COMMVAULT', user='sa_cloud', password='1qaz@WSX',
-                                   database='CommServ')
+                                   database='CommServ', timeout=2)
             cur = conn.cursor()
         except:
             return JsonResponse({

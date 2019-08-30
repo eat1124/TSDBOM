@@ -17,7 +17,7 @@ class DataMonitor(object):
     @property
     def _connection(self):
         try:
-            connection = pymssql.connect(host=self.host, user=self.user, password=self.password, database=self.database)
+            connection = pymssql.connect(host=self.host, user=self.user, password=self.password, database=self.database, timeout=2)
         except pymssql.OperationalError as e:
             self.msg = "链接数据库失败。"
             return None
