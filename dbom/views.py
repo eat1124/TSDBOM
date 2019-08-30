@@ -2150,6 +2150,11 @@ def get_clients_info(request):
     if request.user.is_authenticated():
         # 备份状态监控
         sql_api = SQLApi.CVApi(settings.sql_credit)
+        if sql_api.msg == "链接数据库失败。":
+            return JsonResponse({
+                "ret": 0,
+                "data": "数据来源服务器异常，请检查。"
+            })
 
         commserv_info = sql_api.get_commserv_info()
 
@@ -2165,7 +2170,10 @@ def get_clients_info(request):
                                    database='CommServ')
             cur = conn.cursor()
         except:
-            print("链接失败!")
+            return JsonResponse({
+                "ret": 0,
+                "data": "数据来源服务器异常，请检查。"
+            })
         else:
             # 脱机客户端
             try:
@@ -2174,7 +2182,6 @@ def get_clients_info(request):
                 offline_client = cur.fetchone()
             except:
                 print("备份任务不存在!")
-        sql_api = SQLApi.CVApi(settings.sql_credit)
 
         # 介质服务器
         # 存储总容量/已用容量/平均每月增长量
