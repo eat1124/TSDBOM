@@ -2166,7 +2166,7 @@ def get_clients_info(request):
         offline_client = 0
         try:
             conn = pymssql.connect(host='cv-server\COMMVAULT', user='sa_cloud', password='1qaz@WSX',
-                                   database='CommServ', timeout=2)
+                                   database='CommServ')
             cur = conn.cursor()
         except:
             return JsonResponse({
